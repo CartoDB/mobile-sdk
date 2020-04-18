@@ -132,9 +132,13 @@ namespace carto {
     void NMLModelLODTreeLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         Layer::onSurfaceCreated(shaderManager, textureManager);
 
-        if (_nmlModelLODTreeRenderer) {
-            _nmlModelLODTreeRenderer->onSurfaceDestroyed();
-            _nmlModelLODTreeRenderer.reset();
+        // Reset caches/model info
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _meshMap.clear();
+            _meshCache.clear();
+            _textureMap.clear();
+            _textureCache.clear();
         }
 
         _nmlModelLODTreeRenderer = std::make_shared<NMLModelLODTreeRenderer>(_mapRenderer, _options);
@@ -166,6 +170,14 @@ namespace carto {
         if (_nmlModelLODTreeRenderer) {
             _nmlModelLODTreeRenderer->onSurfaceDestroyed();
             _nmlModelLODTreeRenderer.reset();
+        }
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _meshMap.clear();
+            _meshCache.clear();
+            _textureMap.clear();
+            _textureCache.clear();
         }
 
         Layer::onSurfaceDestroyed();

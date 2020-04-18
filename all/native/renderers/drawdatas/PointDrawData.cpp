@@ -13,8 +13,8 @@
 
 namespace carto {
 
-    PointDrawData::PointDrawData(const PointGeometry& geometry, const PointStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
-        VectorElementDrawData(style.getColor()),
+    PointDrawData::PointDrawData(const PointGeometry& geometry, const PointStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
+        VectorElementDrawData(style.getColor(), projectionSurface),
         _bitmap(style.getBitmap()),
         _clickScale(style.getClickSize() == -1 ? std::max(1.0f, 1 + (IDEAL_CLICK_SIZE - style.getSize()) * CLICK_SIZE_COEF / style.getSize()) : style.getClickSize() / style.getSize()),
         _pos(),
@@ -23,9 +23,9 @@ namespace carto {
         _size(style.getSize())
     {
         MapPos internalPos = projection.toInternal(geometry.getCenterPos());
-        _pos = projectionSurface.calculatePosition(internalPos);
-        _xAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0))));
-        _yAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0))));
+        _pos = projectionSurface->calculatePosition(internalPos);
+        _xAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface->calculateVector(internalPos, MapVec(1, 0, 0))));
+        _yAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface->calculateVector(internalPos, MapVec(0, 1, 0))));
     }
     
     PointDrawData::~PointDrawData() {

@@ -16,8 +16,8 @@
 
 namespace carto {
 
-    LineDrawData::LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
-        VectorElementDrawData(style.getColor()),
+    LineDrawData::LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
+        VectorElementDrawData(style.getColor(), projectionSurface),
         _bitmap(style.getBitmap()),
         _normalScale(style.getWidth() / 2),
         _clickScale(style.getClickWidth() == -1 ? std::max(1.0f, 1 + (IDEAL_CLICK_WIDTH - style.getWidth()) * CLICK_WIDTH_COEF / style.getWidth()) : style.getClickWidth()),
@@ -27,11 +27,11 @@ namespace carto {
         _texCoords(),
         _indices()
     {
-        init(geometry.getPoses(), projection, projectionSurface, style);
+        init(geometry.getPoses(), projection, style);
     }
     
-    LineDrawData::LineDrawData(const std::vector<MapPos>& poses, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
-        VectorElementDrawData(style.getColor()),
+    LineDrawData::LineDrawData(const std::vector<MapPos>& poses, const LineStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
+        VectorElementDrawData(style.getColor(), projectionSurface),
         _bitmap(style.getBitmap()),
         _normalScale(style.getWidth() / 2),
         _clickScale(std::max(1.0f, 1 + (IDEAL_CLICK_WIDTH - style.getWidth()) * CLICK_WIDTH_COEF / style.getWidth())),
@@ -41,7 +41,7 @@ namespace carto {
         _texCoords(),
         _indices()
     {
-        init(poses, projection, projectionSurface, style);
+        init(poses, projection, style);
     }
         
     LineDrawData::~LineDrawData() {
@@ -82,7 +82,7 @@ namespace carto {
         setIsOffset(true);
     }
     
-    void LineDrawData::init(const std::vector<MapPos>& poses, const Projection& projection, const ProjectionSurface& projectionSurface, const LineStyle& style) {
+    void LineDrawData::init(const std::vector<MapPos>& poses, const Projection& projection, const LineStyle& style) {
         // Calculate real coordinates and tesselate the line
         std::vector<cglib::vec3<float> > posNormals;
         _poses.reserve(poses.size());
@@ -90,12 +90,12 @@ namespace carto {
         std::vector<MapPos> internalPoses;
         for (std::size_t i = 1; i < poses.size(); i++) {
             internalPoses.clear();
-            projectionSurface.tesselateSegment(projection.toInternal(poses[i - 1]), projection.toInternal(poses[i]), internalPoses);
+            _projectionSurface->tesselateSegment(projection.toInternal(poses[i - 1]), projection.toInternal(poses[i]), internalPoses);
             for (const MapPos& internalPos : internalPoses) {
-                cglib::vec3<double> pos = projectionSurface.calculatePosition(internalPos);
+                cglib::vec3<double> pos = _projectionSurface->calculatePosition(internalPos);
                 if (_poses.empty() || pos != _poses.back()) {
                     _poses.push_back(pos);
-                    posNormals.push_back(cglib::vec3<float>::convert(projectionSurface.calculateNormal(internalPos)));
+                    posNormals.push_back(cglib::vec3<float>::convert(_projectionSurface->calculateNormal(internalPos)));
                 }
             }
         }

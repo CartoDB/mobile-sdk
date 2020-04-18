@@ -64,6 +64,7 @@ namespace carto {
     void NMLModelLODTreeRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         _glResourceManager = std::make_shared<nml::GLResourceManager>();
         _drawRecordMap.clear();
+        _tempDrawDatas.clear();
 
         nml::GLTexture::registerGLExtensions();
     }

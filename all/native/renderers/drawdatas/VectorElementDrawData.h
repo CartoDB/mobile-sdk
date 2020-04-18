@@ -12,6 +12,7 @@
 #include <memory>
 
 namespace carto {
+    class ProjectionSurface;
     class VectorElement;
     
     class VectorElementDrawData {
@@ -22,13 +23,17 @@ namespace carto {
         
         virtual bool isOffset() const;
         virtual void offsetHorizontally(double offset) = 0;
+
+        const std::shared_ptr<ProjectionSurface>& getProjectionSurface() const;
     
     protected:
         static Color GetPremultipliedColor(const Color& color);
 
-        VectorElementDrawData(const Color& color);
+        VectorElementDrawData(const Color& color, const std::shared_ptr<ProjectionSurface>& projectionSurface);
 
         void setIsOffset(bool isOffset);
+
+        std::shared_ptr<ProjectionSurface> _projectionSurface;
 
     private:
         Color _color;

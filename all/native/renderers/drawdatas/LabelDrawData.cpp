@@ -7,7 +7,7 @@
 
 namespace carto {
 
-    LabelDrawData::LabelDrawData(const Label& label, const LabelStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const ViewState& viewState) :
+    LabelDrawData::LabelDrawData(const Label& label, const LabelStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface, const ViewState& viewState) :
         BillboardDrawData(label,
                           style,
                           projection,

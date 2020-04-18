@@ -74,13 +74,10 @@ namespace carto {
         _u_tex = _shader->getUniformLoc("u_tex");
 
         // Drop elements
-        std::vector<std::shared_ptr<Line>> elements;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            std::swap(elements, _elements);
-        }
-        for (const std::shared_ptr<Line>& element : elements) {
-            element->setDrawData(std::shared_ptr<LineDrawData>());
+            _elements.clear();
+            _tempElements.clear();
         }
     }
     
@@ -415,7 +412,6 @@ namespace carto {
         _drawDataBuffer.clear();
         _prevBitmap = nullptr;
     }
-    
 
     const std::string LineRenderer::LINE_VERTEX_SHADER = R"GLSL(
         #version 100

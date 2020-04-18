@@ -15,7 +15,7 @@ namespace carto {
     
     class MarkerDrawData : public BillboardDrawData {
     public:
-        MarkerDrawData(const Marker& marker, const MarkerStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
+        MarkerDrawData(const Marker& marker, const MarkerStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface);
         virtual ~MarkerDrawData();
 
         virtual float getClickScale() const;

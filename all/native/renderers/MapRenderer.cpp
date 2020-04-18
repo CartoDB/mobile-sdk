@@ -478,6 +478,10 @@ namespace carto {
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+        // If the surface was lost, properly signal about this
+        if (_surfaceCreated) {
+            onSurfaceDestroyed();
+        }
         _surfaceCreated = true;
 
         // Reset frame buffer manager
@@ -893,9 +897,6 @@ namespace carto {
     
                 // Initialize layer renderer if it was added after onSurfaceCreated was called
                 if (!layer->isSurfaceCreated() || resetSurfaces) {
-                    if (layer->isSurfaceCreated()) {
-                        layer->onSurfaceDestroyed();
-                    }
                     layer->onSurfaceCreated(_shaderManager, _textureManager);
                     layerChanged(layer, false);
                 }

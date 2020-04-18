@@ -19,8 +19,8 @@
 
 namespace carto {
 
-    PolygonDrawData::PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
-        VectorElementDrawData(style.getColor()),
+    PolygonDrawData::PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
+        VectorElementDrawData(style.getColor(), projectionSurface),
         _bitmap(style.getBitmap()),
         _boundingBox(cglib::bbox3<double>::smallest()),
         _coords(),
@@ -103,7 +103,7 @@ namespace carto {
             unsigned int i1 = elements[i + 1];
             unsigned int i2 = elements[i + 2];
             if (i0 != TESS_UNDEF && i1 != TESS_UNDEF && i2 != TESS_UNDEF) {
-                projectionSurface.tesselateTriangle(i0, i1, i2, indices, internalPoses);
+                projectionSurface->tesselateTriangle(i0, i1, i2, indices, internalPoses);
             }
         }
     
@@ -132,7 +132,7 @@ namespace carto {
                 auto it = indexMap.find(index);
                 if (it == indexMap.end()) {
                     unsigned int newIndex = static_cast<unsigned int>(_coords.back().size());
-                    _coords.back().push_back(projectionSurface.calculatePosition(internalPoses[index]));
+                    _coords.back().push_back(projectionSurface->calculatePosition(internalPoses[index]));
                     _boundingBox.add(_coords.back().back());
                     _indices.back().push_back(newIndex);
                     indexMap[index] = newIndex;

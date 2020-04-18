@@ -6,7 +6,10 @@
 
 #include <cmath>
 #include <limits>
+#include <iomanip>
 #include <sstream>
+
+#include <boost/algorithm/string.hpp>
 
 namespace carto {
 
@@ -16,6 +19,7 @@ namespace carto {
         _location(0, 0),
         _locationDefined(false),
         _locationRadius(0),
+        _customParams(),
         _mutex()
     {
         if (!projection) {
@@ -60,10 +64,46 @@ namespace carto {
         _locationRadius = radius;
     }
 
+    Variant GeocodingRequest::getCustomParameters() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _customParams;
+    }
+
+    Variant GeocodingRequest::getCustomParameter(const std::string& param) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::string> keys;
+        boost::split(keys, param, boost::is_any_of("."));
+        picojson::value subValue = _customParams.toPicoJSON();
+        for (const std::string& key : keys) {
+            if (!subValue.is<picojson::object>()) {
+                return Variant();
+            }
+            subValue = subValue.get(key);
+        }
+        return Variant::FromPicoJSON(subValue);
+    }
+
+    void GeocodingRequest::setCustomParameter(const std::string& param, const Variant& value) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::string> keys;
+        boost::split(keys, param, boost::is_any_of("."));
+        picojson::value rootValue = _customParams.toPicoJSON();
+        picojson::value* subValue = &rootValue;
+        for (const std::string& key : keys) {
+            if (!subValue->is<picojson::object>()) {
+                subValue->set(picojson::object());
+            }
+            subValue = &subValue->get<picojson::object>()[key];
+        }
+        *subValue = value.toPicoJSON();
+        _customParams = Variant::FromPicoJSON(rootValue);
+    }
+
     std::string GeocodingRequest::toString() const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         std::stringstream ss;
+        ss << std::setiosflags(std::ios::fixed);
         ss << "GeocodingRequest [";
         ss << "query='" << _query << "'";
         if (_locationDefined) {
@@ -71,6 +111,9 @@ namespace carto {
         }
         if (_locationRadius > 0) {
             ss << ", locationRadius=" << _locationRadius;
+        }
+        if (_customParams.getType() != VariantType::VARIANT_TYPE_NULL) {
+            ss << ", customParams=" << _customParams.toString();
         }
         ss << "]";
         return ss.str();

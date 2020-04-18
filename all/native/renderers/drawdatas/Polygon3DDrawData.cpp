@@ -18,8 +18,8 @@
 
 namespace carto {
 
-    Polygon3DDrawData::Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
-        VectorElementDrawData(style.getColor()),
+    Polygon3DDrawData::Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
+        VectorElementDrawData(style.getColor(), projectionSurface),
         _sideColor(GetPremultipliedColor(style.getSideColor())),
         _boundingBox(cglib::bbox3<double>::smallest()),
         _coords(),
@@ -100,7 +100,7 @@ namespace carto {
             unsigned int i1 = roofElements[i + 1];
             unsigned int i2 = roofElements[i + 2];
             if (i0 != TESS_UNDEF && i1 != TESS_UNDEF && i2 != TESS_UNDEF) {
-                projectionSurface.tesselateTriangle(i0, i1, i2, roofIndices, roofInternalPoses);
+                projectionSurface->tesselateTriangle(i0, i1, i2, roofIndices, roofInternalPoses);
             }
         }
 
@@ -112,7 +112,7 @@ namespace carto {
                 if (!tesselatedPoses.empty()) {
                     tesselatedPoses.pop_back();
                 }
-                projectionSurface.tesselateSegment(ringInternalPoses[i], ringInternalPoses[(i + 1) % ringInternalPoses.size()], tesselatedPoses);
+                projectionSurface->tesselateSegment(ringInternalPoses[i], ringInternalPoses[(i + 1) % ringInternalPoses.size()], tesselatedPoses);
             }
             std::swap(ringInternalPoses, tesselatedPoses);
         }
@@ -126,8 +126,8 @@ namespace carto {
         // Convert triangulator output to coord array
         for (std::size_t i = 0; i < roofIndices.size(); i++) {
             std::size_t index = roofIndices[i];
-            _coords.push_back(projectionSurface.calculatePosition(roofInternalPoses[index]));
-            _normals.push_back(cglib::vec3<float>::convert(projectionSurface.calculateNormal(roofInternalPoses[index])));
+            _coords.push_back(projectionSurface->calculatePosition(roofInternalPoses[index]));
+            _normals.push_back(cglib::vec3<float>::convert(projectionSurface->calculateNormal(roofInternalPoses[index])));
             _attribs.push_back(1);
         }
         
@@ -143,10 +143,10 @@ namespace carto {
             for (std::size_t j = 1; j < ringInternalPoses.size(); j++) {
                 const MapPos& internalPos0 = ringInternalPoses[(flipOrder ? j : j - 1)];
                 const MapPos& internalPos1 = ringInternalPoses[(flipOrder ? j - 1 : j)];
-                cglib::vec3<double> p0r = projectionSurface.calculatePosition(internalPos0);
-                cglib::vec3<double> p1r = projectionSurface.calculatePosition(internalPos1);
-                cglib::vec3<double> p0b = projectionSurface.calculatePosition(MapPos(internalPos0.getX(), internalPos0.getY(), 0));
-                cglib::vec3<double> p1b = projectionSurface.calculatePosition(MapPos(internalPos1.getX(), internalPos1.getY(), 0));
+                cglib::vec3<double> p0r = projectionSurface->calculatePosition(internalPos0);
+                cglib::vec3<double> p1r = projectionSurface->calculatePosition(internalPos1);
+                cglib::vec3<double> p0b = projectionSurface->calculatePosition(MapPos(internalPos0.getX(), internalPos0.getY(), 0));
+                cglib::vec3<double> p1b = projectionSurface->calculatePosition(MapPos(internalPos1.getX(), internalPos1.getY(), 0));
 
                 // Add coordinates for 2 triangles
                 _coords.push_back(p0r);
@@ -157,8 +157,8 @@ namespace carto {
                 _coords.push_back(p1r);
 
                 // Calculate side normal
-                cglib::vec3<double> normal = projectionSurface.calculateNormal(internalPos0);
-                cglib::vec3<double> sideVec = projectionSurface.calculateVector(internalPos0, internalPos1 - internalPos0);
+                cglib::vec3<double> normal = projectionSurface->calculateNormal(internalPos0);
+                cglib::vec3<double> sideVec = projectionSurface->calculateVector(internalPos0, internalPos1 - internalPos0);
                 cglib::vec3<float> sideNormal = cglib::vec3<float>::convert(cglib::unit(cglib::vector_product(sideVec, normal)));
 
                 // Add normal for each vertex

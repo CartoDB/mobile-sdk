@@ -812,7 +812,7 @@ namespace carto {
         if (overlayPoint->getStyle()) {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             if (auto mapRenderer = _mapRenderer.lock()) {
-                overlayPoint->setDrawData(std::make_shared<PointDrawData>(*overlayPoint->getGeometry(), *overlayPoint->getStyle(), *_dataSource->getProjection(), *mapRenderer->getProjectionSurface()));
+                overlayPoint->setDrawData(std::make_shared<PointDrawData>(*overlayPoint->getGeometry(), *overlayPoint->getStyle(), *_dataSource->getProjection(), mapRenderer->getProjectionSurface()));
             }
         }
         return overlayPoint;

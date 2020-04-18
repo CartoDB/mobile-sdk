@@ -75,13 +75,10 @@ namespace carto {
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
 
         // Drop elements
-        std::vector<std::shared_ptr<Polygon3D>> elements;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            std::swap(elements, _elements);
-        }
-        for (const std::shared_ptr<Polygon3D>& element : elements) {
-            element->setDrawData(std::shared_ptr<Polygon3DDrawData>());
+            _elements.clear();
+            _tempElements.clear();
         }
     }
     
