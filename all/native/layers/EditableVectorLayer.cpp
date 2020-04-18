@@ -130,6 +130,8 @@ namespace carto {
         VectorLayer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
         _overlayRenderer->setComponents(options, mapRenderer);
 
+        // Register/unregister touch handler listener
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (touchHandler.lock()) {
             registerTouchHandlerListener();
         } else {
