@@ -15,7 +15,6 @@
 #include "graphics/ViewState.h"
 #include "renderers/BackgroundRenderer.h"
 #include "renderers/components/AnimationHandler.h"
-#include "renderers/components/BillboardSorter.h"
 #include "renderers/components/KineticEventHandler.h"
 #include "renderers/WatermarkRenderer.h"
 
@@ -188,7 +187,7 @@ namespace carto {
         BackgroundRenderer _backgroundRenderer;
         WatermarkRenderer _watermarkRenderer;
         
-        BillboardSorter _billboardSorter;
+        std::vector<std::shared_ptr<BillboardDrawData> > _billboardDrawDatas;
         std::vector<std::shared_ptr<BillboardDrawData> > _billboardDrawDataBuffer;
         std::shared_ptr<BillboardPlacementWorker> _billboardPlacementWorker;
         std::thread _billboardPlacementThread;

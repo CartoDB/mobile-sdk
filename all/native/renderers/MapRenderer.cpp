@@ -5,7 +5,6 @@
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
 #include "core/ScreenBounds.h"
-#include "drawdatas/BillboardDrawData.h"
 #include "graphics/Bitmap.h"
 #include "layers/Layer.h"
 #include "projections/Projection.h"
@@ -14,11 +13,13 @@
 #include "renderers/MapRendererListener.h"
 #include "renderers/RendererCaptureListener.h"
 #include "renderers/RedrawRequestListener.h"
+#include "renderers/components/BillboardSorter.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
 #include "renderers/cameraevents/CameraTiltEvent.h"
 #include "renderers/cameraevents/CameraZoomEvent.h"
+#include "renderers/drawdatas/BillboardDrawData.h"
 #include "renderers/utils/GLContext.h"
 #include "renderers/utils/GLResourceManager.h"
 #include "renderers/utils/FrameBuffer.h"
@@ -49,7 +50,7 @@ namespace carto {
         _screenBlendShader(),
         _backgroundRenderer(*options, *layers),
         _watermarkRenderer(*options),
-        _billboardSorter(),
+        _billboardDrawDatas(),
         _billboardDrawDataBuffer(),
         _billboardPlacementWorker(std::make_shared<BillboardPlacementWorker>()),
         _billboardPlacementThread(),
@@ -167,7 +168,7 @@ namespace carto {
 
     std::vector<std::shared_ptr<BillboardDrawData> > MapRenderer::getBillboardDrawDatas() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _billboardSorter.getSortedBillboardDrawDatas();
+        return _billboardDrawDatas;
     }
 
     AnimationHandler& MapRenderer::getAnimationHandler() {
@@ -804,41 +805,41 @@ namespace carto {
     }
     
     void MapRenderer::drawLayers(float deltaSeconds, const ViewState& viewState) {
-        bool needRedraw = false;
+        std::vector<std::shared_ptr<Layer> > layers = _layers->getAll();
+
+        // Create new billboard sorter instance
+        std::vector<std::shared_ptr<BillboardDrawData> > billboardDrawDatas;
         {
-            std::vector<std::shared_ptr<Layer> > layers = _layers->getAll();
-
-            // BillboardSorter modifications must be synchronized
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            
-            // Clear billboard before sorting
-            _billboardSorter.clear();
+            billboardDrawDatas.reserve(_billboardDrawDatas.size());
+        }
+        BillboardSorter billboardSorter(billboardDrawDatas);
 
-            // Do base drawing pass
-            for (const std::shared_ptr<Layer>& layer : layers) {
-                if (viewState.getHorizontalLayerOffsetDir() != 0) {
-                    layer->offsetLayerHorizontally(viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
-                }
-    
-                needRedraw = layer->onDrawFrame(deltaSeconds, _billboardSorter, viewState) || needRedraw;
+        // Do base drawing pass
+        bool needRedraw = false;
+        for (const std::shared_ptr<Layer>& layer : layers) {
+            if (viewState.getHorizontalLayerOffsetDir() != 0) {
+                layer->offsetLayerHorizontally(viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
             }
-            
-            // Do 3D drawing pass
-            for (const std::shared_ptr<Layer>& layer : layers) {
-                needRedraw = layer->onDrawFrame3D(deltaSeconds, _billboardSorter, viewState) || needRedraw;
-            }
-            
-            // Sort billboards, calculate rotation state
-            _billboardSorter.sort(viewState);
+
+            needRedraw = layer->onDrawFrame(deltaSeconds, billboardSorter, viewState) || needRedraw;
         }
         
+        // Do 3D drawing pass
+        for (const std::shared_ptr<Layer>& layer : layers) {
+            needRedraw = layer->onDrawFrame3D(deltaSeconds, billboardSorter, viewState) || needRedraw;
+        }
+        
+        // Sort billboards, calculate rotation state
+        billboardSorter.sort(viewState);
+        
         // Draw billboards, grouped by layer renderer
-        if (!_billboardSorter.getSortedBillboardDrawDatas().empty()) {
+        if (!billboardDrawDatas.empty()) {
             glDisable(GL_DEPTH_TEST);
 
             _billboardDrawDataBuffer.clear();
             std::shared_ptr<BillboardRenderer> prevRenderer;
-            for (const std::shared_ptr<BillboardDrawData>& drawData : _billboardSorter.getSortedBillboardDrawDatas()) {
+            for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
                 if (std::shared_ptr<BillboardRenderer> renderer = drawData->getRenderer().lock()) {
                     if (prevRenderer && prevRenderer != renderer) {
                         prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, viewState);
@@ -854,6 +855,12 @@ namespace carto {
             }
 
             glEnable(GL_DEPTH_TEST);
+        }
+
+        // Store the active billboard draw data list
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _billboardDrawDatas = std::move(billboardDrawDatas);
         }
     
         // Redraw, if needed

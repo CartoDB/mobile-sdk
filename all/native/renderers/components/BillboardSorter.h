@@ -16,7 +16,7 @@ namespace carto {
     
     class BillboardSorter {
     public:
-        BillboardSorter();
+        BillboardSorter(std::vector<std::shared_ptr<BillboardDrawData> >& billboardDrawDatas);
         virtual ~BillboardSorter();
     
         void clear();
@@ -25,12 +25,10 @@ namespace carto {
     
         void sort(const ViewState& viewState);
     
-        const std::vector<std::shared_ptr<BillboardDrawData> >& getSortedBillboardDrawDatas() const;
-    
     private:
         static const float PLANAR_ZOOM_THRESHOLD;
 
-        std::vector<std::shared_ptr<BillboardDrawData> > _billboardDrawDatas;
+        std::vector<std::shared_ptr<BillboardDrawData> >& _billboardDrawDatas;
     };
     
 }
