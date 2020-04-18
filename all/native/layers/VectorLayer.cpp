@@ -270,15 +270,12 @@ namespace carto {
         }
     }
     
-    void VectorLayer::addRendererElement(const std::shared_ptr<VectorElement>& element) {
+    void VectorLayer::addRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState) {
         if (!element->isVisible()) {
             return;
         }
 
-        std::shared_ptr<ProjectionSurface> projectionSurface;
-        if (auto mapRenderer = getMapRenderer()) {
-            projectionSurface = mapRenderer->getProjectionSurface();
-        }
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
         if (!projectionSurface) {
             return;
         }
@@ -354,10 +351,7 @@ namespace carto {
         bool visible = element->isVisible() && isVisible() && getVisibleZoomRange().inRange(viewState.getZoom());
         bool billboardsChanged = false;
         
-        std::shared_ptr<ProjectionSurface> projectionSurface;
-        if (auto mapRenderer = getMapRenderer()) {
-            projectionSurface = mapRenderer->getProjectionSurface();
-        }
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
         if (!projectionSurface) {
             return false;
         }
@@ -582,15 +576,20 @@ namespace carto {
     
     bool VectorLayer::FetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
         const std::shared_ptr<VectorLayer>& layer = _layer.lock();
+        if (!layer) {
+            return false;
+        }
 
         std::shared_ptr<VectorData> vectorData = layer->_dataSource->loadElements(cullState);
         if (!vectorData) {
             return false;
         }
 
+        const ViewState& viewState = cullState->getViewState();
+
         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
         for (const std::shared_ptr<VectorElement>& element : vectorData->getElements()) {
-            layer->addRendererElement(element);
+            layer->addRendererElement(element, viewState);
         }
         return layer->refreshRendererElements();
     }

@@ -161,15 +161,17 @@ namespace carto {
         return refresh;
     }
 
-    void EditableVectorLayer::addRendererElement(const std::shared_ptr<VectorElement>& element) {
+    void EditableVectorLayer::addRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState) {
         if (!IsSameElement(element, _selectedVectorElement)) { // NOTE: locked already
-            VectorLayer::addRendererElement(element);
+            VectorLayer::addRendererElement(element, viewState);
         }
     }
     
     bool EditableVectorLayer::refreshRendererElements() {
         if (_selectedVectorElement) { // NOTE: locked already
-            VectorLayer::addRendererElement(_selectedVectorElement);
+            if (auto mapRenderer = getMapRenderer()) {
+                VectorLayer::addRendererElement(_selectedVectorElement, mapRenderer->getViewState());
+            }
         }
         bool billboardChanged = VectorLayer::refreshRendererElements();
         syncElementOverlayPoints(_selectedVectorElement);

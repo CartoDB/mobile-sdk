@@ -160,6 +160,9 @@ namespace carto {
 
     bool ClusteredVectorLayer::ClusterFetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
         std::shared_ptr<ClusteredVectorLayer> layer = std::static_pointer_cast<ClusteredVectorLayer>(_layer.lock());
+        if (!layer) {
+            return false;
+        }
 
         if (auto options = layer->getOptions()) {
             std::lock_guard<std::mutex> lock(layer->_clusterMutex);
@@ -493,7 +496,7 @@ namespace carto {
                 element = cluster.clusterElement;
             }
             if (element) {
-                addRendererElement(element);
+                addRendererElement(element, viewState);
             }
         }
 

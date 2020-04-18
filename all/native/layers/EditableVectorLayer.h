@@ -70,7 +70,7 @@ namespace carto {
 
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
 
-        virtual void addRendererElement(const std::shared_ptr<VectorElement>& element);
+        virtual void addRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState);
         virtual bool refreshRendererElements();
         virtual bool syncRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState, bool remove);
         
