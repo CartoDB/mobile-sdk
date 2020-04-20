@@ -53,6 +53,18 @@ namespace carto {
         if (locationSigma.getType() != VariantType::VARIANT_TYPE_NULL) {
             options.locationSigma = static_cast<float>(locationSigma.getDouble());
         }
+        Variant matchRankWeight = request->getCustomParameter("ranking.match_weight");
+        if (matchRankWeight.getType() != VariantType::VARIANT_TYPE_NULL) {
+            options.matchRankWeight = static_cast<float>(matchRankWeight.getDouble());
+        }
+        Variant entityRankWeight = request->getCustomParameter("ranking.entity_weight");
+        if (entityRankWeight.getType() != VariantType::VARIANT_TYPE_NULL) {
+            options.entityRankWeight = static_cast<float>(entityRankWeight.getDouble());
+        }
+        Variant locationRankWeight = request->getCustomParameter("ranking.location_weight");
+        if (locationRankWeight.getType() != VariantType::VARIANT_TYPE_NULL) {
+            options.locationRankWeight = static_cast<float>(locationRankWeight.getDouble());
+        }
 
         std::vector<std::pair<geocoding::Address, float> > addrs = geocoder->findAddresses(request->getQuery(), options);
 
