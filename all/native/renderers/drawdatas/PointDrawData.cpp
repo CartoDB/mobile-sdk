@@ -59,6 +59,8 @@ namespace carto {
         _pos(0) += offset;
         setIsOffset(true);
     }
+
+    const int PointDrawData::IDEAL_CLICK_SIZE = 64;
     
     const float PointDrawData::CLICK_SIZE_COEF = 0.5f;
     

@@ -1,11 +1,10 @@
 #include "SolidRenderer.h"
 #include "graphics/Bitmap.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/TextureManager.h"
-#include "graphics/Texture.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
+#include "renderers/MapRenderer.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/Shader.h"
+#include "renderers/utils/Texture.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -14,6 +13,7 @@
 namespace carto {
 
     SolidRenderer::SolidRenderer() :
+        _mapRenderer(),
         _color(),
         _bitmap(),
         _bitmapTex(),
@@ -24,53 +24,44 @@ namespace carto {
         _u_mvpMat(0),
         _u_tex(0),
         _u_color(0),
-        _textureManager()
+        _mutex()
     {
     }
     
     SolidRenderer::~SolidRenderer() {
     }
     
-    void SolidRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        static ShaderSource shaderSource("solid", &SOLID_VERTEX_SHADER, &SOLID_FRAGMENT_SHADER);
-        
-        // Shader and textures must be reloaded
-        _shader = shaderManager->createShader(shaderSource);
-    
-        // Get shader variables locations
-        glUseProgram(_shader->getProgId());
-        _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
-        _u_tex = _shader->getUniformLoc("u_tex");
-        _u_color = _shader->getUniformLoc("u_color");
-        _a_coord = _shader->getAttribLoc("a_coord");
-        _a_texCoord = _shader->getAttribLoc("a_texCoord");
-    
-        _textureManager = textureManager;
-        
-        _color = Color();
-        _bitmap.reset();
+    void SolidRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        _mapRenderer = mapRenderer;
+        _shader.reset();
         _bitmapTex.reset();
-        _bitmapScale = 1.0f;
     }
 
     void SolidRenderer::setColor(const Color& color) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
         _color = color;
     }
 
     void SolidRenderer::setBitmap(const std::shared_ptr<Bitmap>& bitmap, float scale) {
-        if (_bitmap != bitmap || !_bitmapTex) {
-            if (bitmap) {
-                _bitmapTex = _textureManager->createTexture(bitmap, true, true);
-            } else {
-                auto defaultBitmap = std::make_shared<Bitmap>(DEFAULT_BITMAP, 1, 1, ColorFormat::COLOR_FORMAT_RGBA, 4);
-                _bitmapTex = _textureManager->createTexture(defaultBitmap, true, true);
-            }
-            _bitmap = bitmap;
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (_bitmap != bitmap) {
+            _bitmapTex.reset();
         }
+        _bitmap = bitmap;
         _bitmapScale = scale;
     }
     
     void SolidRenderer::onDrawFrame(const ViewState& viewState) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!initializeRenderer()) {
+            return;
+        }
+
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
         // Texture, color
@@ -109,12 +100,31 @@ namespace carto {
         GLContext::CheckGLError("SolidRenderer::onDrawFrame");
     }
     
-    void SolidRenderer::onSurfaceDestroyed() {
-        _bitmap.reset();
-        _bitmapTex.reset();
+    bool SolidRenderer::initializeRenderer() {
+        if (_shader && _shader->isValid() && _bitmapTex && _bitmapTex->isValid()) {
+            return true;
+        }
 
-        _shader.reset();
-        _textureManager.reset();
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            // Shader and textures must be reloaded
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>("solid", SOLID_VERTEX_SHADER, SOLID_FRAGMENT_SHADER);
+        
+            // Get shader variables locations
+            _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
+            _u_tex = _shader->getUniformLoc("u_tex");
+            _u_color = _shader->getUniformLoc("u_color");
+            _a_coord = _shader->getAttribLoc("a_coord");
+            _a_texCoord = _shader->getAttribLoc("a_texCoord");
+
+            if (_bitmap) {
+                _bitmapTex = mapRenderer->getGLResourceManager()->create<Texture>(_bitmap, true, true);
+            } else {
+                auto defaultBitmap = std::make_shared<Bitmap>(DEFAULT_BITMAP, 1, 1, ColorFormat::COLOR_FORMAT_RGBA, 4);
+                _bitmapTex = mapRenderer->getGLResourceManager()->create<Texture>(defaultBitmap, true, true);
+            }
+        }
+
+        return _shader && _shader->isValid() && _bitmapTex && _bitmapTex->isValid();
     }
     
     const unsigned char SolidRenderer::DEFAULT_BITMAP[] = {

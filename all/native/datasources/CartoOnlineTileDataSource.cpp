@@ -232,6 +232,10 @@ namespace carto {
         return tileData;
     }
 
+    const int CartoOnlineTileDataSource::DEFAULT_MAX_ZOOM = 14;
+
+    const unsigned int CartoOnlineTileDataSource::MAX_CACHED_TILES = 8;
+
     const std::string CartoOnlineTileDataSource::TILE_SERVICE_TEMPLATE = "https://api.nutiteq.com/maps/v2/{source}/1/tiles.json";
     
 }

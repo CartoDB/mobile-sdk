@@ -2,7 +2,6 @@
 #include "core/BinaryData.h"
 #include "utils/AssetUtils.h"
 #include "graphics/Bitmap.h"
-#include "graphics/utils/GLContext.h"
 #include "utils/Log.h"
 
 #include <stdext/utf8_filesystem.h>

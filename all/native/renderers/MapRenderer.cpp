@@ -5,15 +5,7 @@
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
 #include "core/ScreenBounds.h"
-#include "drawdatas/BillboardDrawData.h"
 #include "graphics/Bitmap.h"
-#include "graphics/FrameBuffer.h"
-#include "graphics/Shader.h"
-#include "graphics/Texture.h"
-#include "graphics/FrameBufferManager.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/TextureManager.h"
-#include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
 #include "projections/Projection.h"
 #include "projections/ProjectionSurface.h"
@@ -21,11 +13,18 @@
 #include "renderers/MapRendererListener.h"
 #include "renderers/RendererCaptureListener.h"
 #include "renderers/RedrawRequestListener.h"
+#include "renderers/components/BillboardSorter.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
 #include "renderers/cameraevents/CameraTiltEvent.h"
 #include "renderers/cameraevents/CameraZoomEvent.h"
+#include "renderers/drawdatas/BillboardDrawData.h"
+#include "renderers/utils/GLContext.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/FrameBuffer.h"
+#include "renderers/utils/Shader.h"
+#include "renderers/utils/Texture.h"
 #include "renderers/workers/BillboardPlacementWorker.h"
 #include "renderers/workers/VTLabelPlacementWorker.h"
 #include "renderers/workers/CullWorker.h"
@@ -40,10 +39,7 @@ namespace carto {
     MapRenderer::MapRenderer(const std::shared_ptr<Layers>& layers, const std::shared_ptr<Options>& options) :
         _lastFrameTime(),
         _viewState(),
-        _frameBufferManager(),
-        _shaderManager(),
-        _textureManager(),
-        _styleCache(),
+        _glResourceManager(),
         _cullWorker(std::make_shared<CullWorker>()),
         _cullThread(),
         _vtLabelPlacementWorker(std::make_shared<VTLabelPlacementWorker>()),
@@ -54,7 +50,7 @@ namespace carto {
         _screenBlendShader(),
         _backgroundRenderer(*options, *layers),
         _watermarkRenderer(*options),
-        _billboardSorter(),
+        _billboardDrawDatas(),
         _billboardDrawDataBuffer(),
         _billboardPlacementWorker(std::make_shared<BillboardPlacementWorker>()),
         _billboardPlacementThread(),
@@ -65,7 +61,6 @@ namespace carto {
         _surfaceCreated(false),
         _surfaceChanged(false),
         _billboardsChanged(false),
-        _renderProjectionChanged(false),
         _redrawPending(false),
         _redrawRequestListener(),
         _mapRendererListener(),
@@ -73,8 +68,6 @@ namespace carto {
         _rendererCaptureListenersMutex(),
         _onChangeListeners(),
         _onChangeListenersMutex(),
-        _renderThreadCallbacks(),
-        _renderThreadCallbacksMutex(),
         _mutex()
     {
     }
@@ -168,9 +161,14 @@ namespace carto {
         return _layers;
     }
 
+    std::shared_ptr<GLResourceManager> MapRenderer::getGLResourceManager() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _glResourceManager;
+    }
+
     std::vector<std::shared_ptr<BillboardDrawData> > MapRenderer::getBillboardDrawDatas() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _billboardSorter.getSortedBillboardDrawDatas();
+        return _billboardDrawDatas;
     }
 
     AnimationHandler& MapRenderer::getAnimationHandler() {
@@ -483,50 +481,24 @@ namespace carto {
             onSurfaceDestroyed();
         }
         _surfaceCreated = true;
+        _surfaceChanged = true; // should not be needed, do it in any case
 
-        // Reset frame buffer manager
-        if (_frameBufferManager) {
-            _frameBufferManager->setGLThreadId(std::thread::id());
+        // Reset resource manager
+        if (_glResourceManager) {
+            _glResourceManager->setGLThreadId(std::thread::id());
         }
-        _frameBufferManager = std::make_shared<FrameBufferManager>();
-        _frameBufferManager->setGLThreadId(std::this_thread::get_id());
-
-        // Reset shader manager
-        if (_shaderManager) {
-            _shaderManager->setGLThreadId(std::thread::id());
-        }
-        _shaderManager = std::make_shared<ShaderManager>();
-        _shaderManager->setGLThreadId(std::this_thread::get_id());
-
-        // Reset texture manager
-        if (_textureManager) {
-            _textureManager->setGLThreadId(std::thread::id());
-        }
-        _textureManager = std::make_shared<TextureManager>();
-        _textureManager->setGLThreadId(std::this_thread::get_id());
-
-        // Reset style cache
-        _styleCache = std::make_shared<StyleTextureCache>(_textureManager, STYLE_TEXTURE_CACHE_SIZE);
+        _glResourceManager = std::make_shared<GLResourceManager>();
+        _glResourceManager->setGLThreadId(std::this_thread::get_id());
 
         // Reset screen blending state
         _currentBoundFBOs.clear();
         _screenFrameBuffer.reset();
         _screenBlendShader.reset();
 
-        // Drop all thread callbacks, as context is invalidated
-        {
-            std::lock_guard<std::mutex> lock(_renderThreadCallbacksMutex);
-            _renderThreadCallbacks.clear();
-        }
-
         // Notify renderers about the event
-        _backgroundRenderer.onSurfaceCreated(_shaderManager, _textureManager);
-        _watermarkRenderer.onSurfaceCreated(_shaderManager, _textureManager);
-    
-        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
-            layer->onSurfaceCreated(_shaderManager, _textureManager);
-        }
-        
+        _backgroundRenderer.onSurfaceCreated(_glResourceManager);
+        _watermarkRenderer.onSurfaceCreated(_glResourceManager);
+
         GLContext::CheckGLError("MapRenderer::onSurfaceCreated");
     }
 
@@ -552,29 +524,30 @@ namespace carto {
         DirectorPtr<MapRendererListener> mapRendererListener = _mapRendererListener;
 
         // Re-set GL thread ids, Windows Phone needs this as onSurfaceCreate/onSurfaceChange may be called from different threads
-        _frameBufferManager->setGLThreadId(std::this_thread::get_id());
-        _shaderManager->setGLThreadId(std::this_thread::get_id());
-        _textureManager->setGLThreadId(std::this_thread::get_id());
+        _glResourceManager->setGLThreadId(std::this_thread::get_id());
 
-        // Create pending textures and shaders
-        _frameBufferManager->processFrameBuffers();
-        _shaderManager->processShaders();
-        _textureManager->processTextures();
+        // Create pending resources
+        _glResourceManager->processResources();
 
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_surfaceChanged) {
-                glViewport(0, 0, _viewState.getWidth(), _viewState.getHeight());
-                _watermarkRenderer.onSurfaceChanged(_viewState.getWidth(), _viewState.getHeight());
-    
-                _kineticEventHandler.stopPan();
-                _kineticEventHandler.stopRotation();
-                _kineticEventHandler.stopZoom();
-            
-                GLContext::CheckGLError("MapRenderer::onSurfaceChanged");
-    
-                _lastFrameTime = std::chrono::steady_clock::now();
+        // Check if surface has changed
+        if (_surfaceChanged.exchange(false)) {
+            int width = 0, height = 0;
+            {
+                std::lock_guard<std::recursive_mutex> lock(_mutex);
+                width = _viewState.getWidth();
+                height = _viewState.getHeight();
             }
+            glViewport(0, 0, width, height);
+            _watermarkRenderer.onSurfaceChanged(width, height);
+
+            _kineticEventHandler.stopPan();
+            _kineticEventHandler.stopRotation();
+            _kineticEventHandler.stopZoom();
+        
+            _lastFrameTime = std::chrono::steady_clock::now();
+
+            // Perform culling without delay
+            viewChanged(false);
         }
         
         // Calculate time from the last frame
@@ -586,7 +559,7 @@ namespace carto {
         if (mapRendererListener) {
             mapRendererListener->onBeforeDrawFrame();
         }
-        
+
         // Calculate camera params and make a synchronized copy of the view state
         ViewState viewState;
         {
@@ -596,17 +569,12 @@ namespace carto {
             _viewState.setHorizontalLayerOffsetDir(0);
         }
 
-        // Don't delay calling the cull task, the view state was already updated
-        if (_surfaceChanged.exchange(false)) {
-            viewChanged(false);
-        }
-        
         // Calculate map moving animations and kinetic events
         _animationHandler.calculate(viewState, deltaSeconds);
         _kineticEventHandler.calculate(viewState, deltaSeconds);
 
+        // Render everything
         initializeRenderState();
-    
         _backgroundRenderer.onDrawFrame(viewState);
         drawLayers(deltaSeconds, viewState);
         _watermarkRenderer.onDrawFrame(viewState);
@@ -616,13 +584,13 @@ namespace carto {
             mapRendererListener->onAfterDrawFrame();
         }
 
+        // Handle renderer capture callbacks as everything is rendered now
+        handleRendererCaptureCallbacks();
+        
         // Update billboard placements/visibility
         if (_billboardsChanged.exchange(false)) {
             _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
         }
-        
-        handleRenderThreadCallbacks();
-        handleRendererCaptureCallbacks();
         
         // Call listener to inform we are idle now, if no redraw request is pending
         if (!_redrawPending) {
@@ -638,45 +606,20 @@ namespace carto {
         // This method may never be called (e.x Android)
         _surfaceCreated = false;
 
-        // Reset texture manager. We tell managers to ignore all resource 'release' operations by invalidating manager thread ids
-        if (_textureManager) {
-            _textureManager->setGLThreadId(std::thread::id());
-            _textureManager.reset();
+        // Reset resource manager. We tell managers to ignore all resource 'release' operations by invalidating manager thread ids
+        if (_glResourceManager) {
+            _glResourceManager->setGLThreadId(std::thread::id());
+            _glResourceManager.reset();
         }
-
-        // Reset shader manager
-        if (_shaderManager) {
-            _shaderManager->setGLThreadId(std::thread::id());
-            _shaderManager.reset();
-        }
-
-        // Reset frame buffer manager
-        if (_frameBufferManager) {
-            _frameBufferManager->setGLThreadId(std::thread::id());
-            _frameBufferManager.reset();
-        }
-
-        // Reset style cache
-        _styleCache.reset();
 
         // Reset screen blending state
         _currentBoundFBOs.clear();
         _screenFrameBuffer.reset();
         _screenBlendShader.reset();
 
-        // Clean up all opengl resources
-        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
-            layer->onSurfaceDestroyed();
-        }
-        
+        // Notify renderers about the event
         _watermarkRenderer.onSurfaceDestroyed();
         _backgroundRenderer.onSurfaceDestroyed();
-
-        // Drop all thread callbacks, as context is invalidated
-        {
-            std::lock_guard<std::mutex> lock(_renderThreadCallbacksMutex);
-            _renderThreadCallbacks.clear();
-        }
     }
     
     void MapRenderer::finishRendering() {
@@ -690,7 +633,7 @@ namespace carto {
         _currentBoundFBOs.emplace_back(static_cast<GLuint>(prevBoundFBO), bufferMask);
 
         if (!_screenFrameBuffer) {
-            _screenFrameBuffer = _frameBufferManager->createFrameBuffer(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
+            _screenFrameBuffer = _glResourceManager->create<FrameBuffer>(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, _screenFrameBuffer->getFBOId());
@@ -728,7 +671,7 @@ namespace carto {
         GLuint bufferMask = _currentBoundFBOs.back().second;
         _currentBoundFBOs.pop_back();
         
-        if (!_screenFrameBuffer) {
+        if (!_screenFrameBuffer || !_screenFrameBuffer->isValid()) {
             return; // should not happen, just safety
         }
         if (bufferMask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
@@ -737,10 +680,8 @@ namespace carto {
 
         glBindFramebuffer(GL_FRAMEBUFFER, prevBoundFBO);
 
-        if (!_screenBlendShader) {
-            static const ShaderSource shaderSource("blend", &BLEND_VERTEX_SHADER, &BLEND_FRAGMENT_SHADER);
-            
-            _screenBlendShader = _shaderManager->createShader(shaderSource);
+        if (!_screenBlendShader || !_screenBlendShader->isValid()) {
+            _screenBlendShader = _glResourceManager->create<Shader>("blend", BLEND_VERTEX_SHADER, BLEND_FRAGMENT_SHADER);
         }
         
         glUseProgram(_screenBlendShader->getProgId());
@@ -802,13 +743,8 @@ namespace carto {
         // If screen size has been set, load the layers, otherwise wait for the onSurfaceChanged method
         // which will also start the cull worker
         if (_surfaceCreated) {
-            // If layer not yet initialized, Force the layer to be initialized (and then culled) in the UI thread
-            if (!layer->isSurfaceCreated()) {
-                requestRedraw();
-            } else {
-                int delayTime = layer->getCullDelay();
-                _cullWorker->init(layer, delay ? delayTime : 0);
-            }
+            int delayTime = layer->getCullDelay();
+            _cullWorker->init(layer, delay ? delayTime : 0);
         }
     }
     
@@ -842,11 +778,6 @@ namespace carto {
         _onChangeListeners.erase(std::remove(_onChangeListeners.begin(), _onChangeListeners.end(), listener), _onChangeListeners.end());
     }
 
-    void MapRenderer::addRenderThreadCallback(const std::shared_ptr<ThreadWorker>& callback) {
-        std::lock_guard<std::mutex> lock(_renderThreadCallbacksMutex);
-        _renderThreadCallbacks.push_back(callback);
-    }
-    
     void MapRenderer::initializeRenderState() const {
         // Enable backface culling
         glEnable(GL_CULL_FACE);
@@ -876,53 +807,44 @@ namespace carto {
     }
     
     void MapRenderer::drawLayers(float deltaSeconds, const ViewState& viewState) {
-        bool needRedraw = false;
+        std::vector<std::shared_ptr<Layer> > layers = _layers->getAll();
+
+        // Create new billboard sorter instance
+        std::vector<std::shared_ptr<BillboardDrawData> > billboardDrawDatas;
         {
-            std::vector<std::shared_ptr<Layer> > layers = _layers->getAll();
-
-            // Reset surfaces if renderprojection has changed
-            bool resetSurfaces = _renderProjectionChanged.exchange(false);
-
-            // BillboardSorter modifications must be synchronized
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            
-            // Clear billboard before sorting
-            _billboardSorter.clear();
+            billboardDrawDatas.reserve(_billboardDrawDatas.size());
+        }
+        BillboardSorter billboardSorter(billboardDrawDatas);
 
-            // Do base drawing pass
-            for (const std::shared_ptr<Layer>& layer : layers) {
-                if (viewState.getHorizontalLayerOffsetDir() != 0) {
-                    layer->offsetLayerHorizontally(viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
-                }
-    
-                // Initialize layer renderer if it was added after onSurfaceCreated was called
-                if (!layer->isSurfaceCreated() || resetSurfaces) {
-                    layer->onSurfaceCreated(_shaderManager, _textureManager);
-                    layerChanged(layer, false);
-                }
-    
-                needRedraw = layer->onDrawFrame(deltaSeconds, _billboardSorter, *_styleCache, viewState) || needRedraw;
+        // Do base drawing pass
+        bool needRedraw = false;
+        for (const std::shared_ptr<Layer>& layer : layers) {
+            if (viewState.getHorizontalLayerOffsetDir() != 0) {
+                layer->offsetLayerHorizontally(viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
             }
-            
-            // Do 3D drawing pass
-            for (const std::shared_ptr<Layer>& layer : layers) {
-                needRedraw = layer->onDrawFrame3D(deltaSeconds, _billboardSorter, *_styleCache, viewState) || needRedraw;
-            }
-            
-            // Sort billboards, calculate rotation state
-            _billboardSorter.sort(viewState);
+
+            needRedraw = layer->onDrawFrame(deltaSeconds, billboardSorter, viewState) || needRedraw;
         }
         
+        // Do 3D drawing pass
+        for (const std::shared_ptr<Layer>& layer : layers) {
+            needRedraw = layer->onDrawFrame3D(deltaSeconds, billboardSorter, viewState) || needRedraw;
+        }
+        
+        // Sort billboards, calculate rotation state
+        billboardSorter.sort(viewState);
+        
         // Draw billboards, grouped by layer renderer
-        if (!_billboardSorter.getSortedBillboardDrawDatas().empty()) {
+        if (!billboardDrawDatas.empty()) {
             glDisable(GL_DEPTH_TEST);
 
             _billboardDrawDataBuffer.clear();
             std::shared_ptr<BillboardRenderer> prevRenderer;
-            for (const std::shared_ptr<BillboardDrawData>& drawData : _billboardSorter.getSortedBillboardDrawDatas()) {
+            for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
                 if (std::shared_ptr<BillboardRenderer> renderer = drawData->getRenderer().lock()) {
                     if (prevRenderer && prevRenderer != renderer) {
-                        prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, *_styleCache, viewState);
+                        prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, viewState);
                         _billboardDrawDataBuffer.clear();
                     }
             
@@ -931,27 +853,21 @@ namespace carto {
                 }
             }
             if (prevRenderer) {
-                prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, *_styleCache, viewState);
+                prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, viewState);
             }
 
             glEnable(GL_DEPTH_TEST);
+        }
+
+        // Store the active billboard draw data list
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _billboardDrawDatas = std::move(billboardDrawDatas);
         }
     
         // Redraw, if needed
         if (needRedraw) {
             requestRedraw();
-        }
-    }
-    
-    void MapRenderer::handleRenderThreadCallbacks() {
-        // Call all registered callbacks exacly once
-        std::vector<std::shared_ptr<ThreadWorker> > renderThreadCallbacks;
-        {
-            std::lock_guard<std::mutex> lock(_renderThreadCallbacksMutex);
-            std::swap(_renderThreadCallbacks, renderThreadCallbacks);
-        }
-        for (const std::shared_ptr<ThreadWorker>& callback : renderThreadCallbacks) {
-            (*callback)();
         }
     }
     
@@ -1019,16 +935,7 @@ namespace carto {
                 updateView = true;
             }
 
-            if (optionName == "RenderProjectionMode") {
-                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
-                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
-                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
-                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
-                mapRenderer->_renderProjectionChanged = true;
-                updateView = true;
-            }
-
-            if (optionName == "BaseProjection" || optionName == "ZoomRange" || optionName == "PanBounds" || optionName == "RestrictedPanning") {
+            if (optionName == "RenderProjectionMode" || optionName == "BaseProjection" || optionName == "ZoomRange" || optionName == "PanBounds" || optionName == "RestrictedPanning") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
                 mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
                 mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
@@ -1053,8 +960,6 @@ namespace carto {
     const int MapRenderer::BILLBOARD_PLACEMENT_TASK_DELAY = 200;
 
     const int MapRenderer::VT_LABEL_PLACEMENT_TASK_DELAY = 200;
-
-    const int MapRenderer::STYLE_TEXTURE_CACHE_SIZE = 8 * 1024 * 1024;
 
     const std::string MapRenderer::BLEND_VERTEX_SHADER = R"GLSL(
         #version 100

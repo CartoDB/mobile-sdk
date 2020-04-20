@@ -206,8 +206,6 @@ namespace carto {
         bool loadWEBP(const unsigned char* compressedData, std::size_t dataSize);
         bool loadNUTI(const unsigned char* compressedData, std::size_t dataSize);
         
-        static const unsigned int PNG_SIGNATURE_LENGTH = 8;
-    
         unsigned int _width;
         unsigned int _height;
     

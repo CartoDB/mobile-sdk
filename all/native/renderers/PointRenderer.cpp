@@ -1,15 +1,13 @@
 #include "PointRenderer.h"
 #include "graphics/Bitmap.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/Texture.h"
-#include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
+#include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/PointDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
-#include "renderers/components/StyleTextureCache.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/Shader.h"
+#include "renderers/utils/Texture.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "vectorelements/Point.h"
@@ -19,6 +17,7 @@
 namespace carto {
 
     PointRenderer::PointRenderer() :
+        _mapRenderer(),
         _elements(),
         _tempElements(),
         _drawDataBuffer(),
@@ -27,6 +26,7 @@ namespace carto {
         _coordBuf(),
         _indexBuf(),
         _texCoordBuf(),
+        _textureCache(),
         _shader(),
         _a_color(0),
         _a_coord(0),
@@ -40,6 +40,14 @@ namespace carto {
     PointRenderer::~PointRenderer() {
     }
     
+    void PointRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        _mapRenderer = mapRenderer;
+        _textureCache.reset();
+        _shader.reset();
+    }
+    
     void PointRenderer::offsetLayerHorizontally(double offset) {
         // Offset current draw data batch horizontally by the required amount
         std::lock_guard<std::mutex> lock(_mutex);
@@ -49,32 +57,15 @@ namespace carto {
         }
     }
     
-    void PointRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        static ShaderSource shaderSource("point", &POINT_VERTEX_SHADER, &POINT_FRAGMENT_SHADER);
-        
-        _shader = shaderManager->createShader(shaderSource);
-    
-        // Get shader variables locations
-        glUseProgram(_shader->getProgId());
-        _a_color = _shader->getAttribLoc("a_color");
-        _a_coord = _shader->getAttribLoc("a_coord");
-        _a_texCoord = _shader->getAttribLoc("a_texCoord");
-        _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
-        _u_tex = _shader->getUniformLoc("u_tex");
-
-        // Drop elements
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _elements.clear();
-            _tempElements.clear();
-        }
-    }
-    
-    void PointRenderer::onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState) {
+    void PointRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
         
         if (_elements.empty()) {
             // Early return, to avoid calling glUseProgram etc.
+            return;
+        }
+
+        if (!initializeRenderer()) {
             return;
         }
         
@@ -83,17 +74,13 @@ namespace carto {
         // Draw points, batch by bitmap
         for (const std::shared_ptr<Point>& element : _elements) {
             std::shared_ptr<PointDrawData> drawData = element->getDrawData();
-            addToBatch(drawData, styleCache, viewState);
+            addToBatch(drawData, viewState);
         }
-        drawBatch(styleCache, viewState);
+        drawBatch(viewState);
         
         unbind();
     
         GLContext::CheckGLError("PointRenderer::onDrawFrame");
-    }
-    
-    void PointRenderer::onSurfaceDestroyed() {
-        _shader.reset();
     }
     
     void PointRenderer::addElement(const std::shared_ptr<Point>& element) {
@@ -139,7 +126,6 @@ namespace carto {
                                             std::vector<float>& texCoordBuf,
                                             std::vector<std::shared_ptr<PointDrawData> >& drawDataBuffer,
                                             const cglib::vec2<float>& texCoordScale,
-                                            StyleTextureCache& styleCache,
                                             const ViewState& viewState)
     {
         // Resize the buffers, if necessary
@@ -273,6 +259,27 @@ namespace carto {
         }
         return false;
     }
+
+    bool PointRenderer::initializeRenderer() {
+        if (_shader && _shader->isValid() && _textureCache && _textureCache->isValid()) {
+            return true;
+        }
+
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            _textureCache = mapRenderer->getGLResourceManager()->create<BitmapTextureCache>(TEXTURE_CACHE_SIZE);
+
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>("point", POINT_VERTEX_SHADER, POINT_FRAGMENT_SHADER);
+    
+            // Get shader variables locations
+            _a_color = _shader->getAttribLoc("a_color");
+            _a_coord = _shader->getAttribLoc("a_coord");
+            _a_texCoord = _shader->getAttribLoc("a_texCoord");
+            _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
+            _u_tex = _shader->getUniformLoc("u_tex");
+       }
+
+       return _shader && _shader->isValid() && _textureCache && _textureCache->isValid();
+    }
     
     void PointRenderer::bind(const ViewState& viewState) {
         // Prepare for drawing
@@ -300,33 +307,33 @@ namespace carto {
         return _drawDataBuffer.empty();
     }
     
-    void PointRenderer::addToBatch(const std::shared_ptr<PointDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState) {
+    void PointRenderer::addToBatch(const std::shared_ptr<PointDrawData>& drawData, const ViewState& viewState) {
         const Bitmap* bitmap = drawData->getBitmap().get();
         
         if (!_drawDataBuffer.empty() && ((_prevBitmap != bitmap))) {
-            drawBatch(styleCache, viewState);
+            drawBatch(viewState);
         }
         
         _drawDataBuffer.push_back(std::move(drawData));
         _prevBitmap = bitmap;
     }
     
-    void PointRenderer::drawBatch(StyleTextureCache& styleCache, const ViewState& viewState) {
+    void PointRenderer::drawBatch(const ViewState& viewState) {
         if (_drawDataBuffer.empty()) {
             return;
         }
 
         // Bind texture
         const std::shared_ptr<Bitmap>& bitmap = _drawDataBuffer.front()->getBitmap();
-        std::shared_ptr<Texture> texture = styleCache.get(bitmap);
+        std::shared_ptr<Texture> texture = _textureCache->get(bitmap);
         if (!texture) {
-            texture = styleCache.create(bitmap, true, false);
+            texture = _textureCache->create(bitmap, true, false);
         }
         glBindTexture(GL_TEXTURE_2D, texture->getTexId());
         
         // Draw the draw datas
         BuildAndDrawBuffers(_a_color, _a_coord, _a_texCoord, _colorBuf, _coordBuf, _indexBuf, _texCoordBuf, _drawDataBuffer,
-                            texture->getTexCoordScale(), styleCache, viewState);
+                            texture->getTexCoordScale(), viewState);
 
         _drawDataBuffer.clear();
         _prevBitmap = nullptr;
@@ -361,5 +368,7 @@ namespace carto {
             gl_FragColor = color;
         }
     )GLSL";
+
+    const unsigned int PointRenderer::TEXTURE_CACHE_SIZE = 8 * 1024 * 1024;
 
 }

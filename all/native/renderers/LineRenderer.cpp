@@ -1,15 +1,13 @@
 #include "LineRenderer.h"
 #include "graphics/Bitmap.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/Texture.h"
-#include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
+#include "renderers/MapRenderer.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/Shader.h"
+#include "renderers/utils/Texture.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
-#include "renderers/components/StyleTextureCache.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "vectorelements/Line.h"
@@ -20,6 +18,7 @@
 namespace carto {
     
     LineRenderer::LineRenderer() :
+        _mapRenderer(),
         _elements(),
         _tempElements(),
         _drawDataBuffer(),
@@ -30,6 +29,7 @@ namespace carto {
         _normalBuf(),
         _texCoordBuf(),
         _indexBuf(),
+        _textureCache(),
         _shader(),
         _a_color(0),
         _a_coord(0),
@@ -47,6 +47,14 @@ namespace carto {
     LineRenderer::~LineRenderer() {
     }
     
+    void LineRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        _mapRenderer = mapRenderer;
+        _textureCache.reset();
+        _shader.reset();
+    }
+
     void LineRenderer::offsetLayerHorizontally(double offset) {
         // Offset current draw data batch horizontally by the required amount
         std::lock_guard<std::mutex> lock(_mutex);
@@ -56,36 +64,15 @@ namespace carto {
         }
     }
     
-    void LineRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        static ShaderSource shaderSource("line", &LINE_VERTEX_SHADER, &LINE_FRAGMENT_SHADER);
-        
-        _shader = shaderManager->createShader(shaderSource);
-    
-        // Get shader variables locations
-        glUseProgram(_shader->getProgId());
-        _a_color = _shader->getAttribLoc("a_color");
-        _a_coord = _shader->getAttribLoc("a_coord");
-        _a_normal = _shader->getAttribLoc("a_normal");
-        _a_texCoord = _shader->getAttribLoc("a_texCoord");
-        _u_gamma = _shader->getUniformLoc("u_gamma");
-        _u_dpToPX = _shader->getUniformLoc("u_dpToPX");
-        _u_unitToDP = _shader->getUniformLoc("u_unitToDP");
-        _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
-        _u_tex = _shader->getUniformLoc("u_tex");
-
-        // Drop elements
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _elements.clear();
-            _tempElements.clear();
-        }
-    }
-    
-    void LineRenderer::onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState) {
+    void LineRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
         
         if (_elements.empty()) {
             // Early return, to avoid calling glUseProgram etc.
+            return;
+        }
+
+        if (!initializeRenderer()) {
             return;
         }
         
@@ -95,19 +82,15 @@ namespace carto {
     
         // Draw, batch by bitmap
         for (const std::shared_ptr<Line>& element : _elements) {
-            addToBatch(element->getDrawData(), styleCache, viewState);
+            addToBatch(element->getDrawData(), viewState);
         }
-        drawBatch(styleCache, viewState);
+        drawBatch(viewState);
         
         unbind();
 
         glEnable(GL_CULL_FACE);
     
         GLContext::CheckGLError("LineRenderer::onDrawFrame");
-    }
-    
-    void LineRenderer::onSurfaceDestroyed() {
-        _shader.reset();
     }
     
     void LineRenderer::addElement(const std::shared_ptr<Line>& element) {
@@ -155,7 +138,6 @@ namespace carto {
                                            std::vector<float>& texCoordBuf,
                                            std::vector<unsigned short>& indexBuf,
                                            std::vector<const LineDrawData*>& drawDataBuffer,
-                                           StyleTextureCache& styleCache,
                                            const ViewState& viewState)
     {
         // Get bitmap
@@ -350,6 +332,31 @@ namespace carto {
         return false;
     }
     
+    bool LineRenderer::initializeRenderer() {
+        if (_shader && _shader->isValid() && _textureCache && _textureCache->isValid()) {
+            return true;
+        }
+
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            _textureCache = mapRenderer->getGLResourceManager()->create<BitmapTextureCache>(TEXTURE_CACHE_SIZE);
+
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>("line", LINE_VERTEX_SHADER, LINE_FRAGMENT_SHADER);
+
+            // Get shader variables locations
+            _a_color = _shader->getAttribLoc("a_color");
+            _a_coord = _shader->getAttribLoc("a_coord");
+            _a_normal = _shader->getAttribLoc("a_normal");
+            _a_texCoord = _shader->getAttribLoc("a_texCoord");
+            _u_gamma = _shader->getUniformLoc("u_gamma");
+            _u_dpToPX = _shader->getUniformLoc("u_dpToPX");
+            _u_unitToDP = _shader->getUniformLoc("u_unitToDP");
+            _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
+            _u_tex = _shader->getUniformLoc("u_tex");
+        }
+
+       return _shader && _shader->isValid() && _textureCache && _textureCache->isValid();
+    }
+    
     void LineRenderer::bind(const ViewState& viewState) {
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
@@ -381,11 +388,11 @@ namespace carto {
         return _drawDataBuffer.empty();
     }
     
-    void LineRenderer::addToBatch(const std::shared_ptr<LineDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState) {
+    void LineRenderer::addToBatch(const std::shared_ptr<LineDrawData>& drawData, const ViewState& viewState) {
         const Bitmap* bitmap = drawData->getBitmap().get();
         
         if (_prevBitmap && (_prevBitmap != bitmap)) {
-            drawBatch(styleCache, viewState);
+            drawBatch(viewState);
         }
         
         _lineDrawDataBuffer.push_back(drawData.get());
@@ -393,20 +400,20 @@ namespace carto {
         _prevBitmap = bitmap;
     }
     
-    void LineRenderer::drawBatch(StyleTextureCache& styleCache, const ViewState& viewState) {
+    void LineRenderer::drawBatch(const ViewState& viewState) {
         if (_lineDrawDataBuffer.empty()) {
             return;
         }
 
         // Bind texture
         const std::shared_ptr<Bitmap>& bitmap = _lineDrawDataBuffer.front()->getBitmap();
-        std::shared_ptr<Texture> texture = styleCache.get(bitmap);
+        std::shared_ptr<Texture> texture = _textureCache->get(bitmap);
         if (!texture) {
-            texture = styleCache.create(bitmap, true, true);
+            texture = _textureCache->create(bitmap, true, true);
         }
         glBindTexture(GL_TEXTURE_2D, texture->getTexId());
         
-        BuildAndDrawBuffers(_a_color, _a_coord, _a_normal, _a_texCoord, _colorBuf, _coordBuf, _normalBuf,_texCoordBuf, _indexBuf, _lineDrawDataBuffer, styleCache, viewState);
+        BuildAndDrawBuffers(_a_color, _a_coord, _a_normal, _a_texCoord, _colorBuf, _coordBuf, _normalBuf,_texCoordBuf, _indexBuf, _lineDrawDataBuffer, viewState);
 
         _lineDrawDataBuffer.clear();
         _drawDataBuffer.clear();
@@ -458,5 +465,7 @@ namespace carto {
             gl_FragColor = texture2D(u_tex, v_texCoord) * v_color * a;
         }
     )GLSL";
+
+    const unsigned int LineRenderer::TEXTURE_CACHE_SIZE = 1 * 1024 * 1024;
 
 }

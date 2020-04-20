@@ -131,11 +131,11 @@ namespace carto {
                                                    float screenWidth, float screenHeight, float dpToPX);
         
     private:
-        static const int SCREEN_PADDING = 10;
-        static const int MAX_CANVAS_SIZE = 8192;
-
         ScreenBounds measureButtonSize(const std::shared_ptr<BalloonPopupButton>& button, float dpToPX) const;
         void drawButtonOnCanvas(const std::shared_ptr<BalloonPopupButton>& button, BitmapCanvas& canvas, const ScreenBounds& bounds, float dpToPX) const;
+
+        static const int SCREEN_PADDING;
+        static const int MAX_CANVAS_SIZE;
 
         std::shared_ptr<BalloonPopupStyle> _style;
         

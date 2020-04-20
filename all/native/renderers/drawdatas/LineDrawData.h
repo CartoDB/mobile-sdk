@@ -49,7 +49,7 @@ namespace carto {
         static const float LINE_JOIN_TESSELATION_FACTOR;
         static const float LINE_JOIN_MIN_MITER_DOT;
     
-        static const int IDEAL_CLICK_WIDTH = 64;
+        static const int IDEAL_CLICK_WIDTH;
     
         static const float CLICK_WIDTH_COEF;
         

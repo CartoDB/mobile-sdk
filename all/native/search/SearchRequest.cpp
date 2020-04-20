@@ -87,7 +87,9 @@ namespace carto {
         ss << "]";
         return ss.str();
     }
-    
+
+    const float SearchRequest::DEFAULT_SEARCH_RADIUS = 0;
+
 }
 
 #endif

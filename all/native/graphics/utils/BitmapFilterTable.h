@@ -51,11 +51,11 @@ namespace carto {
                 float dq = a * (2 * uu + 1) + b*vv;
                 float q = c*vv*vv + b*uu*vv + a*uu*uu;
                 for (int u0 = -du; u0 <= du; u0++) {
-                    if (q < _GaussTableSize) {
+                    if (q < GAUSS_TABLE_SIZE) {
                         float qf = std::max(q, 0.0f);
                         int qi = static_cast<int>(qf);
-                        float f0 = _GaussTable[qi + 0];
-                        float f1 = _GaussTable[qi + 1];
+                        float f0 = GAUSS_TABLE[qi + 0];
+                        float f1 = GAUSS_TABLE[qi + 1];
                         float weight = f0 + (f1 - f0) * (qf - qi);
                         addSample(ui + u0, vi + v0, weight);
                         samplesWeight += weight;
@@ -94,8 +94,8 @@ namespace carto {
         std::vector<int> _sampleCounts;
         std::vector<Sample> _samples;
 
-        static const int _GaussTableSize;
-        static const float _GaussTable[];
+        static const int GAUSS_TABLE_SIZE;
+        static const float GAUSS_TABLE[];
     };
 
     template <typename Transform>
@@ -119,7 +119,7 @@ namespace carto {
         float f = a*c - b*b*0.25f + epsilon;
 
         // Prescale so that f = _filter_table_size
-        float s = _GaussTableSize * filterScale / f;
+        float s = GAUSS_TABLE_SIZE * filterScale / f;
         a *= s; b *= s; c *= s; f *= s;
 
         // Find bounding box dimensions

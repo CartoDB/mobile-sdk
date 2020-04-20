@@ -200,5 +200,7 @@ namespace carto {
     
         return false;
     }
+
+    const int CancelableThreadPool::DEFAULT_PRIORITY = 0;
     
 }

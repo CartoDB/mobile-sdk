@@ -52,6 +52,10 @@ namespace carto {
     private:
         void initializeTransform(const std::shared_ptr<OGRSpatialReference>& poDatasetSpatialRef);
 
+        static const float FILTER_SCALE;
+        static const int MAX_FILTER_WIDTH;
+        static const int MAX_DOWNSAMPLE_FACTOR;
+
         GDALDataset* _poDataset;
         int _width;
         int _height;
@@ -62,10 +66,6 @@ namespace carto {
         std::shared_ptr<Projection> _projection;
 
         mutable std::mutex _mutex;
-
-        static const float FILTER_SCALE;
-        static const int MAX_FILTER_WIDTH;
-        static const int MAX_DOWNSAMPLE_FACTOR;
     };
 }
 

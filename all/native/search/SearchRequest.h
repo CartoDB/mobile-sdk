@@ -99,7 +99,7 @@ namespace carto {
         std::string toString() const;
 
     private:
-        static const int DEFAULT_SEARCH_RADIUS = 0; // in meters
+        static const float DEFAULT_SEARCH_RADIUS; // in meters
 
         std::string _filterExpr;
         std::string _regexFilter;

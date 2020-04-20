@@ -63,7 +63,7 @@ namespace carto {
         static const float KINETIC_ZOOM_DELTA_MULTIPLIER;
         static const float KINETIC_ZOOM_DELTA_CLAMP;
         
-        static const int AVERAGE_SAMPLE_COUNT = 7;
+        static const unsigned int AVERAGE_SAMPLE_COUNT;
     
         bool _pan;
         float _panDelta;

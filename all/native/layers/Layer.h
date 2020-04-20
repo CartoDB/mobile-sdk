@@ -10,7 +10,6 @@
 #include "core/ScreenPos.h"
 #include "core/MapRange.h"
 #include "core/Variant.h"
-#include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/CullState.h"
 #include "ui/ClickType.h"
 
@@ -28,11 +27,7 @@ namespace carto {
     class BillboardSorter;
     class DataSource;
     class Layers;
-    class MapPos;
-    class MapVec;
     class MapRenderer;
-    class ShaderManager;
-    class TextureManager;
     class TouchHandler;
     class CancelableThreadPool;
     class RayIntersectedElement;
@@ -176,6 +171,9 @@ namespace carto {
                                    const std::weak_ptr<MapRenderer>& mapRenderer,
                                    const std::weak_ptr<TouchHandler>& touchHandler);
     
+        std::shared_ptr<Options> getOptions() const;
+        std::shared_ptr<MapRenderer> getMapRenderer() const;
+        std::shared_ptr<TouchHandler> getTouchHandler() const;
         std::shared_ptr<CullState> getLastCullState() const;
 
         void redraw() const;
@@ -184,11 +182,8 @@ namespace carto {
         
         virtual void offsetLayerHorizontally(double offset) = 0;
 
-        virtual bool isSurfaceCreated() const;
-        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) = 0;
-        virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
-        virtual void onSurfaceDestroyed();
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) = 0;
+        virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         
         virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
         virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
@@ -201,9 +196,6 @@ namespace carto {
     
         std::shared_ptr<CancelableThreadPool> _envelopeThreadPool;
         std::shared_ptr<CancelableThreadPool> _tileThreadPool;
-        std::weak_ptr<Options> _options;
-        std::weak_ptr<MapRenderer> _mapRenderer;
-        std::weak_ptr<TouchHandler> _touchHandler;
         
         std::shared_ptr<CullState> _lastCullState;
        
@@ -220,11 +212,13 @@ namespace carto {
         mutable std::recursive_mutex _mutex;
 
     private:
-        static const int DEFAULT_CULL_DELAY = 400;
+        static const int DEFAULT_CULL_DELAY;
 
         std::map<std::string, Variant> _metaData;
 
-        bool _surfaceCreated;
+        std::weak_ptr<Options> _options;
+        std::weak_ptr<MapRenderer> _mapRenderer;
+        std::weak_ptr<TouchHandler> _touchHandler;
     };
     
 }

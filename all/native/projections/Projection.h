@@ -76,9 +76,6 @@ namespace carto {
         explicit Projection(const MapBounds& bounds);
     
         MapBounds _bounds;
-
-    private:
-        static const int EARTH_RADIUS = 6371000;
     };
     
 }

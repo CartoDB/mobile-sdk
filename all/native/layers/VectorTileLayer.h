@@ -156,10 +156,8 @@ namespace carto {
 
         virtual void offsetLayerHorizontally(double offset);
         
-        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
-        virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
-        virtual void onSurfaceDestroyed();
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
+        virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         
         virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
         virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
@@ -206,13 +204,15 @@ namespace carto {
             std::shared_ptr<VectorTileDecoder::TileMap> _tileMap;
         };
 
-        static const int BACKGROUND_BLOCK_SIZE = 16;
-        static const int BACKGROUND_BLOCK_COUNT = 16;
-        static const int DEFAULT_CULL_DELAY = 200;
-        static const int PRELOADING_PRIORITY_OFFSET = -2;
-        static const int EXTRA_TILE_FOOTPRINT = 4096;
-        static const int DEFAULT_VISIBLE_CACHE_SIZE = 512 * 1024 * 1024; // NOTE: the limit should never be reached in normal cases
-        static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
+        static const int BACKGROUND_BLOCK_SIZE;
+        static const int BACKGROUND_BLOCK_COUNT;
+
+        static const int DEFAULT_CULL_DELAY;
+        static const int PRELOADING_PRIORITY_OFFSET;
+
+        static const unsigned int EXTRA_TILE_FOOTPRINT;
+        static const unsigned int DEFAULT_VISIBLE_CACHE_SIZE;
+        static const unsigned int DEFAULT_PRELOADING_CACHE_SIZE;
         
         ThreadSafeDirectorPtr<VectorTileEventListener> _vectorTileEventListener;
 

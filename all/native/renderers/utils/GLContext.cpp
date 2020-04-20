@@ -31,7 +31,7 @@ namespace carto {
         
         TEXTURE_FILTER_ANISOTROPIC = HasGLExtension("GL_EXT_texture_filter_anisotropic");
         TEXTURE_NPOT_REPEAT = HasGLExtension("GL_OES_texture_npot");
-        TEXTURE_NPOT_MIPMAPS = HasGLExtension("GL_OES_texture_npot") || HasGLExtension("NV_texture_npot_2D_mipmap");
+        TEXTURE_NPOT_MIPMAPS = HasGLExtension("GL_OES_texture_npot") || HasGLExtension("NV_texture_npot_2D_mipmap") || HasGLExtension("APPLE_texture_2D_limited_npot");
 
 #ifdef GL_EXT_discard_framebuffer
         DISCARD_FRAMEBUFFER = HasGLExtension("GL_EXT_discard_framebuffer");

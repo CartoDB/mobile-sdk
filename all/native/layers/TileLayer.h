@@ -22,6 +22,8 @@
 namespace carto {
     class CancelableTask;
     class CullState;
+    class GLResourceManager;
+    class ProjectionSurface;
     class TileRenderer;
     class TileLoadListener;
     class UTFGridTile;
@@ -287,9 +289,6 @@ namespace carto {
         std::shared_ptr<vt::TileTransformer> getTileTransformer() const;
         void resetTileTransformer();
 
-        std::shared_ptr<TileRenderer> getTileRenderer() const;
-        void setTileRenderer(const std::shared_ptr<TileRenderer>& renderer);
-
         static const float DISCRETE_ZOOM_LEVEL_BIAS;
 
         std::atomic<bool> _synchronizedRefresh;
@@ -318,6 +317,8 @@ namespace carto {
         float _zoomLevelBias;
         int _maxOverzoomLevel;
         int _maxUnderzoomLevel;
+
+        std::shared_ptr<TileRenderer> _tileRenderer;
     
     private:
         void calculateVisibleTiles(const std::shared_ptr<CullState>& cullState);
@@ -328,8 +329,8 @@ namespace carto {
         bool findParentTile(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
         int findChildTiles(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
     
-        static const int MAX_PARENT_SEARCH_DEPTH = 6;
-        static const int MAX_CHILD_SEARCH_DEPTH = 3;
+        static const int MAX_PARENT_SEARCH_DEPTH;
+        static const int MAX_CHILD_SEARCH_DEPTH;
         
         static const double PRELOADING_TILE_SCALE;
         static const float SUBDIVISION_THRESHOLD;
@@ -337,8 +338,9 @@ namespace carto {
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
-        std::shared_ptr<TileRenderer> _tileRenderer;
-        std::shared_ptr<vt::TileTransformer> _tileTransformer;
+
+        std::weak_ptr<GLResourceManager> _glResourceManager;
+        std::weak_ptr<ProjectionSurface> _projectionSurface;
     };
     
 }

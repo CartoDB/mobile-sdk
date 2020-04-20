@@ -7,17 +7,15 @@
 #ifndef _CARTO_SHADER_H_
 #define _CARTO_SHADER_H_
 
-#include "graphics/ShaderSource.h"
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLResource.h"
 
 #include <memory>
 #include <string>
 #include <unordered_map>
 
 namespace carto {
-    class ShaderManager;
 
-    class Shader {
+    class Shader : public GLResource {
     public:
         virtual ~Shader();
 
@@ -26,20 +24,22 @@ namespace carto {
         GLuint getAttribLoc(const std::string& varName) const;
         
     protected:
-        friend class ShaderManager;
+        friend GLResourceManager;
         
-        Shader(const std::shared_ptr<ShaderManager>& shaderManager, const ShaderSource& source);
+        Shader(const std::shared_ptr<GLResourceManager>& manager, const std::string& name, const std::string& vertSource, const std::string& fragSource);
 
-        void load() const;
-        void unload() const;
+        virtual void create() const;
+        virtual void destroy() const;
 
     private:
         void registerVars(GLuint progId) const;
 
-        GLuint loadProg(GLuint vertShaderId, GLuint fragShaderId) const;
-        GLuint loadShader(const std::string& source, GLenum shaderType) const;
+        static GLuint LoadProg(const std::string& name, GLuint vertShaderId, GLuint fragShaderId);
+        static GLuint LoadShader(const std::string& name, const std::string& source, GLenum shaderType);
 
-        ShaderSource _shaderSource;
+        const std::string _name;
+        const std::string _vertSource;
+        const std::string _fragSource;
         
         mutable GLuint _progId;
         mutable GLuint _vertShaderId;
@@ -47,8 +47,6 @@ namespace carto {
         
         mutable std::unordered_map<std::string, GLuint> _uniformMap;
         mutable std::unordered_map<std::string, GLuint> _attribMap;
-
-        std::shared_ptr<ShaderManager> _shaderManager;
     };
 
 }

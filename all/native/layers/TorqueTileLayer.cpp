@@ -32,27 +32,25 @@ namespace carto {
         return static_cast<int>(count);
     }
 
-    bool TorqueTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool TorqueTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         updateTileLoadListener();
 
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-            if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-                float opacity = getOpacity();
+        if (auto mapRenderer = getMapRenderer()) {
+            float opacity = getOpacity();
 
-                Color backgroundColor(0, 0, 0, 0);
-                if (std::shared_ptr<mvt::Map::Settings> mapSettings = getTileDecoder()->getMapSettings()) {
-                    backgroundColor = Color(mapSettings->backgroundColor.value());
-                }
-                mapRenderer->clearAndBindScreenFBO(backgroundColor, false, false);
-
-                tileRenderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
-                tileRenderer->setSubTileBlending(false);
-                bool refresh = tileRenderer->onDrawFrame(deltaSeconds, viewState);
-
-                mapRenderer->blendAndUnbindScreenFBO(opacity);
-
-                return refresh;
+            Color backgroundColor(0, 0, 0, 0);
+            if (std::shared_ptr<mvt::Map::Settings> mapSettings = getTileDecoder()->getMapSettings()) {
+                backgroundColor = Color(mapSettings->backgroundColor.value());
             }
+            mapRenderer->clearAndBindScreenFBO(backgroundColor, false, false);
+
+            _tileRenderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
+            _tileRenderer->setSubTileBlending(false);
+            bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
+
+            mapRenderer->blendAndUnbindScreenFBO(opacity);
+
+            return refresh;
         }
         return false;
     }

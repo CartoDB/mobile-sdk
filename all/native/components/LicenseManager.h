@@ -75,7 +75,7 @@ namespace carto {
         mutable std::vector<std::thread> _updateThreads;
         mutable std::mutex _updateThreadsMutex;
 
-        static const int LICENSESERVER_TIMEOUT = 5000; // in milliseconds
+        static const int LICENSESERVER_TIMEOUT; // in milliseconds
         static const std::string LICENSE_PREFIX;
         static const std::string LICENSE_SERVICE_URL;
         static const std::string PUBLIC_KEY;

@@ -11,8 +11,8 @@
 
 namespace carto {
 
-    BillboardSorter::BillboardSorter() :
-        _billboardDrawDatas()
+    BillboardSorter::BillboardSorter(std::vector<std::shared_ptr<BillboardDrawData> >& billboardDrawDatas) :
+        _billboardDrawDatas(billboardDrawDatas)
     {
     }
     
@@ -68,10 +68,6 @@ namespace carto {
         std::stable_sort(_billboardDrawDatas.begin(), _billboardDrawDatas.end(), distanceComparator);
     }
     
-    const std::vector<std::shared_ptr<BillboardDrawData> >& BillboardSorter::getSortedBillboardDrawDatas() const {
-        return _billboardDrawDatas;
-    }
-
     const float BillboardSorter::PLANAR_ZOOM_THRESHOLD = 10.0f;
 
 }

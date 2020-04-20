@@ -7,7 +7,7 @@
 #ifndef _CARTO_WATERMARKRENDERER_H_
 #define _CARTO_WATERMARKRENDERER_H_
 
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLContext.h"
 
 #include <memory>
 
@@ -17,8 +17,7 @@
 namespace carto {
     class Bitmap;
     class Options;
-    class ShaderManager;
-    class TextureManager;
+    class GLResourceManager;
     class Shader;
     class Texture;
     class ViewState;
@@ -28,7 +27,7 @@ namespace carto {
         explicit WatermarkRenderer(const Options& options);
         virtual ~WatermarkRenderer();
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
+        void onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager);
         void onSurfaceChanged(int width, int height);
         void onDrawFrame(const ViewState& viewState);
         void onSurfaceDestroyed();
@@ -57,7 +56,7 @@ namespace carto {
         GLuint _a_coord;
         GLuint _a_texCoord;
 
-        std::shared_ptr<TextureManager> _textureManager;
+        std::shared_ptr<GLResourceManager> _glResourceManager;
     
         const Options& _options;
     };

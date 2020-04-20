@@ -38,6 +38,8 @@ namespace carto {
     std::string EPSG3857::getName() const {
         return "EPSG:3857";
     }
+
+    const double EPSG3857::EARTH_RADIUS = 6378137.0;
         
     const double EPSG3857::METERS_TO_INTERNAL_EQUATOR = Const::WORLD_SIZE / (2.0 * Const::PI * EARTH_RADIUS);
     

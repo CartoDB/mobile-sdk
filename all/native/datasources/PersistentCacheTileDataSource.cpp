@@ -313,7 +313,7 @@ namespace carto {
         int maxZoom = _maxZoom;
         if (auto dataSource = _dataSource.lock()) {
             if (!dataSource->isOpen()) {
-                Log::Warn("PersistentCacheTileDataSource:: DownloadTask: Database is not open, skipping download");
+                Log::Warn("PersistentCacheTileDataSource::DownloadTask: Database is not open, skipping download");
                 return;
             }
             projection = dataSource->getProjection();
@@ -332,7 +332,7 @@ namespace carto {
             tileCount += dx * dy;
         }
 
-        Log::Infof("PersistentCacheTileDataSource:: DownloadTask: Starting to download %d tiles", static_cast<int>(tileCount));
+        Log::Infof("PersistentCacheTileDataSource::DownloadTask: Starting to download %d tiles", static_cast<int>(tileCount));
 
         if (_downloadListener) {
             _downloadListener->onDownloadStarting(static_cast<int>(tileCount));
@@ -377,7 +377,9 @@ namespace carto {
             _downloadListener->onDownloadCompleted();
         }
 
-        Log::Info("PersistentCacheTileDataSource:: DownloadTask: Finished downloading");
+        Log::Info("PersistentCacheTileDataSource::DownloadTask: Finished downloading");
     }
+
+    const unsigned int PersistentCacheTileDataSource::DEFAULT_CAPACITY = 50 * 1024 * 1024;
 
 }

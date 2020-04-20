@@ -37,4 +37,6 @@ namespace carto {
         return std::make_shared<Bitmap>(data.data(), size, size, ColorFormat::COLOR_FORMAT_RGBA, 4 * size);
     }
 
+    const int BackgroundBitmapGenerator::DEFAULT_CONTRAST_DIFF = 40;
+
 }
