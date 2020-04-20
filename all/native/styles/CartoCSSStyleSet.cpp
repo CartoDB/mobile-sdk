@@ -20,11 +20,11 @@ namespace carto {
     }
 
     const std::string& CartoCSSStyleSet::getCartoCSS() const {
-         return _cartoCSS;
+        return _cartoCSS;
     }
 
     const std::shared_ptr<AssetPackage>& CartoCSSStyleSet::getAssetPackage() const {
-         return _assetPackage;
+        return _assetPackage;
     }
 
 }
