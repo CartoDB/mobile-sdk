@@ -19,6 +19,7 @@ CARTO Mobile SDK 4.3.0RC2
 * Fixed rare display corruption issues when OpenGL surface was lost and layers were being removed from the map
 * Fixed styling issues with VectorLayers when bitmaps were shared between different vector element styles
 * Implemented proper 'line-cap' support for dashed lines
+* Added 'custom parameters' option to GeocodingRequest and ReverseGeocodingRequest classes. Custom parameters can be used to customize specific parameters of geocoding engines.
 
 
 CARTO Mobile SDK 4.3.0RC1
