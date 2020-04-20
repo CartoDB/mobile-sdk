@@ -4,6 +4,11 @@
 #include "components/Exceptions.h"
 #include "projections/Projection.h"
 
+#include <iomanip>
+#include <sstream>
+
+#include <boost/algorithm/string.hpp>
+
 namespace carto {
 
     ReverseGeocodingRequest::ReverseGeocodingRequest(const std::shared_ptr<Projection>& projection, const MapPos& location) :
