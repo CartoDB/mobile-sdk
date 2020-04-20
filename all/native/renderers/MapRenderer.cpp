@@ -481,6 +481,7 @@ namespace carto {
             onSurfaceDestroyed();
         }
         _surfaceCreated = true;
+        _surfaceChanged = true; // should not be needed, do it in any case
 
         // Reset resource manager
         if (_glResourceManager) {
@@ -528,20 +529,25 @@ namespace carto {
         // Create pending resources
         _glResourceManager->processResources();
 
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_surfaceChanged) {
-                glViewport(0, 0, _viewState.getWidth(), _viewState.getHeight());
-                _watermarkRenderer.onSurfaceChanged(_viewState.getWidth(), _viewState.getHeight());
-    
-                _kineticEventHandler.stopPan();
-                _kineticEventHandler.stopRotation();
-                _kineticEventHandler.stopZoom();
-            
-                GLContext::CheckGLError("MapRenderer::onSurfaceChanged");
-    
-                _lastFrameTime = std::chrono::steady_clock::now();
+        // Check if surface has changed
+        if (_surfaceChanged.exchange(false)) {
+            int width = 0, height = 0;
+            {
+                std::lock_guard<std::recursive_mutex> lock(_mutex);
+                width = _viewState.getWidth();
+                height = _viewState.getHeight();
             }
+            glViewport(0, 0, width, height);
+            _watermarkRenderer.onSurfaceChanged(width, height);
+
+            _kineticEventHandler.stopPan();
+            _kineticEventHandler.stopRotation();
+            _kineticEventHandler.stopZoom();
+        
+            _lastFrameTime = std::chrono::steady_clock::now();
+
+            // Perform culling without delay
+            viewChanged(false);
         }
         
         // Calculate time from the last frame
@@ -553,7 +559,7 @@ namespace carto {
         if (mapRendererListener) {
             mapRendererListener->onBeforeDrawFrame();
         }
-        
+
         // Calculate camera params and make a synchronized copy of the view state
         ViewState viewState;
         {
@@ -563,17 +569,12 @@ namespace carto {
             _viewState.setHorizontalLayerOffsetDir(0);
         }
 
-        // Don't delay calling the cull task, the view state was already updated
-        if (_surfaceChanged.exchange(false)) {
-            viewChanged(false);
-        }
-        
         // Calculate map moving animations and kinetic events
         _animationHandler.calculate(viewState, deltaSeconds);
         _kineticEventHandler.calculate(viewState, deltaSeconds);
 
+        // Render everything
         initializeRenderState();
-    
         _backgroundRenderer.onDrawFrame(viewState);
         drawLayers(deltaSeconds, viewState);
         _watermarkRenderer.onDrawFrame(viewState);
@@ -583,12 +584,13 @@ namespace carto {
             mapRendererListener->onAfterDrawFrame();
         }
 
+        // Handle renderer capture callbacks as everything is rendered now
+        handleRendererCaptureCallbacks();
+        
         // Update billboard placements/visibility
         if (_billboardsChanged.exchange(false)) {
             _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
         }
-        
-        handleRendererCaptureCallbacks();
         
         // Call listener to inform we are idle now, if no redraw request is pending
         if (!_redrawPending) {
