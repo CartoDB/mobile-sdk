@@ -41,6 +41,9 @@ namespace carto {
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         
     private:
+        static const float FILTER_SCALE;
+        static const int MAX_FILTER_WIDTH;
+
         int _tileSize;
 
         cglib::vec2<double> _origin;
@@ -48,9 +51,6 @@ namespace carto {
         cglib::mat3x3<double> _invTransform;
         std::shared_ptr<Bitmap> _bitmap;
         std::shared_ptr<Projection> _projection;
-
-        static const float FILTER_SCALE;
-        static const int MAX_FILTER_WIDTH;
     };
 }
 

@@ -143,4 +143,6 @@ namespace carto {
         Label::setStyle(style);
     }
 
+    const int Text::MAX_CANVAS_SIZE = 8192;
+
 }

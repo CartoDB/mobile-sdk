@@ -59,5 +59,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _cache.resize(capacityInBytes);
     }
-        
+
+    const unsigned int MemoryCacheTileDataSource::DEFAULT_CAPACITY = 6 * 1024 * 1024;
+    
 }

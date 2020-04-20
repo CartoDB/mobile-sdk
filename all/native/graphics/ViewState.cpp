@@ -321,7 +321,7 @@ namespace carto {
         mapPos.setZ(0);
 
         if (seamlessPanning && renderProjectionMode == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
-            double n = std::floor((mapPos.getX() + Const::HALF_WORLD_SIZE) / Const::WORLD_SIZE);
+            double n = std::floor((mapPos.getX() + Const::WORLD_SIZE * 0.5) / Const::WORLD_SIZE);
             if (n != 0) {
                 mapPos.setX(mapPos.getX() - n * Const::WORLD_SIZE);
                 setHorizontalLayerOffsetDir(-static_cast<int>(n));
@@ -448,7 +448,7 @@ namespace carto {
             _tanHalfFOVX = _aspectRatio * _tanHalfFOVY;
             _cosHalfFOVXY = std::cos(std::atan(_tanHalfFOVX)) * _cosHalfFOVY;
 
-            _zoom0Distance = static_cast<float>(_height * Const::HALF_WORLD_SIZE / (tileDrawSize * _tanHalfFOVY * (_dpi / Const::UNSCALED_DPI)));
+            _zoom0Distance = static_cast<float>(_height * 0.5 * Const::WORLD_SIZE / (tileDrawSize * _tanHalfFOVY * (_dpi / Const::UNSCALED_DPI)));
             _minZoom = zoomRange.getMin();
             _zoomRange = zoomRange;
             _restrictedPanning = restrictedPanning;
@@ -623,7 +623,7 @@ namespace carto {
     void ViewState::calculateViewDistances(const Options& options, float& near, float& far, bool& skyVisible) const {
         float halfFOVY = options.getFieldOfViewY() * 0.5f;
         float tanHalfFOVY = std::tan(static_cast<float>(halfFOVY * Const::DEG_TO_RAD));
-        float zoom0Distance = _height * Const::HALF_WORLD_SIZE / (_tileDrawSize * tanHalfFOVY * (_dpi / Const::UNSCALED_DPI));
+        float zoom0Distance = _height * 0.5 * Const::WORLD_SIZE / (_tileDrawSize * tanHalfFOVY * (_dpi / Const::UNSCALED_DPI));
         float initialZ = std::pow(2.0f, -_zoom) * zoom0Distance / 64.0f;
         cglib::vec3<double> zProjVector = cglib::unit(_focusPos - _cameraPos);
 

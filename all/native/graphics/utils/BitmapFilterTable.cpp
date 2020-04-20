@@ -2,9 +2,9 @@
 
 namespace carto {
 
-    const int BitmapFilterTable::_GaussTableSize = 64;
+    const int BitmapFilterTable::GAUSS_TABLE_SIZE = 64;
 
-    const float BitmapFilterTable::_GaussTable[] = {
+    const float BitmapFilterTable::GAUSS_TABLE[] = {
         1.0000f, 0.9394f, 0.8825f, 0.8290f, 0.7788f, 0.7316f, 0.6873f, 0.6456f,
         0.6065f, 0.5698f, 0.5353f, 0.5028f, 0.4724f, 0.4437f, 0.4169f, 0.3916f,
         0.3679f, 0.3456f, 0.3247f, 0.3050f, 0.2865f, 0.2691f, 0.2528f, 0.2375f,

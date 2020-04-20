@@ -597,4 +597,14 @@ namespace carto {
         return size;
     }
     
+    const int VectorTileLayer::BACKGROUND_BLOCK_SIZE = 16;
+    const int VectorTileLayer::BACKGROUND_BLOCK_COUNT = 16;
+
+    const int VectorTileLayer::DEFAULT_CULL_DELAY = 200;
+    const int VectorTileLayer::PRELOADING_PRIORITY_OFFSET = -2;
+
+    const unsigned int VectorTileLayer::EXTRA_TILE_FOOTPRINT = 4096;
+    const unsigned int VectorTileLayer::DEFAULT_VISIBLE_CACHE_SIZE = 512 * 1024 * 1024; // NOTE: the limit should never be reached in normal cases
+    const unsigned int VectorTileLayer::DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
+
 }

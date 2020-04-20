@@ -37,7 +37,7 @@ namespace carto {
         virtual void offsetHorizontally(double offset);
     
     private:
-        static const int IDEAL_CLICK_SIZE = 64;
+        static const int IDEAL_CLICK_SIZE;
     
         static const float CLICK_SIZE_COEF;
     

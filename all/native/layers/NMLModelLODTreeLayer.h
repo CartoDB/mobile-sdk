@@ -208,14 +208,14 @@ namespace carto {
 
         static cglib::mat4x4<double> CalculateLocalMat(const ViewState& viewState, const NMLModelLODTree* modelLODTree);
     
-        static const int MODELLODTREE_LOADING_PRIORITY_OFFSET = 1;
-        static const int MESH_LOADING_PRIORITY_OFFSET = 0;
-        static const int TEXTURE_LOADING_PRIORITY_OFFSET = 0;
+        static const int MODELLODTREE_LOADING_PRIORITY_OFFSET;
+        static const int MESH_LOADING_PRIORITY_OFFSET;
+        static const int TEXTURE_LOADING_PRIORITY_OFFSET;
 
-        static const int DEFAULT_MODELLODTREE_CACHE_SIZE = 64;
-        static const int DEFAULT_MAX_MEMORY_SIZE = 80 * 1024 * 1024;
-        static const int DEFAULT_MESH_CACHE_SIZE = 80 * 1024 * 1024;
-        static const int DEFAULT_TEXTURE_CACHE_SIZE = 80 * 1024 * 1024;
+        static const unsigned int DEFAULT_MODELLODTREE_CACHE_SIZE;
+        static const unsigned int DEFAULT_MAX_MEMORY_SIZE;
+        static const unsigned int DEFAULT_MESH_CACHE_SIZE;
+        static const unsigned int DEFAULT_TEXTURE_CACHE_SIZE;
     
         std::size_t _maxMemorySize;
         float _LODResolutionFactor;

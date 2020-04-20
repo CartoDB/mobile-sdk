@@ -58,7 +58,7 @@ namespace carto {
     
         bool shouldTerminateWorker(TaskWorker& worker);
     
-        static const int DEFAULT_PRIORITY = 0;
+        static const int DEFAULT_PRIORITY;
     
         int _poolSize;
         long long _taskCount;

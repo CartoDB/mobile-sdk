@@ -29,8 +29,7 @@ namespace carto {
         virtual std::string getName() const;
         
     private:
-        enum { EARTH_RADIUS = 6378137 };
-
+        static const double EARTH_RADIUS;
         static const double METERS_TO_INTERNAL_EQUATOR;
     };
     

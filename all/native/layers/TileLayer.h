@@ -329,8 +329,8 @@ namespace carto {
         bool findParentTile(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
         int findChildTiles(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
     
-        static const int MAX_PARENT_SEARCH_DEPTH = 6;
-        static const int MAX_CHILD_SEARCH_DEPTH = 3;
+        static const int MAX_PARENT_SEARCH_DEPTH;
+        static const int MAX_CHILD_SEARCH_DEPTH;
         
         static const double PRELOADING_TILE_SCALE;
         static const float SUBDIVISION_THRESHOLD;

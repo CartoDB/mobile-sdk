@@ -324,7 +324,7 @@ namespace carto {
 
         // Use hierarchical clustering, if size above threshold
         std::list<ClusterInfo> clusterInfos;
-        if (initialClusters > 2 * THRESHOLD) {
+        if (initialClusters > 2 * HIERARCHICAL_MODE_THRESHOLD) {
             std::vector<int> childClusterIdxs1;
             childClusterIdxs1.reserve(initialClusters);
             std::vector<int> childClusterIdxs2;
@@ -338,8 +338,8 @@ namespace carto {
                 }
             }
             if (!childClusterIdxs1.empty() && !childClusterIdxs2.empty()) {
-                childClusterIdxs1 = mergeClusters(childClusterIdxs1.begin(), childClusterIdxs1.end(), clusters, projectionSurface, THRESHOLD);
-                childClusterIdxs2 = mergeClusters(childClusterIdxs2.begin(), childClusterIdxs2.end(), clusters, projectionSurface, THRESHOLD);
+                childClusterIdxs1 = mergeClusters(childClusterIdxs1.begin(), childClusterIdxs1.end(), clusters, projectionSurface, HIERARCHICAL_MODE_THRESHOLD);
+                childClusterIdxs2 = mergeClusters(childClusterIdxs2.begin(), childClusterIdxs2.end(), clusters, projectionSurface, HIERARCHICAL_MODE_THRESHOLD);
                 std::sort(childClusterIdxs1.begin(), childClusterIdxs1.end(), clusterComparator);
                 std::sort(childClusterIdxs2.begin(), childClusterIdxs2.end(), clusterComparator);
                 for (int clusterIdx : childClusterIdxs1) {
@@ -684,5 +684,7 @@ namespace carto {
         }
         return false;
     }
+
+    const unsigned int ClusteredVectorLayer::HIERARCHICAL_MODE_THRESHOLD = 100;
 
 }

@@ -173,7 +173,7 @@ namespace carto {
             return;
         }
 
-        int intTwoPowZoom = 1 << static_cast<int>(viewState.getZoom());
+        double intTwoPowZoom = 1 << static_cast<int>(viewState.getZoom());
         const cglib::vec3<double>& focusPos = viewState.getFocusPos();
         const cglib::vec3<double>& cameraPos = viewState.getCameraPos();
 
@@ -190,7 +190,7 @@ namespace carto {
             // Calculate coordinate transformation parameters
             float coordScale = static_cast<float>(Const::WORLD_SIZE / Const::PI);
             float backgroundScale = static_cast<float>(Const::WORLD_SIZE / viewState.getCosHalfFOVXY());
-            float scale = static_cast<float>(intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
+            float scale = static_cast<float>(intTwoPowZoom / Const::WORLD_SIZE);
             double focusPosS = (focusPos(0) != 0 || focusPos(1) != 0 ? std::atan2(focusPos(1), focusPos(0)) / Const::PI + 1 : 0);
             double focusPosT = 0.5 * std::log((1 + cglib::unit(focusPos)(2)) / (1 - cglib::unit(focusPos)(2))) / Const::PI;
             double translateS = -std::floor(focusPosS * scale * backgroundScale);
@@ -228,7 +228,7 @@ namespace carto {
         } else if (_options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
             // Calculate coordinate transformation parameters
             float backgroundScale = static_cast<float>(viewState.getFar() * 2 / viewState.getCosHalfFOVXY());
-            float scale = static_cast<float>(intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
+            float scale = static_cast<float>(intTwoPowZoom / Const::WORLD_SIZE);
             double translateS = cameraPos(0) * scale;
             double translateT = cameraPos(1) * scale;
             translateS -= std::floor(translateS);

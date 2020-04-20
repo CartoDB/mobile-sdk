@@ -495,7 +495,9 @@ namespace carto {
     const float LineDrawData::LINE_ENDPOINT_TESSELATION_FACTOR = 0.004f;
     const float LineDrawData::LINE_JOIN_TESSELATION_FACTOR = 0.002f;
     const float LineDrawData::LINE_JOIN_MIN_MITER_DOT = -0.8f;
-    
+
+    const int LineDrawData::IDEAL_CLICK_WIDTH = 64;
+
     const float LineDrawData::CLICK_WIDTH_COEF = 0.5f;
     
 }

@@ -820,6 +820,15 @@ namespace carto {
         }
         layer->_fetchingTextures.remove(_binding.textureId);
     }
+
+    const int NMLModelLODTreeLayer::MODELLODTREE_LOADING_PRIORITY_OFFSET = 1;
+    const int NMLModelLODTreeLayer::MESH_LOADING_PRIORITY_OFFSET = 0;
+    const int NMLModelLODTreeLayer::TEXTURE_LOADING_PRIORITY_OFFSET = 0;
+
+    const unsigned int NMLModelLODTreeLayer::DEFAULT_MODELLODTREE_CACHE_SIZE = 64;
+    const unsigned int NMLModelLODTreeLayer::DEFAULT_MAX_MEMORY_SIZE = 80 * 1024 * 1024;
+    const unsigned int NMLModelLODTreeLayer::DEFAULT_MESH_CACHE_SIZE = 80 * 1024 * 1024;
+    const unsigned int NMLModelLODTreeLayer::DEFAULT_TEXTURE_CACHE_SIZE = 80 * 1024 * 1024;
     
 }
 

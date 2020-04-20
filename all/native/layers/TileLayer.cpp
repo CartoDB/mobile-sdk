@@ -751,6 +751,9 @@ namespace carto {
 
     const float TileLayer::DISCRETE_ZOOM_LEVEL_BIAS = 0.001f;
 
+    const int TileLayer::MAX_PARENT_SEARCH_DEPTH = 6;
+    const int TileLayer::MAX_CHILD_SEARCH_DEPTH = 3;
+
     const double TileLayer::PRELOADING_TILE_SCALE = 1.5;
     const float TileLayer::SUBDIVISION_THRESHOLD = Const::WORLD_SIZE;
     

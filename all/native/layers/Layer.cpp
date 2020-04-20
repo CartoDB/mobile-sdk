@@ -228,4 +228,6 @@ namespace carto {
         return std::shared_ptr<Bitmap>();
     }
 
+    const int Layer::DEFAULT_CULL_DELAY = 400;
+
 }

@@ -123,6 +123,8 @@ namespace carto {
         // NOTE: ignore
     }
 
+    const unsigned int PackageManagerTileDataSource::MAX_OPEN_PACKAGES = 4;
+
 }
 
 #endif

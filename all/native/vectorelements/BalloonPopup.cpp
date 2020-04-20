@@ -521,5 +521,9 @@ namespace carto {
         canvas.setFont(buttonStyle->getTextFontName(), textFontSize);
         canvas.drawText(button->getText(), textPos, maxTextWidth, isTextWrap);
     }
+
+    const int BalloonPopup::SCREEN_PADDING = 10;
+
+    const int BalloonPopup::MAX_CANVAS_SIZE = 8192;
        
 }

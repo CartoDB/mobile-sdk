@@ -212,7 +212,7 @@ namespace carto {
         mutable std::recursive_mutex _mutex;
 
     private:
-        static const int DEFAULT_CULL_DELAY = 400;
+        static const int DEFAULT_CULL_DELAY;
 
         std::map<std::string, Variant> _metaData;
 

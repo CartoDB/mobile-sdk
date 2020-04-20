@@ -126,7 +126,7 @@ namespace carto {
             virtual bool loadElements(const std::shared_ptr<CullState>& cullState);
         };
 
-        static const std::size_t THRESHOLD = 100;
+        static const unsigned int HIERARCHICAL_MODE_THRESHOLD;
 
         const DirectorPtr<ClusterElementBuilder> _clusterElementBuilder;
         ClusterBuilderMode::ClusterBuilderMode _clusterBuilderMode;

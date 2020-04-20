@@ -40,6 +40,8 @@ namespace carto {
     std::string EPSG4326::getName() const {
         return "EPSG:4326";
     }
+
+    const double EPSG4326::EARTH_RADIUS = 6378137.0;
         
     const double EPSG4326::UNITS_TO_INTERNAL = Const::WORLD_SIZE / (2.0 * Const::PI);
     

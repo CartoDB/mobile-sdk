@@ -51,15 +51,15 @@ namespace carto {
             double distance; // only defined if children != null, once defined, becomes immutable
         };
         
-        static const int MAX_DEPTH = 20;
-        static const std::size_t MIN_SPLIT_COUNT = 2;
-        
         void insertToNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>& bounds, const T& object, int depth);
         std::shared_ptr<Node> removeFromNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>* bounds, const T& object);
         
         void queryNode(const std::shared_ptr<Node>& node, const cglib::frustum3<double>& frustum, std::vector<T>& results) const;
         void queryNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>& bounds, std::vector<T>& results) const;
         void getAllFromNode(const std::shared_ptr<Node>& node, std::vector<T>& results) const;
+        
+        static const int MAX_DEPTH;
+        static const unsigned int MIN_SPLIT_COUNT;
         
         std::shared_ptr<Node> _root;
         std::size_t _count;
@@ -302,6 +302,12 @@ namespace carto {
             getAllFromNode(child, results);
         }
     }
+
+    template<typename T>
+    const int KDTreeSpatialIndex<T>::MAX_DEPTH = 20;
+
+    template<typename T>
+    const unsigned int KDTreeSpatialIndex<T>::MIN_SPLIT_COUNT = 2;
     
 }
 

@@ -471,4 +471,10 @@ namespace carto {
         return std::make_shared<vt::Tile>(vtTile, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
     }
 
+    const int RasterTileLayer::DEFAULT_CULL_DELAY = 200;
+    const int RasterTileLayer::PRELOADING_PRIORITY_OFFSET = -2;
+
+    const unsigned int RasterTileLayer::EXTRA_TILE_FOOTPRINT = 4096;
+    const unsigned int RasterTileLayer::DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
+
 }

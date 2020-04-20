@@ -36,7 +36,7 @@ namespace carto {
         virtual void setCapacity(std::size_t capacityInBytes);
     
     protected:
-        static const int DEFAULT_CAPACITY = 6 * 1024 * 1024;
+        static const unsigned int DEFAULT_CAPACITY;
 
         cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;
         mutable std::recursive_mutex _mutex;

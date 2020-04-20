@@ -22,20 +22,18 @@ namespace carto {
         static const double LOGE_2;
         static const double SQRT_2;
 
-        // World size. World bounds are from left -HALF_WORLD_SIZE to right +HALF_WORLD_SIZE
-        // and from top +HALF_WORLD_SIZE to bottom -HALF_WORLD_SIZE
+        // World size. All internal coordinates are between -0.5 * WORLD_SIZE and 0.5 * WORLD_SIZE.
         static const int WORLD_SIZE;
-        static const float HALF_WORLD_SIZE;
 
         // Earth size
         static const double EARTH_RADIUS;
         static const double EARTH_CIRCUMFERENCE;
 
-        // Maximum supported zoom level
-        enum { MAX_SUPPORTED_ZOOM_LEVEL = 24 };
-    
         // If device dpi = UNSCALED_DPI then 1 dp = 1 px
         static const float UNSCALED_DPI;
+    
+        // Maximum supported zoom level
+        static const int MAX_SUPPORTED_ZOOM_LEVEL;
     
         // Min and max supported tilt angles
         static const float MIN_SUPPORTED_TILT_ANGLE;

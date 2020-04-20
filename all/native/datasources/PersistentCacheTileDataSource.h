@@ -107,7 +107,7 @@ namespace carto {
             DirectorPtr<TileDownloadListener> _downloadListener;
         };
 
-        static const int DEFAULT_CAPACITY = 50 * 1024 * 1024;
+        static const unsigned int DEFAULT_CAPACITY;
 
         void openDatabase(const std::string& databasePath);
         void closeDatabase();
