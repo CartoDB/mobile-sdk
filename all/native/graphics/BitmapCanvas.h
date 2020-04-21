@@ -12,6 +12,7 @@
 #include "graphics/Color.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace carto {
@@ -38,19 +39,43 @@ namespace carto {
         void pushClipRect(const ScreenBounds& clipRect);
         void popClipRect();
 
-        void drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines);
+        void drawText(const std::string& text, const ScreenPos& pos, int maxWidth, bool breakLines);
         void drawPolygon(const std::vector<ScreenPos>& poses);
         void drawRoundRect(const ScreenBounds& rect, float radius);
         void drawBitmap(const ScreenBounds& rect, const std::shared_ptr<Bitmap>& bitmap);
 
-        ScreenBounds measureTextSize(std::string text, int maxWidth, bool breakLines);
+        ScreenBounds measureTextSize(const std::string& text, int maxWidth, bool breakLines) const;
 
         std::shared_ptr<Bitmap> buildBitmap() const;
 
     protected:
-        struct State;
+        class Impl {
+        public:
+            virtual ~Impl();
+
+            virtual void setDrawMode(DrawMode mode) = 0;
+            virtual void setColor(const Color& color) = 0;
+            virtual void setStrokeWidth(float width) = 0;
+            virtual void setFont(const std::string& name, float size) = 0;
+
+            virtual void pushClipRect(const ScreenBounds& clipRect) = 0;
+            virtual void popClipRect() = 0;
+
+            virtual void drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) = 0;
+            virtual void drawPolygon(const std::vector<ScreenPos>& poses) = 0;
+            virtual void drawRoundRect(const ScreenBounds& rect, float radius) = 0;
+            virtual void drawBitmap(const ScreenBounds& rect, const std::shared_ptr<Bitmap>& bitmap) = 0;
+
+            virtual ScreenBounds measureTextSize(std::string text, int maxWidth, bool breakLines) const = 0;
+
+            virtual std::shared_ptr<Bitmap> buildBitmap() const = 0;
+        };
+
+        class AndroidImpl;
+        class IOSImpl;
+        class UWPImpl;
         
-        std::unique_ptr<State> _state;
+        std::unique_ptr<Impl> _impl;
     };
 }
 
