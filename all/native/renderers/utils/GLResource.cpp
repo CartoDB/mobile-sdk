@@ -16,5 +16,9 @@ namespace carto {
         _manager(manager)
     {
     }
-    
+
+    void GLResource::disconnect() {
+        _manager.reset();
+    }
+
 }
