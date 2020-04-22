@@ -91,7 +91,6 @@ namespace carto {
         if (!initializeRenderer()) {
             return false;
         }
-
         std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer();
         if (!tileRenderer) {
             return false;
@@ -134,10 +133,9 @@ namespace carto {
     bool TileRenderer::onDrawFrame3D(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
         
-        if (!initializeRenderer()) {
+        if (!_vtRenderer) {
             return false;
         }
-
         std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer();
         if (!tileRenderer) {
             return false;
