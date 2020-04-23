@@ -27,7 +27,8 @@
 namespace carto {
 
     HTTPClient::HTTPClient(bool log) :
-        _log(log), _impl(new CARTO_HTTP_SOCKET_IMPL(log))
+        _log(log),
+        _impl(new CARTO_HTTP_SOCKET_IMPL(log))
     {
     }
 

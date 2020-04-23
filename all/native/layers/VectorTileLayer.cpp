@@ -438,7 +438,10 @@ namespace carto {
     }
         
     bool VectorTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
-        return _tileRenderer->onDrawFrame3D(deltaSeconds, viewState);
+        if (auto mapRenderer = getMapRenderer()) {
+            return _tileRenderer->onDrawFrame3D(deltaSeconds, viewState);
+        }
+        return false;
     }
     
     std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {
