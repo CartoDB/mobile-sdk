@@ -12,6 +12,15 @@ namespace carto {
     }
     
     GLResourceManager::~GLResourceManager() {
+        if (std::this_thread::get_id() == _glThreadId) {
+            for (const std::unique_ptr<GLResource>& resource : _deleteQueue) {
+                resource->destroy();
+            }
+            _deleteQueue.clear();
+        }
+        if (!_deleteQueue.empty()) {
+            Log::Debugf("GLResourceManager::~GLResourceManager: Delete queue size: %d", static_cast<int>(_deleteQueue.size()));
+        }
     }
 
     std::thread::id GLResourceManager::getGLThreadId() const {
@@ -54,13 +63,9 @@ namespace carto {
     std::shared_ptr<GLResource> GLResourceManager::registerResource(GLResource* resourcePtr) {
         std::shared_ptr<GLResource> resource;
         try {
-            std::weak_ptr<GLResourceManager> managerWeak(shared_from_this());
-
-            resource = std::shared_ptr<GLResource>(resourcePtr, [managerWeak](GLResource* resourcePtr) {
-                std::unique_ptr<GLResource> resource(resourcePtr);
-                if (auto manager = managerWeak.lock()) {
-                    manager->deleteResource(std::move(resource));
-                }
+            std::shared_ptr<GLResourceManager> manager(shared_from_this());
+            resource = std::shared_ptr<GLResource>(resourcePtr, [manager](GLResource* resourcePtr) {
+                manager->deleteResource(std::unique_ptr<GLResource>(resourcePtr));
             });
         }
         catch (const std::exception&) {

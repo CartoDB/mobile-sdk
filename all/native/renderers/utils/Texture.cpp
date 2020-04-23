@@ -32,7 +32,7 @@ namespace carto {
         return _texId;
     }
 
-    Texture::Texture(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat) :
+    Texture::Texture(const std::weak_ptr<GLResourceManager>& manager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat) :
         GLResource(manager),
         _bitmap(bitmap),
         _mipmaps(genMipmaps),

@@ -24,13 +24,12 @@ namespace carto {
     protected:
         friend class GLResourceManager;
 
-        GLResource(const std::shared_ptr<GLResourceManager>& manager);
-        void disconnect();
+        GLResource(const std::weak_ptr<GLResourceManager>& manager);
 
         virtual void create() const = 0;
         virtual void destroy() const = 0;
 
-        std::shared_ptr<GLResourceManager> _manager;
+        const std::weak_ptr<GLResourceManager> _manager;
     };
     
 }

@@ -9,16 +9,15 @@ namespace carto {
     }
 
     bool GLResource::isValid() const {
-        return std::this_thread::get_id() == _manager->getGLThreadId();
+        if (_manager.lock()) {
+            return true;
+        }
+        return false;
     }
       
-    GLResource::GLResource(const std::shared_ptr<GLResourceManager>& manager) :
+    GLResource::GLResource(const std::weak_ptr<GLResourceManager>& manager) :
         _manager(manager)
     {
-    }
-
-    void GLResource::disconnect() {
-        _manager.reset();
     }
 
 }

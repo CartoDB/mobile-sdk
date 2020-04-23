@@ -14,7 +14,7 @@ namespace carto {
         return _resourceManager;
     }
 
-    NMLResources::NMLResources(const std::shared_ptr<GLResourceManager>& manager) :
+    NMLResources::NMLResources(const std::weak_ptr<GLResourceManager>& manager) :
         GLResource(manager),
         _resourceManager()
     {

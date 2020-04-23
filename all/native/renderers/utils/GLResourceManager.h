@@ -26,7 +26,8 @@ namespace carto {
 
         template <typename T, typename... Args>
         std::shared_ptr<T> create(Args&&... args) {
-            return std::static_pointer_cast<T>(registerResource(new T(shared_from_this(), std::forward<Args>(args)...)));
+            std::weak_ptr<GLResourceManager> managerWeak(shared_from_this());
+            return std::static_pointer_cast<T>(registerResource(new T(managerWeak, std::forward<Args>(args)...)));
         }
     
         void processResources();

@@ -24,7 +24,7 @@ namespace carto {
     protected:
         friend GLResourceManager;
 
-        NMLResources(const std::shared_ptr<GLResourceManager>& manager);
+        NMLResources(const std::weak_ptr<GLResourceManager>& manager);
 
         virtual void create() const;
         virtual void destroy() const;

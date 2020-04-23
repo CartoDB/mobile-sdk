@@ -53,7 +53,7 @@ namespace carto {
         }
     }
         
-    FrameBuffer::FrameBuffer(const std::shared_ptr<GLResourceManager>& manager, int width, int height, bool color, bool depth, bool stencil) :
+    FrameBuffer::FrameBuffer(const std::weak_ptr<GLResourceManager>& manager, int width, int height, bool color, bool depth, bool stencil) :
         GLResource(manager),
         _width(width),
         _height(height),

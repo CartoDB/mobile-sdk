@@ -26,7 +26,7 @@ namespace carto {
     protected:
         friend GLResourceManager;
         
-        Shader(const std::shared_ptr<GLResourceManager>& manager, const std::string& name, const std::string& vertSource, const std::string& fragSource);
+        Shader(const std::weak_ptr<GLResourceManager>& manager, const std::string& name, const std::string& vertSource, const std::string& fragSource);
 
         virtual void create() const;
         virtual void destroy() const;

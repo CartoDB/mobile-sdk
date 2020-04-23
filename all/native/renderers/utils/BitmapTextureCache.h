@@ -20,7 +20,6 @@ namespace carto {
     
     class BitmapTextureCache : public GLResource {
     public:
-        BitmapTextureCache(const std::shared_ptr<GLResourceManager>& manager, std::size_t capacityInBytes);
         virtual ~BitmapTextureCache();
         
         std::size_t getCapacity() const;
@@ -32,6 +31,10 @@ namespace carto {
         std::shared_ptr<Texture> create(const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat);
     
     protected:
+        friend GLResourceManager;
+
+        BitmapTextureCache(const std::weak_ptr<GLResourceManager>& manager, std::size_t capacityInBytes);
+
         virtual void create() const;
         virtual void destroy() const;
 

@@ -32,7 +32,7 @@ namespace carto {
         return it->second;
     }
     
-    Shader::Shader(const std::shared_ptr<GLResourceManager>& manager, const std::string& name, const std::string& vertSource, const std::string& fragSource) :
+    Shader::Shader(const std::weak_ptr<GLResourceManager>& manager, const std::string& name, const std::string& vertSource, const std::string& fragSource) :
         GLResource(manager),
         _name(name),
         _vertSource(vertSource),

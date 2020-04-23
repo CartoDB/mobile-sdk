@@ -12,7 +12,7 @@ namespace carto {
         return _tileRenderer;
     }
 
-    VTRenderer::VTRenderer(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader2D, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader3D) :
+    VTRenderer::VTRenderer(const std::weak_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader2D, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader3D) :
         GLResource(manager),
         _tileTransformer(tileTransformer),
         _lightingShader2D(lightingShader2D),

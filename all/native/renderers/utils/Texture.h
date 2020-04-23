@@ -33,7 +33,7 @@ namespace carto {
     protected:
         friend GLResourceManager;
 
-        Texture(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat);
+        Texture(const std::weak_ptr<GLResourceManager>& manager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat);
 
         virtual void create() const;
         virtual void destroy() const;
