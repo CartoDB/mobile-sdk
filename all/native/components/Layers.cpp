@@ -132,9 +132,7 @@ namespace carto {
     }
 
     void Layers::add(const std::shared_ptr<Layer>& layer) {
-        std::vector<std::shared_ptr<Layer> > layers;
-        layers.push_back(layer);
-        addAll(layers);
+        addAll(std::vector<std::shared_ptr<Layer> > { layer });
     }
 
     void Layers::addAll(const std::vector<std::shared_ptr<Layer> >& layers) {
@@ -165,9 +163,7 @@ namespace carto {
     }
 
     bool Layers::remove(const std::shared_ptr<Layer>& layer) {
-        std::vector<std::shared_ptr<Layer> > layers;
-        layers.push_back(layer);
-        return removeAll(layers);
+        return removeAll(std::vector<std::shared_ptr<Layer> > { layer });
     }
     
     bool Layers::removeAll(const std::vector<std::shared_ptr<Layer> >& layers) {
@@ -187,7 +183,7 @@ namespace carto {
                     removedAll = false;
                     continue;
                 }
-                _layers.erase(it, _layers.end());
+                _layers.erase(it);
                 if (std::find(_layers.begin(), _layers.end(), layer) == _layers.end()) {
                     layer->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
                 }
