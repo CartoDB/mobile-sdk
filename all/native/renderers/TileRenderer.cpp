@@ -279,7 +279,7 @@ namespace carto {
         boost::optional<vt::GLTileRenderer::LightingShader> lightingShader2D;
         if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
             lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _viewDir.data());
+                glUniform3fv(glGetUniformLocation(shaderProgram, "u_viewDir"), 1, _viewDir.data());
             });
         }
         boost::optional<vt::GLTileRenderer::LightingShader> lightingShader3D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_3D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
@@ -289,6 +289,7 @@ namespace carto {
                 const Color& mainLightColor = options->getMainLightColor();
                 glUniform4f(glGetUniformLocation(shaderProgram, "u_lightColor"), mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f, mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
                 glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
+                glUniform3fv(glGetUniformLocation(shaderProgram, "u_viewDir"), 1, _viewDir.data());
             }
         });
 
@@ -302,9 +303,9 @@ namespace carto {
     }
 
     const std::string TileRenderer::LIGHTING_SHADER_2D = R"GLSL(
-        uniform vec3 u_lightDir;
+        uniform vec3 u_viewDir;
         vec4 applyLighting(vec4 color, vec3 normal) {
-            float lighting = max(0.0, dot(normal, u_lightDir)) * 0.5 + 0.5;
+            float lighting = max(0.0, dot(normal, u_viewDir)) * 0.5 + 0.5;
             return vec4(color.rgb * lighting, color.a);
         }
     )GLSL";
@@ -313,9 +314,16 @@ namespace carto {
         uniform vec4 u_ambientColor;
         uniform vec4 u_lightColor;
         uniform vec3 u_lightDir;
-        vec4 applyLighting(vec4 color, vec3 normal) {
-            vec3 lighting = max(0.0, dot(normal, u_lightDir)) * u_lightColor.rgb + u_ambientColor.rgb;
-            return vec4(color.rgb * lighting, color.a);
+        uniform vec3 u_viewDir;
+        vec4 applyLighting(vec4 color, vec3 normal, float height, bool sideVertex) {
+            if (sideVertex) {
+                vec3 dimmedColor = color.rgb * (1.0 - 0.5 / (1.0 + height * height));
+                vec3 lighting = max(0.0, dot(normal, u_lightDir)) * u_lightColor.rgb + u_ambientColor.rgb;
+                return vec4(dimmedColor.rgb * lighting, color.a);
+            } else {
+                float lighting = max(0.0, dot(normal, u_viewDir)) * 0.5 + 0.5;
+                return vec4(color.rgb * lighting, color.a);
+            }
         }
     )GLSL";
 
