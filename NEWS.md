@@ -4,6 +4,7 @@ CARTO Mobile SDK 4.3.0RC3
 ### Changes/fixes:
 
 * Changed shading of building symbolizers in VT renderer. The lighting is now NOT applied to the top of the building. This matches the behavior of Mapnik.
+* Enabled support for rendering buildings with negative height in VT renderer
 * Fixed cyclical resource manager referencing, causing memory leaks on Android
 * Fixed potential timing related crashes happening when disconnecting layers from MapRenderer
 * Fixed a deadlock regression in 4.3.0RC2 when bitmap texture cache was released
