@@ -65,7 +65,7 @@ namespace carto {
             GLint uniformCount = 0;
             glGetProgramiv(_progId, GL_ACTIVE_UNIFORMS, &uniformCount);
             for (GLuint tsj = 0; tsj < (GLuint) uniformCount; tsj++) {
-                char varNameBuf[VAR_NAME_BUF_SIZE];
+                char varNameBuf[VAR_NAME_BUF_SIZE + 1];
                 GLsizei actualLength = 0;
                 GLint size = 0;
                 GLenum type = 0;
@@ -79,7 +79,7 @@ namespace carto {
             GLint attribCount = 0;
             glGetProgramiv(_progId, GL_ACTIVE_ATTRIBUTES, &attribCount);
             for (GLuint tsj = 0; tsj < (GLuint) attribCount; tsj++) {
-                char varNameBuf[VAR_NAME_BUF_SIZE];
+                char varNameBuf[VAR_NAME_BUF_SIZE + 1];
                 GLsizei actualLength = 0;
                 GLint size = 0;
                 GLenum type = 0;
@@ -131,9 +131,11 @@ namespace carto {
             GLint infoLen = 0;
             glGetShaderiv(progId, GL_INFO_LOG_LENGTH, &infoLen);
             if (infoLen > 0) {
-                std::vector<char> infoBuf(infoLen);
-                glGetProgramInfoLog(progId, infoLen, NULL, infoBuf.data());
-                Log::Errorf("Shader::LoadProg: Failed to link shader program in '%s' shader \n Error: %s ", name.c_str(), infoBuf.data());
+                std::vector<char> infoBuf(infoLen + 1);
+                GLsizei charsWritten = 0;
+                glGetProgramInfoLog(progId, infoLen, &charsWritten, infoBuf.data());
+                std::string msg(infoBuf.begin(), infoBuf.begin() + charsWritten);
+                Log::Errorf("Shader::LoadProg: Failed to link shader program in '%s' shader \n Error: %s", name.c_str(), msg.c_str());
             }
             glDeleteProgram(progId);
             progId = 0;
@@ -151,7 +153,7 @@ namespace carto {
             return 0;
         }
 
-        const char* sourceBuf = source.data();
+        const char* sourceBuf = source.c_str();
         glShaderSource(shaderId, 1, &sourceBuf, NULL);
 
         glCompileShader(shaderId);
@@ -161,9 +163,11 @@ namespace carto {
             GLint infoLen = 0;
             glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLen);
             if (infoLen > 0) {
-                std::vector<char> infoBuf(infoLen);
-                glGetShaderInfoLog(shaderId, infoLen, NULL, infoBuf.data());
-                Log::Errorf("Shader::LoadShader: Failed to compile shader type %i in '%s' shader \n Error: %s ", shaderType, name.c_str(), infoBuf.data());
+                std::vector<char> infoBuf(infoLen + 1);
+                GLsizei charsWritten = 0;
+                glGetShaderInfoLog(shaderId, infoLen, &charsWritten, infoBuf.data());
+                std::string msg(infoBuf.begin(), infoBuf.begin() + charsWritten);
+                Log::Errorf("Shader::LoadShader: Failed to compile shader type %i in '%s' shader \n Error: %s", shaderType, name.c_str(), msg.c_str());
             }
             glDeleteShader(shaderId);
             shaderId = 0;
