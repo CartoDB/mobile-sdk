@@ -24,11 +24,10 @@ namespace carto {
         struct InputStreamClass;
         struct OutputStreamClass;
         
-        static std::unique_ptr<URLClass> _URLClass;
-        static std::unique_ptr<HttpURLConnectionClass> _HttpURLConnectionClass;
-        static std::unique_ptr<InputStreamClass> _InputStreamClass;
-        static std::unique_ptr<OutputStreamClass> _OutputStreamClass;
-        static std::mutex _Mutex;
+        static std::unique_ptr<URLClass>& GetURLClass();
+        static std::unique_ptr<HttpURLConnectionClass>& GetHttpURLConnectionClass();
+        static std::unique_ptr<InputStreamClass>& GetInputStreamClass();
+        static std::unique_ptr<OutputStreamClass>& GetOutputStreamClass();
 
         bool _log;
         int _timeout;

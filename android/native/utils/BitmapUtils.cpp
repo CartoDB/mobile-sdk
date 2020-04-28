@@ -4,6 +4,7 @@
 #include "graphics/Bitmap.h"
 #include "utils/AssetUtils.h"
 #include "utils/AndroidUtils.h"
+#include "utils/JNILocalFrame.h"
 #include "utils/Log.h"
 
 #include <stdext/utf8_filesystem.h>
@@ -49,8 +50,7 @@ namespace carto {
         AndroidBitmapInfo bitmapInfo;
         AndroidBitmap_getInfo(jenv, androidBitmap, &bitmapInfo);
         unsigned char* uncompressedData = nullptr;
-        if (AndroidBitmap_lockPixels(jenv, androidBitmap, reinterpret_cast<void **>(&uncompressedData))
-        		!= ANDROID_BITMAP_RESULT_SUCCESS) {
+        if (AndroidBitmap_lockPixels(jenv, androidBitmap, reinterpret_cast<void **>(&uncompressedData)) != ANDROID_BITMAP_RESULT_SUCCESS) {
             Log::Error("BitmapUtils::CreateBitmapFromAndroidBitmap: Failed to lock bitmap pixels");
             return std::shared_ptr<Bitmap>();
         }
@@ -81,8 +81,7 @@ namespace carto {
             return std::shared_ptr<Bitmap>();
         }
 
-        const std::shared_ptr<Bitmap>& bitmap = std::make_shared<Bitmap>(uncompressedData,
-        		bitmapInfo.width, bitmapInfo.height, colorFormat, bitmapInfo.width * bytesPerPixel);
+        const std::shared_ptr<Bitmap>& bitmap = std::make_shared<Bitmap>(uncompressedData, bitmapInfo.width, bitmapInfo.height, colorFormat, bitmapInfo.width * bytesPerPixel);
 
         AndroidBitmap_unlockPixels(jenv, androidBitmap);
 
@@ -98,7 +97,7 @@ namespace carto {
 
         jobject javaBitmapGlobal = NULL;
         {
-            AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapUtils::CreateAndroidBitmapFromBitmap");
+            JNILocalFrame jframe(jenv, 32, "BitmapUtils::CreateAndroidBitmapFromBitmap");
             if (!jframe.isValid()) {
                 return NULL;
             }
