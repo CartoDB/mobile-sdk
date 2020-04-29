@@ -32,8 +32,6 @@ namespace carto {
         virtual void destroy() const;
 
     private:
-        void registerVars(GLuint progId) const;
-
         static GLuint LoadProg(const std::string& name, GLuint vertShaderId, GLuint fragShaderId);
         static GLuint LoadShader(const std::string& name, const std::string& source, GLenum shaderType);
 

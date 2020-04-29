@@ -15,6 +15,7 @@ namespace carto {
     }
     
     GLuint Shader::getUniformLoc(const std::string& uniformName) const {
+        create();
         auto it = _uniformMap.find(uniformName);
         if (it == _uniformMap.end()) {
             Log::Errorf("Shader::getUniformLoc: Uniform '%s' not found in shader '%s'", uniformName.c_str(), _name.c_str());
@@ -24,6 +25,7 @@ namespace carto {
     }
     
     GLuint Shader::getAttribLoc(const std::string& attribName) const {
+        create();
         auto it = _attribMap.find(attribName);
         if (it == _attribMap.end()) {
             Log::Errorf("Shader::getAttribLoc: Attribute '%s' not found in shader '%s'", attribName.c_str(), _name.c_str());
@@ -46,69 +48,73 @@ namespace carto {
     }
 
     void Shader::create() const {
-        if (_progId == 0) {
+        enum { VAR_NAME_BUF_SIZE = 256 };
+
+        if (_vertShaderId == 0) {
             _vertShaderId = LoadShader(_name, _vertSource, GL_VERTEX_SHADER);
+        }
+
+        if (_fragShaderId == 0) {
             _fragShaderId = LoadShader(_name, _fragSource, GL_FRAGMENT_SHADER);
+        }
+
+        if (_progId == 0) {
             _progId = LoadProg(_name, _vertShaderId, _fragShaderId);
 
-            registerVars(_progId);
+            // Assign a location for every uniform variable, save them to map
+            GLint uniformCount = 0;
+            glGetProgramiv(_progId, GL_ACTIVE_UNIFORMS, &uniformCount);
+            for (GLuint tsj = 0; tsj < (GLuint) uniformCount; tsj++) {
+                char varNameBuf[VAR_NAME_BUF_SIZE + 1];
+                GLsizei actualLength = 0;
+                GLint size = 0;
+                GLenum type = 0;
+                glGetActiveUniform(_progId, tsj, VAR_NAME_BUF_SIZE, &actualLength, &size, &type, varNameBuf);
+                std::string varName(varNameBuf, actualLength);
+                GLuint loc = glGetUniformLocation(_progId, varName.c_str());
+                _uniformMap[varName] = loc;
+            }
+            
+            // Assign a location for every attribute variable, save them to map
+            GLint attribCount = 0;
+            glGetProgramiv(_progId, GL_ACTIVE_ATTRIBUTES, &attribCount);
+            for (GLuint tsj = 0; tsj < (GLuint) attribCount; tsj++) {
+                char varNameBuf[VAR_NAME_BUF_SIZE + 1];
+                GLsizei actualLength = 0;
+                GLint size = 0;
+                GLenum type = 0;
+                glGetActiveAttrib(_progId, tsj, VAR_NAME_BUF_SIZE, &actualLength, &size, &type, varNameBuf);
+                std::string varName(varNameBuf, actualLength);
+                GLuint loc = glGetAttribLocation(_progId, varName.c_str());
+                _attribMap[varName] = loc;
+            }
+
+            GLContext::CheckGLError("Shader::create");
         }
     }
 
     void Shader::destroy() const {
-        if (_vertShaderId) {
+        if (_vertShaderId != 0) {
             glDeleteShader(_vertShaderId);
             _vertShaderId = 0;
         }
         
-        if (_fragShaderId) {
+        if (_fragShaderId != 0) {
             glDeleteShader(_fragShaderId);
             _fragShaderId = 0;
         }
         
-        if (_progId) {
+        if (_progId != 0) {
             glDeleteProgram(_progId);
             _progId = 0;
+
+            _uniformMap.clear();
+            _attribMap.clear();
+
+            GLContext::CheckGLError("Shader::destroy");
         }
-        
-        _uniformMap.clear();
-        _attribMap.clear();
-        
-        GLContext::CheckGLError("Shader::destroy");
     }
     
-    void Shader::registerVars(GLuint progId) const {
-        enum { VAR_NAME_BUF_SIZE = 256 };
-        char varNameBuf[VAR_NAME_BUF_SIZE];
-        GLint count = 0;
-        
-        // Assign a location for every uniform variable, save them to map
-        glGetProgramiv(progId, GL_ACTIVE_UNIFORMS, &count);
-        for (GLuint tsj = 0; tsj < (GLuint) count; tsj++) {
-            GLsizei actualLength = 0;
-            GLint size = 0;
-            GLenum type = 0;
-            glGetActiveUniform(progId, tsj, VAR_NAME_BUF_SIZE, &actualLength, &size, &type, varNameBuf);
-            std::string varName(varNameBuf, actualLength);
-            GLuint loc = glGetUniformLocation(progId, varName.c_str());
-            _uniformMap[varName] = loc;
-        }
-        
-        // Assign a location for every attribute variable, save them to map
-        glGetProgramiv(progId, GL_ACTIVE_ATTRIBUTES, &count);
-        for (GLuint tsj = 0; tsj < (GLuint) count; tsj++) {
-            GLsizei actualLength = 0;
-            GLint size = 0;
-            GLenum type = 0;
-            glGetActiveAttrib(progId, tsj, VAR_NAME_BUF_SIZE, &actualLength, &size, &type, varNameBuf);
-            std::string varName(varNameBuf, actualLength);
-            GLuint loc = glGetAttribLocation(progId, varName.c_str());
-            _attribMap[varName] = loc;
-        }
-        
-        GLContext::CheckGLError("Shader::registerVars");
-    }
-
     GLuint Shader::LoadProg(const std::string& name, GLuint vertShaderId, GLuint fragShaderId) {
         GLuint progId = glCreateProgram();
         if (progId == 0) {
@@ -125,9 +131,11 @@ namespace carto {
             GLint infoLen = 0;
             glGetShaderiv(progId, GL_INFO_LOG_LENGTH, &infoLen);
             if (infoLen > 0) {
-                std::vector<char> infoBuf(infoLen);
-                glGetProgramInfoLog(progId, infoLen, NULL, infoBuf.data());
-                Log::Errorf("Shader::LoadProg: Failed to link shader program in '%s' shader \n Error: %s ", name.c_str(), infoBuf.data());
+                std::vector<char> infoBuf(infoLen + 1);
+                GLsizei charsWritten = 0;
+                glGetProgramInfoLog(progId, infoLen, &charsWritten, infoBuf.data());
+                std::string msg(infoBuf.begin(), infoBuf.begin() + charsWritten);
+                Log::Errorf("Shader::LoadProg: Failed to link shader program in '%s' shader \n Error: %s", name.c_str(), msg.c_str());
             }
             glDeleteProgram(progId);
             progId = 0;
@@ -145,7 +153,7 @@ namespace carto {
             return 0;
         }
 
-        const char* sourceBuf = source.data();
+        const char* sourceBuf = source.c_str();
         glShaderSource(shaderId, 1, &sourceBuf, NULL);
 
         glCompileShader(shaderId);
@@ -155,9 +163,11 @@ namespace carto {
             GLint infoLen = 0;
             glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLen);
             if (infoLen > 0) {
-                std::vector<char> infoBuf(infoLen);
-                glGetShaderInfoLog(shaderId, infoLen, NULL, infoBuf.data());
-                Log::Errorf("Shader::LoadShader: Failed to compile shader type %i in '%s' shader \n Error: %s ", shaderType, name.c_str(), infoBuf.data());
+                std::vector<char> infoBuf(infoLen + 1);
+                GLsizei charsWritten = 0;
+                glGetShaderInfoLog(shaderId, infoLen, &charsWritten, infoBuf.data());
+                std::string msg(infoBuf.begin(), infoBuf.begin() + charsWritten);
+                Log::Errorf("Shader::LoadShader: Failed to compile shader type %i in '%s' shader \n Error: %s", shaderType, name.c_str(), msg.c_str());
             }
             glDeleteShader(shaderId);
             shaderId = 0;
