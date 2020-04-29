@@ -16,7 +16,7 @@ namespace carto {
     struct JNILocalFrame {
         JNILocalFrame() = default;
         JNILocalFrame(const JNILocalFrame&) = delete;
-        JNILocalFrame(JNILocalFrame&&) { std::swap(_jenv, other._jenv); }
+        JNILocalFrame(JNILocalFrame&& other) { std::swap(_jenv, other._jenv); }
         JNILocalFrame(JNIEnv* jenv, int count, const char* methodId) : _jenv(jenv) {
             if (_jenv) {
                 if (_jenv->PushLocalFrame(count) < 0) { 
