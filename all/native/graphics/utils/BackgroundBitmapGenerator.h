@@ -23,7 +23,7 @@ namespace carto {
         std::shared_ptr<Bitmap> generateBitmap(const Color& backgroundColor, const Color& dotColor) const;
 
     private:
-        static const int DEFAULT_CONTRAST_DIFF = 40;
+        static const int DEFAULT_CONTRAST_DIFF;
 
         const int _blockSize;
         const int _blockCount;

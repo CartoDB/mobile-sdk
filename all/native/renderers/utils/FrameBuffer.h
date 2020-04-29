@@ -7,15 +7,14 @@
 #ifndef _CARTO_FRAMEBUFFER_H_
 #define _CARTO_FRAMEBUFFER_H_
 
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLResource.h"
 
 #include <memory>
 #include <vector>
 
 namespace carto {
-    class FrameBufferManager;
     
-    class FrameBuffer {
+    class FrameBuffer : public GLResource {
     public:
         virtual ~FrameBuffer();
         
@@ -32,12 +31,12 @@ namespace carto {
         void discard(bool color, bool depth, bool stencil);
 
     protected:
-        friend class FrameBufferManager;
+        friend GLResourceManager;
 
-        FrameBuffer(const std::shared_ptr<FrameBufferManager>& frameBufferManager, int width, int height, bool color, bool depth, bool stencil);
+        FrameBuffer(const std::weak_ptr<GLResourceManager>& manager, int width, int height, bool color, bool depth, bool stencil);
 
-        void create() const;
-        void destroy() const;
+        virtual void create() const;
+        virtual void destroy() const;
 
     private:
         int _width;
@@ -49,8 +48,6 @@ namespace carto {
         mutable GLuint _fboId;
         mutable GLuint _colorTexId;
         mutable std::vector<GLuint> _depthStencilRBIds;
-
-        std::shared_ptr<FrameBufferManager> _frameBufferManager;
     };
     
 }

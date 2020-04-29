@@ -124,16 +124,14 @@ namespace carto {
 
         virtual void offsetLayerHorizontally(double offset);
         
-        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
-        virtual void onSurfaceDestroyed();
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         virtual void refreshElement(const std::shared_ptr<VectorElement>& element, bool remove);
 
-        virtual void addRendererElement(const std::shared_ptr<VectorElement>& element);
+        virtual void addRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState);
         virtual bool refreshRendererElements();
         virtual bool syncRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState, bool remove);
         

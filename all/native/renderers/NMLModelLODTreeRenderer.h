@@ -11,6 +11,7 @@
 
 #include "datasources/components/NMLModelLODTree.h"
 #include "renderers/drawdatas/NMLModelLODTreeDrawData.h"
+#include "renderers/utils/GLResource.h"
 
 #include <memory>
 #include <mutex>
@@ -21,17 +22,14 @@
 #include <cglib/ray.h>
 
 namespace carto {
-    class MapPos;
-    class MapVec;
     class Options;
-    class Shader;
-    class ShaderManager;
-    class TextureManager;
-    class RayIntersectedElement;
     class MapRenderer;
+    class GLResourceManager;
+    class RayIntersectedElement;
     class ViewState;
     class NMLModelLODTreeDataSource;
     class NMLModelLODTreeLayer;
+    class NMLResources;
     
     namespace nml {
         class GLModel;
@@ -40,14 +38,14 @@ namespace carto {
 
     class NMLModelLODTreeRenderer {
     public:
-        NMLModelLODTreeRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::weak_ptr<Options>& options);
+        NMLModelLODTreeRenderer();
         virtual ~NMLModelLODTreeRenderer();
     
+        void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
+
         void offsetLayerHorizontally(double offset);
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
-        void onSurfaceDestroyed();
 
         void addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData);
         void refreshDrawData();
@@ -64,11 +62,13 @@ namespace carto {
     
             ModelNodeDrawRecord(const NMLModelLODTreeDrawData& drawData) : drawData(drawData), parent(0), children(), used(false), created(false) { }
         };
+
+        bool initializeRenderer();
     
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
 
-        std::shared_ptr<nml::GLResourceManager> _glResourceManager;
+        std::shared_ptr<NMLResources> _nmlResources;
         std::vector<std::shared_ptr<NMLModelLODTreeDrawData> > _tempDrawDatas;
         std::map<long long, std::shared_ptr<ModelNodeDrawRecord> > _drawRecordMap;
 

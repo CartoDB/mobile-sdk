@@ -154,6 +154,8 @@ namespace carto {
         return tileData;
     }
 
+    const int MapTilerOnlineTileDataSource::DEFAULT_MAX_ZOOM = 14;
+
     const std::string MapTilerOnlineTileDataSource::MAPTILER_SERVICE_URL = "https://api.maptiler.com/tiles/v3/tiles.json?key={key}";
     
 }

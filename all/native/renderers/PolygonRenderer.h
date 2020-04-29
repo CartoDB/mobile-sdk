@@ -7,7 +7,6 @@
 #ifndef _CARTO_POLYGONRENDERER_H_
 #define _CARTO_POLYGONRENDERER_H_
 
-#include "graphics/utils/GLContext.h"
 #include "renderers/LineRenderer.h"
 
 #include <deque>
@@ -22,25 +21,24 @@ namespace carto {
     class LineDrawData;
     class Polygon;
     class PolygonDrawData;
+    class Options;
+    class MapRenderer;
     class Shader;
-    class ShaderManager;
-    class TextureManager;
-    class VectorElement;
     class RayIntersectedElement;
+    class VectorElement;
     class VectorLayer;
     class ViewState;
-    class StyleTextureCache;
     
     class PolygonRenderer {
     public:
         PolygonRenderer();
         virtual ~PolygonRenderer();
     
+        void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
+
         void offsetLayerHorizontally(double offset);
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        void onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState);
-        void onSurfaceDestroyed();
+        void onDrawFrame(float deltaSeconds, const ViewState& viewState);
     
         void addElement(const std::shared_ptr<Polygon>& element);
         void refreshElements();
@@ -59,7 +57,6 @@ namespace carto {
                                         std::vector<float>& coordBuf,
                                         std::vector<unsigned short>& indexBuf,
                                         std::vector<std::shared_ptr<PolygonDrawData> >& drawDataBuffer,
-                                        StyleTextureCache& styleCache,
                                         const ViewState& viewState);
         
         static bool FindElementRayIntersection(const std::shared_ptr<VectorElement>& element,
@@ -69,16 +66,19 @@ namespace carto {
                                                const ViewState& viewState,
                                                std::vector<RayIntersectedElement>& results);
 
+        bool initializeRenderer();
         void bind(const ViewState& viewState);
         void unbind();
         
         bool isEmptyBatch() const;
-        void addToBatch(const std::shared_ptr<PolygonDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState);
-        void drawBatch(StyleTextureCache& styleCache, const ViewState& viewState);
+        void addToBatch(const std::shared_ptr<PolygonDrawData>& drawData, const ViewState& viewState);
+        void drawBatch(const ViewState& viewState);
     
         static const std::string POLYGON_VERTEX_SHADER;
         static const std::string POLYGON_FRAGMENT_SHADER;
         
+        std::weak_ptr<MapRenderer> _mapRenderer;
+
         std::vector<std::shared_ptr<Polygon> > _elements;
         std::vector<std::shared_ptr<Polygon> > _tempElements;
         

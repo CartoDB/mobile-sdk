@@ -83,6 +83,7 @@ namespace carto {
         if (!pixelData) {
             throw NullArgumentException("Null pixelData");
         }
+
         loadFromUncompressedBytes(pixelData->data(), width, height, colorFormat, bytesPerRow);
     }
     
@@ -97,6 +98,7 @@ namespace carto {
         if (!pixelData) {
             throw NullArgumentException("Null pixelData");
         }
+
         loadFromUncompressedBytes(pixelData, width, height, colorFormat, bytesPerRow);
     }
     
@@ -482,6 +484,7 @@ namespace carto {
         if (!compressedData) {
             throw NullArgumentException("Null compressedData");
         }
+
         return CreateFromCompressed(compressedData->data(), compressedData->size());
     }
 
@@ -489,6 +492,7 @@ namespace carto {
         if (!compressedData) {
             throw NullArgumentException("Null compressedData");
         }
+
         std::shared_ptr<Bitmap> bitmap(new Bitmap);
         if (!bitmap->loadFromCompressedBytes(compressedData, dataSize)) {
             return std::shared_ptr<Bitmap>();
@@ -648,13 +652,17 @@ namespace carto {
     }
     
     bool Bitmap::IsJPEG(const unsigned char* compressedData, std::size_t dataSize) {
-        if (dataSize < 4) {
+        static const unsigned int JPG_SIGNATURE_LENGTH = 4;
+
+        if (dataSize < JPG_SIGNATURE_LENGTH) {
             return false;
         }
         return compressedData[0] == 0xFF && compressedData[1] == 0xD8 && compressedData[2] == 0xFF && (compressedData[3] == 0xE0 || compressedData[3] == 0xE1);
     }
     
     bool Bitmap::IsPNG(const unsigned char* compressedData, std::size_t dataSize) {
+        static const unsigned int PNG_SIGNATURE_LENGTH = 8;
+
         if (dataSize < PNG_SIGNATURE_LENGTH) {
             return false;
         }
@@ -662,7 +670,9 @@ namespace carto {
     }
         
     bool Bitmap::IsWEBP(const unsigned char* compressedData, std::size_t dataSize) {
-        if (dataSize < 4) {
+        static const unsigned int WEBP_SIGNATURE_LENGTH = 4;
+
+        if (dataSize < WEBP_SIGNATURE_LENGTH) {
             return false;
         }
         return WebPGetInfo(compressedData, dataSize, nullptr, nullptr) == 1;

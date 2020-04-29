@@ -53,7 +53,7 @@ namespace carto {
 
         std::shared_ptr<TileData> loadOnlineTile(const std::string& url, const MapTile& mapTile);
 
-        static const int DEFAULT_MAX_ZOOM = 14;
+        static const int DEFAULT_MAX_ZOOM;
         static const std::string MAPTILER_SERVICE_URL;
 
         const std::string _key;

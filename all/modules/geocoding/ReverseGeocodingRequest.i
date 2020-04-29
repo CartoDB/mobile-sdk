@@ -7,7 +7,7 @@
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-!proxy_imports(carto::ReverseGeocodingRequest, core.MapPos, projections.Projection)
+!proxy_imports(carto::ReverseGeocodingRequest, core.MapPos, core.Variant, projections.Projection)
 
 %{
 #include "geocoding/ReverseGeocodingRequest.h"
@@ -19,6 +19,7 @@
 %include <cartoswig.i>
 
 %import "core/MapPos.i"
+%import "core/Variant.i"
 %import "projections/Projection.i"
 
 !shared_ptr(carto::ReverseGeocodingRequest, geocoding.ReverseGeocodingRequest)
@@ -26,6 +27,7 @@
 %attributeval(carto::ReverseGeocodingRequest, carto::MapPos, Location, getLocation)
 %attribute(carto::ReverseGeocodingRequest, float, SearchRadius, getSearchRadius, setSearchRadius)
 %attributestring(carto::ReverseGeocodingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
+%ignore carto::ReverseGeocodingRequest::getCustomParameters;
 %std_exceptions(carto::ReverseGeocodingRequest::ReverseGeocodingRequest)
 !standard_equals(carto::ReverseGeocodingRequest);
 !custom_tostring(carto::ReverseGeocodingRequest);

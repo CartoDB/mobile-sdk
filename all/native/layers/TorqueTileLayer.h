@@ -36,7 +36,7 @@ namespace carto {
         int countVisibleFeatures(int frameNr) const;
 
     protected:
-        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
     };
 }
 

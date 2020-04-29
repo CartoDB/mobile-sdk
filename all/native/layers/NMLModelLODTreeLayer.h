@@ -25,6 +25,8 @@
 
 namespace carto {
     class CullState;
+    class GLResourceManager;
+    class ProjectionSurface;
     class NMLModelLODTreeDrawData;
     class NMLModelLODTreeRenderer;
     class NMLModelLODTreeEventListener;
@@ -97,9 +99,7 @@ namespace carto {
     protected:
         virtual void offsetLayerHorizontally(double offset);
     
-        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
-        virtual void onSurfaceDestroyed();
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
     
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
@@ -196,6 +196,7 @@ namespace carto {
             NMLModelLODTree::TextureBinding _binding;
         };
     
+        void clearCaches();
         bool isDataAvailable(const NMLModelLODTree* modelLODTree, int nodeId);
         bool loadModelLODTrees(const MapTileList& mapTileList, bool checkOnly);
         bool loadMeshes(const NMLModelLODTree* modelLODTree, int nodeId, bool checkOnly);
@@ -207,14 +208,14 @@ namespace carto {
 
         static cglib::mat4x4<double> CalculateLocalMat(const ViewState& viewState, const NMLModelLODTree* modelLODTree);
     
-        static const int MODELLODTREE_LOADING_PRIORITY_OFFSET = 1;
-        static const int MESH_LOADING_PRIORITY_OFFSET = 0;
-        static const int TEXTURE_LOADING_PRIORITY_OFFSET = 0;
+        static const int MODELLODTREE_LOADING_PRIORITY_OFFSET;
+        static const int MESH_LOADING_PRIORITY_OFFSET;
+        static const int TEXTURE_LOADING_PRIORITY_OFFSET;
 
-        static const int DEFAULT_MODELLODTREE_CACHE_SIZE = 64;
-        static const int DEFAULT_MAX_MEMORY_SIZE = 80 * 1024 * 1024;
-        static const int DEFAULT_MESH_CACHE_SIZE = 80 * 1024 * 1024;
-        static const int DEFAULT_TEXTURE_CACHE_SIZE = 80 * 1024 * 1024;
+        static const unsigned int DEFAULT_MODELLODTREE_CACHE_SIZE;
+        static const unsigned int DEFAULT_MAX_MEMORY_SIZE;
+        static const unsigned int DEFAULT_MESH_CACHE_SIZE;
+        static const unsigned int DEFAULT_TEXTURE_CACHE_SIZE;
     
         std::size_t _maxMemorySize;
         float _LODResolutionFactor;
@@ -241,6 +242,9 @@ namespace carto {
         ThreadSafeDirectorPtr<NMLModelLODTreeEventListener> _nmlModelLODTreeEventListener;
     
         std::shared_ptr<NMLModelLODTreeRenderer> _nmlModelLODTreeRenderer;
+
+        std::weak_ptr<GLResourceManager> _glResourceManager;
+        std::weak_ptr<ProjectionSurface> _projectionSurface;
     };
     
 }

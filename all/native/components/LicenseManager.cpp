@@ -405,6 +405,8 @@ namespace carto {
 
         return licenseKey;
     }
+
+    const int LicenseManager::LICENSESERVER_TIMEOUT = 5000;
     
     const std::string LicenseManager::LICENSE_PREFIX = "X";
         

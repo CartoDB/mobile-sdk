@@ -128,7 +128,10 @@ namespace carto {
         const std::weak_ptr<TouchHandler>& touchHandler)
     {
         VectorLayer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
+        _overlayRenderer->setComponents(options, mapRenderer);
 
+        // Register/unregister touch handler listener
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (touchHandler.lock()) {
             registerTouchHandlerListener();
         } else {
@@ -138,25 +141,19 @@ namespace carto {
 
     void EditableVectorLayer::offsetLayerHorizontally(double offset) {
         VectorLayer::offsetLayerHorizontally(offset);
-        _overlayRenderer->offsetLayerHorizontally(offset);
     }
 
-    void EditableVectorLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        VectorLayer::onSurfaceCreated(shaderManager, textureManager);
-        _overlayRenderer->onSurfaceCreated(shaderManager, textureManager);
-    }
+    bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
+        bool refresh = VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, viewState);
 
-    bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
-        bool refresh = VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
-
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             float opacity = getOpacity();
 
             if (opacity < 1.0f) {
                 mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), false, false);
             }
 
-            _overlayRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+            _overlayRenderer->onDrawFrame(deltaSeconds, viewState);
 
             if (opacity < 1.0f) {
                 mapRenderer->blendAndUnbindScreenFBO(opacity);
@@ -166,20 +163,17 @@ namespace carto {
         return refresh;
     }
 
-    void EditableVectorLayer::onSurfaceDestroyed() {
-        _overlayRenderer->onSurfaceDestroyed();
-        VectorLayer::onSurfaceDestroyed();
-    }
-
-    void EditableVectorLayer::addRendererElement(const std::shared_ptr<VectorElement>& element) {
+    void EditableVectorLayer::addRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState) {
         if (!IsSameElement(element, _selectedVectorElement)) { // NOTE: locked already
-            VectorLayer::addRendererElement(element);
+            VectorLayer::addRendererElement(element, viewState);
         }
     }
     
     bool EditableVectorLayer::refreshRendererElements() {
         if (_selectedVectorElement) { // NOTE: locked already
-            VectorLayer::addRendererElement(_selectedVectorElement);
+            if (auto mapRenderer = getMapRenderer()) {
+                VectorLayer::addRendererElement(_selectedVectorElement, mapRenderer->getViewState());
+            }
         }
         bool billboardChanged = VectorLayer::refreshRendererElements();
         syncElementOverlayPoints(_selectedVectorElement);
@@ -204,14 +198,14 @@ namespace carto {
     }
 
     void EditableVectorLayer::registerTouchHandlerListener() {
-        if (std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock()) {
+        if (auto touchHandler = getTouchHandler()) {
             _touchHandlerListener = std::make_shared<TouchHandlerListener>(std::static_pointer_cast<EditableVectorLayer>(shared_from_this()));
             touchHandler->registerOnTouchListener(_touchHandlerListener);
         }
     }
 
     void EditableVectorLayer::unregisterTouchHandlerListener() {
-        if (std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock()) {
+        if (auto touchHandler = getTouchHandler()) {
             touchHandler->unregisterOnTouchListener(_touchHandlerListener);
             _touchHandlerListener.reset();
         }
@@ -287,16 +281,15 @@ namespace carto {
 
         DirectorPtr<VectorEditEventListener> vectorEditEventListener = layer->_vectorEditEventListener;
 
-        std::shared_ptr<MapRenderer> mapRenderer;
-        {
-            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-            mapRenderer = layer->_mapRenderer.lock();
-        }
+        auto mapRenderer = layer->getMapRenderer();
         if (!mapRenderer) {
             return false;
         }
-        
         std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
+        if (!projectionSurface) {
+            return false;
+        }
+
         ViewState viewState = mapRenderer->getViewState();
         cglib::vec3<double> worldPos1 = viewState.screenToWorld(cglib::vec2<float>(screenPos1.getX(), screenPos1.getY()), 0);
         if (std::isnan(cglib::norm(worldPos1))) {
@@ -490,6 +483,7 @@ namespace carto {
         if (!projectionSurface) {
             return geometry;
         }
+
         cglib::vec3<double> pos0 = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos0));
         cglib::vec3<double> pos1 = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos1));
         cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(pos0, pos1, 1.0f);
@@ -755,12 +749,16 @@ namespace carto {
     }
 
     void EditableVectorLayer::createGeometryOverlayPoints(const std::shared_ptr<Geometry>& geometry, int& index, std::vector<std::shared_ptr<Point> >& overlayPoints) const {
-        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
+        std::shared_ptr<Projection> projection = _dataSource->getProjection();
+
+        auto mapRenderer = getMapRenderer();
         if (!mapRenderer) {
             return;
         }
-        std::shared_ptr<Projection> projection = _dataSource->getProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
 
         if (auto pointGeometry = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
             MapPos mapPos = pointGeometry->getPos();
@@ -810,8 +808,7 @@ namespace carto {
             overlayPoint = std::make_shared<Point>(mapPos, virtualPoint ? _overlayStyleVirtual : _overlayStyleNormal);
         }
         if (overlayPoint->getStyle()) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (auto mapRenderer = _mapRenderer.lock()) {
+            if (auto mapRenderer = getMapRenderer()) {
                 overlayPoint->setDrawData(std::make_shared<PointDrawData>(*overlayPoint->getGeometry(), *overlayPoint->getStyle(), *_dataSource->getProjection(), mapRenderer->getProjectionSurface()));
             }
         }

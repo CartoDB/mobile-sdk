@@ -112,7 +112,7 @@ namespace carto {
     void Layer::simulateClick(ClickType::ClickType clickType, const ScreenPos& screenPos, const ViewState& viewState) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        auto options = _options.lock();
+        auto options = getOptions();
         if (!options) {
             return;
         }
@@ -146,8 +146,6 @@ namespace carto {
     Layer::Layer() :
         _envelopeThreadPool(),
         _tileThreadPool(),
-        _options(),
-        _mapRenderer(),
         _lastCullState(),
         _updatePriority(0),
         _cullDelay(DEFAULT_CULL_DELAY),
@@ -156,7 +154,9 @@ namespace carto {
         _visibleZoomRange(0, std::numeric_limits<float>::infinity()),
         _mutex(),
         _metaData(),
-        _surfaceCreated(false)
+        _options(),
+        _mapRenderer(),
+        _touchHandler()
     {
     }
     
@@ -195,32 +195,29 @@ namespace carto {
         return _lastCullState;
     }
 
-    void Layer::redraw() const {
-        std::shared_ptr<MapRenderer> mapRenderer;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            mapRenderer = _mapRenderer.lock();
-        }
+    std::shared_ptr<Options> Layer::getOptions() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _options.lock();
+    }
 
-        if (mapRenderer) {
+    std::shared_ptr<MapRenderer> Layer::getMapRenderer() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _mapRenderer.lock();
+    }
+
+    std::shared_ptr<TouchHandler> Layer::getTouchHandler() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _touchHandler.lock();
+    }
+
+    void Layer::redraw() const {
+        if (auto mapRenderer = getMapRenderer()) {
             mapRenderer->requestRedraw();
         }
     }
     
-    bool Layer::isSurfaceCreated() const {
-        return _surfaceCreated;
-    }
-    
-    void Layer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _surfaceCreated = true;
-    }
-    
-    bool Layer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool Layer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         return false;
-    }
-    
-    void Layer::onSurfaceDestroyed() {
-        _surfaceCreated = false;
     }
     
     std::shared_ptr<Bitmap> Layer::getBackgroundBitmap() const {
@@ -230,5 +227,7 @@ namespace carto {
     std::shared_ptr<Bitmap> Layer::getSkyBitmap() const {
         return std::shared_ptr<Bitmap>();
     }
+
+    const int Layer::DEFAULT_CULL_DELAY = 400;
 
 }

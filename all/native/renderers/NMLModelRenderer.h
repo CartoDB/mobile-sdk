@@ -7,30 +7,28 @@
 #ifndef _CARTO_NMLMODELRENDERER_H_
 #define _CARTO_NMLMODELRENDERER_H_
 
-#include "renderers/drawdatas/NMLModelDrawData.h"
-#include "vectorelements/NMLModel.h"
+#include "renderers/utils/GLResource.h"
 
 #include <memory>
 #include <mutex>
 #include <list>
 #include <vector>
-#include <set>
+#include <map>
 
 #include <cglib/ray.h>
 
 namespace carto {
-    class MapPos;
-    class MapVec;
     class Options;
-    class Shader;
-    class ShaderManager;
-    class TextureManager;
-    class RayIntersectedElement;
     class MapRenderer;
+    class GLResourceManager;
+    class RayIntersectedElement;
+    class NMLModel;
+    class NMLResources;
     class ViewState;
     class VectorLayer;
     
     namespace nml {
+        class Model;
         class GLModel;
         class GLResourceManager;
     }
@@ -40,30 +38,29 @@ namespace carto {
         NMLModelRenderer();
         virtual ~NMLModelRenderer();
         
+        void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
+    
         void offsetLayerHorizontally(double offset);
         
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
-        void onSurfaceDestroyed();
 
         void addElement(const std::shared_ptr<NMLModel>& element);
         void refreshElements();
         void updateElement(const std::shared_ptr<NMLModel>& element);
         void removeElement(const std::shared_ptr<NMLModel>& element);
 
-        void setMapRenderer(const std::weak_ptr<MapRenderer>& mapRenderer);
-        void setOptions(const std::weak_ptr<Options>& options);
-    
         void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     private:
-        std::shared_ptr<nml::GLResourceManager> _glResourceManager;
-        std::map<std::weak_ptr<nml::Model>, std::shared_ptr<nml::GLModel>, std::owner_less<std::weak_ptr<nml::Model> > > _glModelMap;
-        std::vector<std::shared_ptr<NMLModel> > _elements;
-        std::vector<std::shared_ptr<NMLModel> > _tempElements;
+        bool initializeRenderer();
 
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
+
+        std::shared_ptr<NMLResources> _nmlResources;
+        std::map<std::weak_ptr<nml::Model>, std::shared_ptr<nml::GLModel>, std::owner_less<std::weak_ptr<nml::Model> > > _nmlModelMap;
+        std::vector<std::shared_ptr<NMLModel> > _elements;
+        std::vector<std::shared_ptr<NMLModel> > _tempElements;
 
         mutable std::mutex _mutex;
     };

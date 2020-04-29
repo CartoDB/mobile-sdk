@@ -1,6 +1,5 @@
 #include "FrameBuffer.h"
-#include "graphics/FrameBufferManager.h"
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLResourceManager.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -29,21 +28,11 @@ namespace carto {
     }
 
     GLuint FrameBuffer::getFBOId() const {
-        if (std::this_thread::get_id() != _frameBufferManager->getGLThreadId()) {
-            Log::Warn("FrameBuffer::getFBOId: Method called from wrong thread!");
-            return 0;
-        }
-
         create();
         return _fboId;
     }
 
     GLuint FrameBuffer::getColorTexId() const {
-        if (std::this_thread::get_id() != _frameBufferManager->getGLThreadId()) {
-            Log::Warn("FrameBuffer::getColorTexId: Method called from wrong thread!");
-            return 0;
-        }
-
         create();
         return _colorTexId;
     }
@@ -64,7 +53,8 @@ namespace carto {
         }
     }
         
-    FrameBuffer::FrameBuffer(const std::shared_ptr<FrameBufferManager>& frameBufferManager, int width, int height, bool color, bool depth, bool stencil) :
+    FrameBuffer::FrameBuffer(const std::weak_ptr<GLResourceManager>& manager, int width, int height, bool color, bool depth, bool stencil) :
+        GLResource(manager),
         _width(width),
         _height(height),
         _color(color),
@@ -72,8 +62,7 @@ namespace carto {
         _stencil(stencil),
         _fboId(0),
         _colorTexId(0),
-        _depthStencilRBIds(),
-        _frameBufferManager(frameBufferManager)
+        _depthStencilRBIds()
     {
     }
 

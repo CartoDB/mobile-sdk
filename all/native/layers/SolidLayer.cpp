@@ -79,6 +79,7 @@ namespace carto {
                                     const std::weak_ptr<TouchHandler>& touchHandler)
     {
         Layer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
+        _solidRenderer->setComponents(options, mapRenderer);
     }
     
     void SolidLayer::loadData(const std::shared_ptr<CullState>& cullState) {
@@ -87,12 +88,7 @@ namespace carto {
     void SolidLayer::offsetLayerHorizontally(double offset) {
     }
     
-    void SolidLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        Layer::onSurfaceCreated(shaderManager, textureManager);
-        _solidRenderer->onSurfaceCreated(shaderManager, textureManager);
-    }
-    
-    bool SolidLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool SolidLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         Color color = getColor();
         _solidRenderer->setColor(Color(color.getR(), color.getG(), color.getB(), static_cast<unsigned char>(color.getA() * getOpacity())));
         _solidRenderer->setBitmap(getBitmap(), getBitmapScale());
@@ -100,11 +96,6 @@ namespace carto {
         return false;
     }
     
-    void SolidLayer::onSurfaceDestroyed(){
-        _solidRenderer->onSurfaceDestroyed();
-        Layer::onSurfaceDestroyed();
-    }
-
     std::shared_ptr<Bitmap> SolidLayer::getBackgroundBitmap() const {
         return std::shared_ptr<Bitmap>();
     }

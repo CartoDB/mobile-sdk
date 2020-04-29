@@ -1,124 +1,81 @@
-#include "graphics/BitmapCanvas.h"
+#include "graphics/BitmapCanvasIOSImpl.h"
 #include "graphics/Bitmap.h"
 #include "components/Exceptions.h"
-#include "utils/CFUniquePtr.h"
 #include "utils/Log.h"
 
 #include <cmath>
 #include <vector>
 
-#import <CoreGraphics/CoreGraphics.h>
-#import <CoreText/CoreText.h>
 #import <Foundation/Foundation.h>
-
-namespace {
-    CGSize measureFramesetter(CTFramesetterRef framesetter, CTFontRef font, int maxWidth, bool breakLines) {
-        for (int extra = 0; extra < 65536; extra++) {
-            CGFloat frameWidth = maxWidth < 0 ? CGFLOAT_MAX : maxWidth;
-            CGFloat frameHeight = breakLines || maxWidth < 0 ? CGFLOAT_MAX : CTFontGetDescent(font) + CTFontGetAscent(font) + CTFontGetLeading(font) + extra;
-            CFRange fitRange;
-            CGSize size = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), nullptr, CGSizeMake(frameWidth, frameHeight), &fitRange);
-            if (size.height > 0) {
-                return size;
-            }
-        }
-        return CGSizeMake(0, 0);
-    }
-}
 
 namespace carto {
     
-    struct BitmapCanvas::State {
-        CFUniquePtr<CGColorSpaceRef> _colorSpace;
-        CFUniquePtr<CGContextRef> _context;
-        DrawMode _drawMode;
-        float _strokeWidth;
-        CFUniquePtr<CFNumberRef> _strokeWidthRef;
-        CFUniquePtr<CGColorRef> _color;
-        CFUniquePtr<CTFontRef> _font;
-        float _fontSize;
-        std::vector<unsigned char> _data;
-        int _width;
-        int _height;
-        
-        State(int width, int height) : _drawMode(FILL), _strokeWidth(0), _fontSize(0), _data(width * height * 4), _width(width), _height(height) { }
-        
-        CFAttributedStringRef createCFAttributedString(const std::string& text) {
-            CFUniquePtr<CFMutableDictionaryRef> attributesDict(CFDictionaryCreateMutable(nullptr, 0, nullptr, nullptr));
-            CFDictionaryAddValue(attributesDict, kCTFontAttributeName, _font);
-            CFDictionaryAddValue(attributesDict, kCTForegroundColorAttributeName, _color);
-            
-            if (_drawMode == STROKE) {
-                CFDictionaryAddValue(attributesDict, kCTStrokeColorAttributeName, _color);
-                
-                // We must keep a persistent reference to stroke width as dictionary values are not retained!
-                int strokeWidth = (int)(-_strokeWidth / _fontSize * 100);
-                _strokeWidthRef = CFUniquePtr<CFNumberRef>(CFNumberCreate(nullptr, kCFNumberIntType, &strokeWidth));
-                CFDictionaryAddValue(attributesDict, kCTStrokeWidthAttributeName, _strokeWidthRef);
-            }
- 
-            CFUniquePtr<CFStringRef> textString(CFStringCreateWithCString(nullptr, text.c_str(), kCFStringEncodingUTF8));
-            return CFAttributedStringCreate(nullptr, textString, attributesDict);
-        }
-    };
-
-    BitmapCanvas::BitmapCanvas(int width, int height) :
-        _state(new State(width, height))
+    BitmapCanvas::IOSImpl::IOSImpl(int width, int height) :
+        _width(width),
+        _height(height),
+        _data(width * height * 4),
+        _colorSpace(),
+        _context(),
+        _drawMode(FILL),
+        _strokeWidth(0),
+        _strokeWidthRef(),
+        _color(),
+        _font(),
+        _fontSize(0)
     {
-        _state->_colorSpace = CFUniquePtr<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB(), CGColorSpaceRelease);
+        _colorSpace = CFUniquePtr<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB(), CGColorSpaceRelease);
         if (width > 0 && height > 0) {
-            _state->_context = CFUniquePtr<CGContextRef>(CGBitmapContextCreate(_state->_data.data(), width, height, 8, 4 * width, _state->_colorSpace, kCGImageAlphaPremultipliedLast), CGContextRelease);
-            if (!_state->_context) {
-                _state.reset();
+            _context = CFUniquePtr<CGContextRef>(CGBitmapContextCreate(_data.data(), width, height, 8, 4 * width, _colorSpace, kCGImageAlphaPremultipliedLast), CGContextRelease);
+            if (!_context) {
                 throw GenericException("Failed to create CGBitmap. Bitmap too large?");
             }
         }
     }
 
-    BitmapCanvas::~BitmapCanvas() {
+    BitmapCanvas::IOSImpl::~IOSImpl() {
     }
 
-    void BitmapCanvas::setDrawMode(DrawMode mode) {
-        _state->_drawMode = mode;
+    void BitmapCanvas::IOSImpl::setDrawMode(DrawMode mode) {
+        _drawMode = mode;
     }
 
-    void BitmapCanvas::setColor(const Color& color) {
+    void BitmapCanvas::IOSImpl::setColor(const Color& color) {
         CGFloat components[] = { color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f };
-        CFUniquePtr<CGColorRef> baseColor(CGColorCreate(_state->_colorSpace, components), CGColorRelease);
-        _state->_color = CFUniquePtr<CGColorRef>(CGColorCreateCopyWithAlpha(baseColor, color.getA() / 255.0f), CGColorRelease);
+        CFUniquePtr<CGColorRef> baseColor(CGColorCreate(_colorSpace, components), CGColorRelease);
+        _color = CFUniquePtr<CGColorRef>(CGColorCreateCopyWithAlpha(baseColor, color.getA() / 255.0f), CGColorRelease);
     }
 
-    void BitmapCanvas::setStrokeWidth(float width) {
-        _state->_strokeWidth = width;
+    void BitmapCanvas::IOSImpl::setStrokeWidth(float width) {
+        _strokeWidth = width;
     }
 
-    void BitmapCanvas::setFont(const std::string& name, float size) {
+    void BitmapCanvas::IOSImpl::setFont(const std::string& name, float size) {
         CFUniquePtr<CFStringRef> nameRef(CFStringCreateWithCString(nullptr, name.c_str(), kCFStringEncodingUTF8));
-        _state->_font = CFUniquePtr<CTFontRef>(CTFontCreateWithName(nameRef, size, nullptr));
-        _state->_fontSize = size;
+        _font = CFUniquePtr<CTFontRef>(CTFontCreateWithName(nameRef, size, nullptr));
+        _fontSize = size;
     }
 
-    void BitmapCanvas::pushClipRect(const ScreenBounds& clipRect) {
-        if (!_state->_context) {
+    void BitmapCanvas::IOSImpl::pushClipRect(const ScreenBounds& clipRect) {
+        if (!_context) {
             return;
         }
 
-        CGContextSaveGState(_state->_context);
+        CGContextSaveGState(_context);
 
         CGRect rect = CGRectMake(clipRect.getMin().getX(), clipRect.getMin().getY(), clipRect.getWidth(), clipRect.getHeight());
-        CGContextClipToRect(_state->_context, rect);
+        CGContextClipToRect(_context, rect);
     }
 
-    void BitmapCanvas::popClipRect() {
-        if (!_state->_context) {
+    void BitmapCanvas::IOSImpl::popClipRect() {
+        if (!_context) {
             return;
         }
 
-        CGContextRestoreGState(_state->_context);
+        CGContextRestoreGState(_context);
     }
 
-    void BitmapCanvas::drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) {
-        if (!_state->_context) {
+    void BitmapCanvas::IOSImpl::drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) {
+        if (!_context) {
             return;
         }
 
@@ -126,19 +83,19 @@ namespace carto {
             return;
         }
 
-        CGContextRef context = _state->_context;
+        CGContextRef context = _context;
         CGContextSaveGState(context);
         
         // Flip the coordinate system
         CGContextSetTextMatrix(context, CGAffineTransformIdentity);
-        CGContextTranslateCTM(context, 0, _state->_height);
+        CGContextTranslateCTM(context, 0, _height);
         CGContextScaleCTM(context, 1.0, -1.0);
         
-        CFUniquePtr<CFAttributedStringRef> attString(_state->createCFAttributedString(text));
+        CFUniquePtr<CFAttributedStringRef> attString(createCFAttributedString(text));
         CFUniquePtr<CTFramesetterRef> framesetter(CTFramesetterCreateWithAttributedString(attString));
-        CGSize frameSize = measureFramesetter(framesetter, _state->_font, maxWidth, breakLines);
+        CGSize frameSize = measureFramesetter(framesetter, maxWidth, breakLines);
         CGRect frameRect = CGRectMake(pos.getX(), pos.getY(), frameSize.width, frameSize.height);
-        frameRect.origin.y = (_state->_height - frameRect.origin.y) - frameRect.size.height;
+        frameRect.origin.y = (_height - frameRect.origin.y) - frameRect.size.height;
         CFUniquePtr<CGMutablePathRef> framePath(CGPathCreateMutable(), CGPathRelease);
         CGPathAddRect(framePath, nullptr, frameRect);
         CFUniquePtr<CTFrameRef> frame(CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), framePath, nullptr));
@@ -196,8 +153,8 @@ namespace carto {
         CGContextRestoreGState(context);
     }
 
-    void BitmapCanvas::drawRoundRect(const ScreenBounds& rect, float radius) {
-        if (!_state->_context) {
+    void BitmapCanvas::IOSImpl::drawRoundRect(const ScreenBounds& rect, float radius) {
+        if (!_context) {
             return;
         }
 
@@ -205,7 +162,7 @@ namespace carto {
         float maxX = rect.getMax().getX(), maxY = rect.getMax().getY();
         float midX = (minX + maxX) * 0.5f, midY = (minY + maxY) * 0.5f;
 
-        CGContextRef context = _state->_context;
+        CGContextRef context = _context;
         CGContextMoveToPoint(context, minX, midY);
         CGContextAddArcToPoint(context, minX, minY, midX, minY, radius);
         CGContextAddArcToPoint(context, maxX, minY, maxX, midY, radius);
@@ -213,21 +170,21 @@ namespace carto {
         CGContextAddArcToPoint(context, minX, maxY, minX, midY, radius);
         CGContextClosePath(context);
         
-        switch (_state->_drawMode) {
+        switch (_drawMode) {
         case STROKE:
-            CGContextSetLineWidth(context, _state->_strokeWidth);
-            CGContextSetStrokeColorWithColor(context, _state->_color);
+            CGContextSetLineWidth(context, _strokeWidth);
+            CGContextSetStrokeColorWithColor(context, _color);
             CGContextDrawPath(context, kCGPathStroke);
             break;
         case FILL:
-            CGContextSetFillColorWithColor(context, _state->_color);
+            CGContextSetFillColorWithColor(context, _color);
             CGContextDrawPath(context, kCGPathFill);
             break;
         }
     }
     
-    void BitmapCanvas::drawPolygon(const std::vector<ScreenPos>& poses) {
-        if (!_state->_context) {
+    void BitmapCanvas::IOSImpl::drawPolygon(const std::vector<ScreenPos>& poses) {
+        if (!_context) {
             return;
         }
 
@@ -242,24 +199,24 @@ namespace carto {
         }
         CGPathCloseSubpath(path);
 
-        CGContextRef context = _state->_context;
+        CGContextRef context = _context;
         CGContextAddPath(context, path);
     
-        switch (_state->_drawMode) {
+        switch (_drawMode) {
         case STROKE:
-            CGContextSetLineWidth(context, _state->_strokeWidth);
-            CGContextSetStrokeColorWithColor(context, _state->_color);
+            CGContextSetLineWidth(context, _strokeWidth);
+            CGContextSetStrokeColorWithColor(context, _color);
             CGContextStrokePath(context);
             break;
         case FILL:
-            CGContextSetFillColorWithColor(context, _state->_color);
+            CGContextSetFillColorWithColor(context, _color);
             CGContextFillPath(context);
             break;
         }
     }
 
-    void BitmapCanvas::drawBitmap(const ScreenBounds& rect, const std::shared_ptr<Bitmap>& bitmap) {
-        if (!_state->_context) {
+    void BitmapCanvas::IOSImpl::drawBitmap(const ScreenBounds& rect, const std::shared_ptr<Bitmap>& bitmap) {
+        if (!_context) {
             return;
         }
 
@@ -267,27 +224,59 @@ namespace carto {
             return;
         }
 
-        CGContextRef context = _state->_context;
+        CGContextRef context = _context;
         
         std::shared_ptr<Bitmap> rgbaBitmap = bitmap->getRGBABitmap();
-        CFUniquePtr<CGContextRef> bitmapContext(CGBitmapContextCreate(const_cast<unsigned char*>(rgbaBitmap->getPixelData().data()), rgbaBitmap->getWidth(), rgbaBitmap->getHeight(), 8, 4 * rgbaBitmap->getWidth(), _state->_colorSpace, kCGImageAlphaPremultipliedLast), CGContextRelease);
+        CFUniquePtr<CGContextRef> bitmapContext(CGBitmapContextCreate(const_cast<unsigned char*>(rgbaBitmap->getPixelData().data()), rgbaBitmap->getWidth(), rgbaBitmap->getHeight(), 8, 4 * rgbaBitmap->getWidth(), _colorSpace, kCGImageAlphaPremultipliedLast), CGContextRelease);
         CFUniquePtr<CGImageRef> bitmapImage(CGBitmapContextCreateImage(bitmapContext), CGImageRelease);
         
         CGContextDrawImage(context, CGRectMake(rect.getMin().getX(), rect.getMin().getY(), rect.getWidth(), rect.getHeight()), bitmapImage);
     }
 
-    ScreenBounds BitmapCanvas::measureTextSize(std::string text, int maxWidth, bool breakLines) {
+    ScreenBounds BitmapCanvas::IOSImpl::measureTextSize(std::string text, int maxWidth, bool breakLines) const {
         if (text.empty()) {
             return ScreenBounds(ScreenPos(0, 0), ScreenPos(0, 0));
         }
 
-        CFUniquePtr<CFAttributedStringRef> attString(_state->createCFAttributedString(text));
+        CFUniquePtr<CFAttributedStringRef> attString(createCFAttributedString(text));
         CFUniquePtr<CTFramesetterRef> framesetter(CTFramesetterCreateWithAttributedString(attString));
-        CGSize frameSize = measureFramesetter(framesetter, _state->_font, maxWidth, breakLines);
+        CGSize frameSize = measureFramesetter(framesetter, maxWidth, breakLines);
         return ScreenBounds(ScreenPos(0, 0), ScreenPos(std::ceil(frameSize.width), std::ceil(frameSize.height)));
     }
 
-    std::shared_ptr<Bitmap> BitmapCanvas::buildBitmap() const {
-        return std::make_shared<Bitmap>(_state->_data.data(), _state->_width, _state->_height, ColorFormat::COLOR_FORMAT_RGBA, -(_state->_width * 4));
+    std::shared_ptr<Bitmap> BitmapCanvas::IOSImpl::buildBitmap() const {
+        return std::make_shared<Bitmap>(_data.data(), _width, _height, ColorFormat::COLOR_FORMAT_RGBA, -(_width * 4));
     }
+
+    CFAttributedStringRef BitmapCanvas::IOSImpl::createCFAttributedString(const std::string& text) const {
+        CFUniquePtr<CFMutableDictionaryRef> attributesDict(CFDictionaryCreateMutable(nullptr, 0, nullptr, nullptr));
+        CFDictionaryAddValue(attributesDict, kCTFontAttributeName, _font);
+        CFDictionaryAddValue(attributesDict, kCTForegroundColorAttributeName, _color);
+        
+        if (_drawMode == STROKE) {
+            CFDictionaryAddValue(attributesDict, kCTStrokeColorAttributeName, _color);
+            
+            // We must keep a persistent reference to stroke width as dictionary values are not retained!
+            int strokeWidth = (int)(-_strokeWidth / _fontSize * 100);
+            _strokeWidthRef = CFUniquePtr<CFNumberRef>(CFNumberCreate(nullptr, kCFNumberIntType, &strokeWidth));
+            CFDictionaryAddValue(attributesDict, kCTStrokeWidthAttributeName, _strokeWidthRef);
+        }
+
+        CFUniquePtr<CFStringRef> textString(CFStringCreateWithCString(nullptr, text.c_str(), kCFStringEncodingUTF8));
+        return CFAttributedStringCreate(nullptr, textString, attributesDict);
+    }
+
+    CGSize BitmapCanvas::IOSImpl::measureFramesetter(CTFramesetterRef framesetter, int maxWidth, bool breakLines) const {
+        for (int extra = 0; extra < 65536; extra++) {
+            CGFloat frameWidth = maxWidth < 0 ? CGFLOAT_MAX : maxWidth;
+            CGFloat frameHeight = breakLines || maxWidth < 0 ? CGFLOAT_MAX : CTFontGetDescent(_font) + CTFontGetAscent(_font) + CTFontGetLeading(_font) + extra;
+            CFRange fitRange;
+            CGSize size = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), nullptr, CGSizeMake(frameWidth, frameHeight), &fitRange);
+            if (size.height > 0) {
+                return size;
+            }
+        }
+        return CGSizeMake(0, 0);
+    }
+
 }

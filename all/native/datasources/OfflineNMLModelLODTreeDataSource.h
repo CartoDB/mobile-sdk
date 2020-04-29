@@ -38,10 +38,10 @@ namespace carto {
         virtual std::shared_ptr<nml::Texture> loadTexture(long long textureId, int level);
 
     private:
-        std::unique_ptr<sqlite3pp::database> _db;
-
         static const float MIN_HEIGHT;
         static const float MAX_HEIGHT;
+
+        std::unique_ptr<sqlite3pp::database> _db;
     };
 
 }

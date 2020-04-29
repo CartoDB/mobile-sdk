@@ -1,3 +1,40 @@
+CARTO Mobile SDK 4.3.0RC3
+-------------------
+
+### Changes/fixes:
+
+* Changed shading of building symbolizers in VT renderer. The lighting is now NOT applied to the top of the building. This matches the behavior of Mapnik.
+* Enabled support for rendering buildings with negative height in VT renderer
+* Fixed cyclical resource manager referencing, causing memory leaks on Android
+* Fixed potential timing related crashes happening when disconnecting layers from MapRenderer
+* Fixed a deadlock regression in 4.3.0RC2 when bitmap texture cache was released
+* Fixed an issue in layer removal code that could cause removing more layers than intended
+
+
+CARTO Mobile SDK 4.3.0RC2
+-------------------
+
+### Changes/fixes:
+
+* Fixed memory leak when switching render projection
+* Thread safety fixes when adding/removing layers to the map
+* Fixed memory leak in iOS implementation of HTTPClient
+* Throw exception instead of crashing when null ptr is used as an argument for Bitmap constructor
+* Fixed very high memory consumption when calling getServerPackages method in PackageManager class
+* Optimized internal representation of tilemask, reduced memory usage by 5x
+* Fixed RasterTileListener not working (regression in SDK 4.2.x vs 4.1.x)
+* Fixed issue with font shaping when '\n' symbol is used in text
+* Fixed texture coordinate artifacts when using dashed lines in VT renderer
+* Removed unneeded error from the log when translating CartoCSS expressions ('Unsupported text expression type ..')
+* Updated the way CartoCSS 'marker-feature-id' and 'text-feature-id' properties treat null/zero values and empty strings: now using these special values forces SDK to generate 'auto id'
+* Fixed potential vector tile rendering issues on devices that supported OpenGL Vertex Array extension
+* Optimized resource usage when layers are removed from the map, the resources are released sooner than before, resulting in smaller application memory footprint
+* Fixed rare display corruption issues when OpenGL surface was lost and layers were being removed from the map
+* Fixed styling issues with VectorLayers when bitmaps were shared between different vector element styles
+* Implemented proper 'line-cap' support for dashed lines
+* Added 'custom parameters' option to GeocodingRequest and ReverseGeocodingRequest classes. Custom parameters can be used to customize specific parameters of geocoding engines.
+
+
 CARTO Mobile SDK 4.3.0RC1
 -------------------
 

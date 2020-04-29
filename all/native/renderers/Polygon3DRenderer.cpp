@@ -3,13 +3,12 @@
 #include "drawdatas/Polygon3DDrawData.h"
 #include "layers/VectorLayer.h"
 #include "graphics/Bitmap.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
 #include "projections/ProjectionSurface.h"
+#include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
+#include "renderers/utils/Shader.h"
+#include "renderers/utils/GLResourceManager.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "vectorelements/Polygon3D.h"
@@ -21,6 +20,8 @@
 namespace carto {
 
     Polygon3DRenderer::Polygon3DRenderer() :
+        _options(),
+        _mapRenderer(),
         _elements(),
         _tempElements(),
         _drawDataBuffer(),
@@ -37,7 +38,6 @@ namespace carto {
         _u_lightColor(0),
         _u_lightDir(0),
         _u_mvpMat(0),
-        _options(),
         _mutex()
     {
     }
@@ -45,8 +45,12 @@ namespace carto {
     Polygon3DRenderer::~Polygon3DRenderer() {
     }
         
-    void Polygon3DRenderer::setOptions(const std::weak_ptr<Options>& options) {
+    void Polygon3DRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
         _options = options;
+        _mapRenderer = mapRenderer;
+        _shader.reset();
     }
     
     void Polygon3DRenderer::offsetLayerHorizontally(double offset) {
@@ -58,33 +62,9 @@ namespace carto {
         }
     }
     
-    void Polygon3DRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        static ShaderSource shaderSource("polygon3d", &POLYGON3D_VERTEX_SHADER, &POLYGON3D_FRAGMENT_SHADER);
-
-        _shader = shaderManager->createShader(shaderSource);
-
-        // Get shader variables locations
-        glUseProgram(_shader->getProgId());
-        _a_color = _shader->getAttribLoc("a_color");
-        _a_attrib = _shader->getAttribLoc("a_attrib");
-        _a_coord = _shader->getAttribLoc("a_coord");
-        _a_normal = _shader->getAttribLoc("a_normal");
-        _u_ambientColor = _shader->getUniformLoc("u_ambientColor");
-        _u_lightColor = _shader->getUniformLoc("u_lightColor");
-        _u_lightDir = _shader->getUniformLoc("u_lightDir");
-        _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
-
-        // Drop elements
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _elements.clear();
-            _tempElements.clear();
-        }
-    }
-    
     void Polygon3DRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
-        
+
         // Check if options are available
         std::shared_ptr<Options> options = _options.lock();
         if (!options) {
@@ -93,6 +73,10 @@ namespace carto {
 
         if (_elements.empty()) {
             // Early return, to avoid calling glUseProgram etc.
+            return;
+        }
+        
+        if (!initializeRenderer()) {
             return;
         }
         
@@ -139,10 +123,6 @@ namespace carto {
         glDisableVertexAttribArray(_a_normal);
     
         GLContext::CheckGLError("Polygon3DRenderer::onDrawFrame");
-    }
-    
-    void Polygon3DRenderer::onSurfaceDestroyed() {
-        _shader.reset();
     }
     
     void Polygon3DRenderer::addElement(const std::shared_ptr<Polygon3D>& element) {
@@ -293,6 +273,28 @@ namespace carto {
         }
     }
         
+    bool Polygon3DRenderer::initializeRenderer() {
+        if (_shader && _shader->isValid()) {
+            return true;
+        }
+
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>("polygon3d", POLYGON3D_VERTEX_SHADER, POLYGON3D_FRAGMENT_SHADER);
+
+            // Get shader variables locations
+            _a_color = _shader->getAttribLoc("a_color");
+            _a_attrib = _shader->getAttribLoc("a_attrib");
+            _a_coord = _shader->getAttribLoc("a_coord");
+            _a_normal = _shader->getAttribLoc("a_normal");
+            _u_ambientColor = _shader->getUniformLoc("u_ambientColor");
+            _u_lightColor = _shader->getUniformLoc("u_lightColor");
+            _u_lightDir = _shader->getUniformLoc("u_lightDir");
+            _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
+        }
+
+        return _shader && _shader->isValid();
+    }
+    
     void Polygon3DRenderer::drawBatch(const ViewState& viewState) {
         // Draw the draw datas, multiple passes may be necessary
         BuildAndDrawBuffers(_a_color, _a_attrib, _a_coord, _a_normal, _colorBuf, _attribBuf, _coordBuf, _normalBuf, _drawDataBuffer, viewState);

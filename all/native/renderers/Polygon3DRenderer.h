@@ -7,7 +7,7 @@
 #ifndef _CARTO_POLYGON3DRENDERER_H_
 #define _CARTO_POLYGON3DRENDERER_H_
 
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLContext.h"
 
 #include <deque>
 #include <memory>
@@ -17,31 +17,25 @@
 #include <cglib/ray.h>
 
 namespace carto {
-    class Bitmap;
-    class Options;
     class Polygon3D;
     class Polygon3DDrawData;
+    class Options;
+    class MapRenderer;
     class Shader;
-    class ShaderManager;
-    class Texture;
-    class TextureManager;
     class RayIntersectedElement;
     class VectorLayer;
     class ViewState;
-    class StyleTextureCache;
     
     class Polygon3DRenderer {
     public:
         Polygon3DRenderer();
         virtual ~Polygon3DRenderer();
         
-        void setOptions(const std::weak_ptr<Options>& options);
+        void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
     
         void offsetLayerHorizontally(double offset);
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         void onDrawFrame(float deltaSeconds, const ViewState& viewState);
-        void onSurfaceDestroyed();
     
         void addElement(const std::shared_ptr<Polygon3D>& element);
         void refreshElements();
@@ -62,11 +56,15 @@ namespace carto {
                                         std::vector<std::shared_ptr<Polygon3DDrawData> >& drawDataBuffer,
                                         const ViewState& viewState);
         
+        bool initializeRenderer();
         void drawBatch(const ViewState& viewState);
         
         static const std::string POLYGON3D_VERTEX_SHADER;
         static const std::string POLYGON3D_FRAGMENT_SHADER;
     
+        std::weak_ptr<Options> _options;
+        std::weak_ptr<MapRenderer> _mapRenderer;
+        
         std::vector<std::shared_ptr<Polygon3D> > _elements;
         std::vector<std::shared_ptr<Polygon3D> > _tempElements;
         
@@ -87,8 +85,6 @@ namespace carto {
         GLuint _u_lightDir;
         GLuint _u_mvpMat;
     
-        std::weak_ptr<Options> _options;
-        
         mutable std::mutex _mutex;
     };
     

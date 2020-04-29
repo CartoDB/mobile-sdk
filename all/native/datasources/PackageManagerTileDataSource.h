@@ -52,7 +52,7 @@ namespace carto {
             PackageManagerTileDataSource& _dataSource;
         };
 
-        static const int MAX_OPEN_PACKAGES = 4;
+        static const unsigned int MAX_OPEN_PACKAGES;
 
         const std::shared_ptr<PackageManager> _packageManager;
 

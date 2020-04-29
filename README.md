@@ -9,10 +9,8 @@ the ['Usage' section](#usage).
 
 # Building
 **We strongly suggest to use the precompiled SDK versions that can be found in
-the samples below (in ['Usage' section](#usage)).** The precompiled libraries include 
-support for CARTO online services (basemaps, offline map packages, routing, etc).
-Also, getting all the SDK dependencies resolved and waiting for the build
-to complete can be very time-consuming.
+the samples below (in ['Usage' section](#usage)).** 
+Getting all the SDK dependencies resolved and waiting for the build to complete can be very time-consuming.
 
 ## Dependencies
 Use `git submodule` to resolve all source-level dependencies
@@ -86,8 +84,9 @@ python build-winphone.py --profile standard
 * Android sample app: https://github.com/CartoDB/mobile-android-samples
 * iOS sample app: https://github.com/CartoDB/mobile-ios-samples
 * .NET (Xamarin and UWP) sample app: https://github.com/CartoDB/mobile-dotnet-samples
+* Scripts for preparing offline packages: https://github.com/nutiteq/mobile-sdk-scripts
 
 # Support, Questions?
-* Post to CARTO developer group: https://groups.google.com/forum/#!forum/cartodb
 * Post an issue to this project, submit a Pull Request
+* Post to CARTO developer group for generic CARTO related questions: https://groups.google.com/forum/#!forum/cartodb
 * Commercial support options: sales@carto.com

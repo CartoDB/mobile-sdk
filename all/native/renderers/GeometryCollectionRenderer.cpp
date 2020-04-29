@@ -27,6 +27,14 @@ namespace carto {
     GeometryCollectionRenderer::~GeometryCollectionRenderer() {
     }
 
+    void GeometryCollectionRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        _pointRenderer.setComponents(options, mapRenderer);
+        _lineRenderer.setComponents(options, mapRenderer);
+        _polygonRenderer.setComponents(options, mapRenderer);
+    }
+
     void GeometryCollectionRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
 
@@ -35,24 +43,15 @@ namespace carto {
         _polygonRenderer.offsetLayerHorizontally(offset);
     }
 
-    void GeometryCollectionRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _pointRenderer.onSurfaceCreated(shaderManager, textureManager);
-        _lineRenderer.onSurfaceCreated(shaderManager, textureManager);
-        _polygonRenderer.onSurfaceCreated(shaderManager, textureManager);
-
-        // Drop elements
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _elements.clear();
-            _tempElements.clear();
-        }
-    }
-
-    void GeometryCollectionRenderer::onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState) {
+    void GeometryCollectionRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (_elements.empty()) {
             // Early return, to avoid calling glUseProgram etc.
+            return;
+        }
+
+        if (!initializeRenderer()) {
             return;
         }
 
@@ -62,64 +61,58 @@ namespace carto {
             for (const std::shared_ptr<VectorElementDrawData>& drawData : element->getDrawData()->getDrawDatas()) {
                 if (std::shared_ptr<PointDrawData> pointDrawData = std::dynamic_pointer_cast<PointDrawData>(drawData)) {
                     if (!_lineRenderer.isEmptyBatch()) {
-                        _lineRenderer.drawBatch(styleCache, viewState);
+                        _lineRenderer.drawBatch(viewState);
                         _lineRenderer.unbind();
                     } else if (!_polygonRenderer.isEmptyBatch()) {
-                        _polygonRenderer.drawBatch(styleCache, viewState);
+                        _polygonRenderer.drawBatch(viewState);
                         _polygonRenderer.unbind();
                     }
                     if (_pointRenderer.isEmptyBatch()) {
                         _pointRenderer.bind(viewState);
                     }
-                    _pointRenderer.addToBatch(pointDrawData, styleCache, viewState);
+                    _pointRenderer.addToBatch(pointDrawData, viewState);
                 } else if (std::shared_ptr<LineDrawData> lineDrawData = std::dynamic_pointer_cast<LineDrawData>(drawData)) {
                     if (!_pointRenderer.isEmptyBatch()) {
-                        _pointRenderer.drawBatch(styleCache, viewState);
+                        _pointRenderer.drawBatch(viewState);
                         _pointRenderer.unbind();
                     } else if (!_polygonRenderer.isEmptyBatch()) {
-                        _polygonRenderer.drawBatch(styleCache, viewState);
+                        _polygonRenderer.drawBatch(viewState);
                         _polygonRenderer.unbind();
                     }
                     if (_lineRenderer.isEmptyBatch()) {
                         _lineRenderer.bind(viewState);
                     }
-                    _lineRenderer.addToBatch(lineDrawData, styleCache, viewState);
+                    _lineRenderer.addToBatch(lineDrawData, viewState);
                 } else if (std::shared_ptr<PolygonDrawData> polygonDrawData = std::dynamic_pointer_cast<PolygonDrawData>(drawData)) {
                     if (!_pointRenderer.isEmptyBatch()) {
-                        _pointRenderer.drawBatch(styleCache, viewState);
+                        _pointRenderer.drawBatch(viewState);
                         _pointRenderer.unbind();
                     } else if (!_lineRenderer.isEmptyBatch()) {
-                        _lineRenderer.drawBatch(styleCache, viewState);
+                        _lineRenderer.drawBatch(viewState);
                         _lineRenderer.unbind();
                     }
                     if (_polygonRenderer.isEmptyBatch()) {
                         _polygonRenderer.bind(viewState);
                     }
-                    _polygonRenderer.addToBatch(polygonDrawData, styleCache, viewState);
+                    _polygonRenderer.addToBatch(polygonDrawData, viewState);
                 }
             }
         }
 
         if (!_pointRenderer._drawDataBuffer.empty()) {
-            _pointRenderer.drawBatch(styleCache, viewState);
+            _pointRenderer.drawBatch(viewState);
             _pointRenderer.unbind();
         }
         if (!_lineRenderer._drawDataBuffer.empty()) {
-            _lineRenderer.drawBatch(styleCache, viewState);
+            _lineRenderer.drawBatch(viewState);
             _lineRenderer.unbind();
         }
         if (!_polygonRenderer._drawDataBuffer.empty()) {
-            _polygonRenderer.drawBatch(styleCache, viewState);
+            _polygonRenderer.drawBatch(viewState);
             _polygonRenderer.unbind();
         }
         
         glEnable(GL_CULL_FACE);
-    }
-
-    void GeometryCollectionRenderer::onSurfaceDestroyed() {
-        _pointRenderer.onSurfaceDestroyed();
-        _lineRenderer.onSurfaceDestroyed();
-        _polygonRenderer.onSurfaceDestroyed();
     }
 
     void GeometryCollectionRenderer::addElement(const std::shared_ptr<GeometryCollection>& element) {
@@ -162,6 +155,10 @@ namespace carto {
                 }
             }
         }
+    }
+
+    bool GeometryCollectionRenderer::initializeRenderer() {
+        return _pointRenderer.initializeRenderer() && _lineRenderer.initializeRenderer() && _polygonRenderer.initializeRenderer();
     }
 
 }

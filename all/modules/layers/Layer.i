@@ -31,10 +31,10 @@
 %attribute(carto::Layer, bool, Visible, isVisible, setVisible)
 %attributeval(carto::Layer, carto::MapRange, VisibleZoomRange, getVisibleZoomRange, setVisibleZoomRange)
 %attribute(carto::Layer, float, Opacity, getOpacity, setOpacity)
-%ignore carto::Layer::isSurfaceCreated;
-%ignore carto::Layer::onSurfaceCreated;
 %ignore carto::Layer::onDrawFrame;
-%ignore carto::Layer::onSurfaceDestroyed;
+%ignore carto::Layer::onDrawFrame3D;
+%ignore carto::Layer::getBackgroundBitmap;
+%ignore carto::Layer::getSkyBitmap;
 %ignore carto::Layer::calculateRayIntersectedElements;
 %ignore carto::Layer::registerDataSourceListener;
 %ignore carto::Layer::unregisterDataSourceListener;

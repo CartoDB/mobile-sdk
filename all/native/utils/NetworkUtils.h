@@ -59,8 +59,6 @@ namespace carto {
 
     private:
         NetworkUtils();
-
-        static const int BUFFER_SIZE = 4096;
     };
     
 }

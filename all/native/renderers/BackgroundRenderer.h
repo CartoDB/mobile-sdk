@@ -7,7 +7,7 @@
 #ifndef _CARTO_BACKGROUNDRENDERER_H_
 #define _CARTO_BACKGROUNDRENDERER_H_
 
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLContext.h"
 
 #include <memory>
 #include <vector>
@@ -18,8 +18,7 @@ namespace carto {
     class Bitmap;
     class Options;
     class Layers;
-    class ShaderManager;
-    class TextureManager;
+    class GLResourceManager;
     class Shader;
     class Texture;
     class ViewState;
@@ -29,7 +28,7 @@ namespace carto {
         explicit BackgroundRenderer(const Options& options, const Layers& layers);
         virtual ~BackgroundRenderer();
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
+        void onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager);
         void onDrawFrame(const ViewState& viewState);
         void onSurfaceDestroyed();
     
@@ -83,7 +82,7 @@ namespace carto {
         GLuint _u_lightDir;
         GLuint _u_mvpMat;
 
-        std::shared_ptr<TextureManager> _textureManager;
+        std::shared_ptr<GLResourceManager> _glResourceManager;
     
         const Options& _options;
         const Layers& _layers;

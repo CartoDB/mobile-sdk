@@ -8,39 +8,42 @@
 #define _CARTO_SOLIDRENDERER_H_
 
 #include "graphics/Color.h"
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLContext.h"
 
 #include <memory>
 #include <mutex>
 
 namespace carto {
     class Bitmap;
+    class Options;
+    class MapRenderer;
     class Shader;
     class Texture;
     class ViewState;
-    class ShaderManager;
-    class TextureManager;
-    class StyleTextureCache;
 
     class SolidRenderer {
     public:
         SolidRenderer();
         virtual ~SolidRenderer();
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
+        void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
+
         void onDrawFrame(const ViewState& viewState);
-        void onSurfaceDestroyed();
 
         void setColor(const Color& color);
         void setBitmap(const std::shared_ptr<Bitmap>& bitmap, float scale);
 
     private:
+        bool initializeRenderer();
+
         static const unsigned char DEFAULT_BITMAP[4];
         static const float QUAD_COORDS[12];
         static const float QUAD_TEX_COORDS[8];
 
         static const std::string SOLID_VERTEX_SHADER;
         static const std::string SOLID_FRAGMENT_SHADER;
+
+        std::weak_ptr<MapRenderer> _mapRenderer;
 
         Color _color;
         std::shared_ptr<Bitmap> _bitmap;
@@ -55,7 +58,7 @@ namespace carto {
         GLuint _u_tex;
         GLuint _u_color;
 
-        std::shared_ptr<TextureManager> _textureManager;
+        mutable std::mutex _mutex;
     };
     
 }

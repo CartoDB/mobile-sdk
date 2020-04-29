@@ -3,26 +3,6 @@
 
 namespace carto {
 
-    AndroidUtils::JNILocalFrame::JNILocalFrame(JNIEnv* jenv, int count, const char* methodId) :
-        _jenv(jenv), _valid(false)
-    {
-        if (_jenv->PushLocalFrame(count) < 0) { 
-            Log::Errorf("%s: Failed to reserve local JNI frame!", methodId);
-            return;
-        }
-        _valid = true;
-    }
-
-    AndroidUtils::JNILocalFrame::~JNILocalFrame() {
-        if (_valid) {
-            _jenv->PopLocalFrame(NULL);
-        }
-    }
-
-    bool AndroidUtils::JNILocalFrame::isValid() const {
-        return _valid;
-    }
-
     void AndroidUtils::AttachJVM(JNIEnv* jenv) {
         std::lock_guard<std::mutex> lock(_Mutex);
         if (_JVM) {
