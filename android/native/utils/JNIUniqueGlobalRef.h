@@ -9,8 +9,6 @@
 
 #include <jni.h>
 
-#include "utils/AndroidUtils.h"
-
 namespace carto {
 
     template <typename T>
@@ -18,9 +16,8 @@ namespace carto {
         JNIUniqueGlobalRef() = default;
         JNIUniqueGlobalRef(const JNIUniqueGlobalRef&) = delete;
         JNIUniqueGlobalRef(JNIUniqueGlobalRef&& other) { std::swap(_ref, other._ref); std::swap(_jenv, other._jenv); }
-        explicit JNIUniqueGlobalRef(jobject obj) : _ref(reinterpret_cast<T>(obj)), _jenv(NULL) { }
         JNIUniqueGlobalRef(JNIEnv* jenv, jobject obj) : _ref(reinterpret_cast<T>(obj)), _jenv(jenv) { }
-        ~JNIUniqueGlobalRef() { if (_ref) { JNIEnv* jenv = _jenv ? _jenv : AndroidUtils::GetCurrentThreadJNIEnv(); if (jenv) jenv->DeleteGlobalRef(_ref); } }
+        ~JNIUniqueGlobalRef() { if (_jenv && _ref) { _jenv->DeleteGlobalRef(_ref); } }
 
         T get() const { return _ref; }
         operator T() const { return _ref; }
