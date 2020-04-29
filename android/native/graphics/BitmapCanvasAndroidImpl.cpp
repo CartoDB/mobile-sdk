@@ -16,7 +16,7 @@ namespace carto {
         jmethodID constructor;
 
         explicit RectFClass(JNIEnv* jenv) {
-            clazz = JNIUniqueGlobalRef<jclass>(jenv->NewGlobalRef(jenv->FindClass("android/graphics/RectF")));
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/graphics/RectF")));
             constructor = jenv->GetMethodID(clazz, "<init>", "(FFFF)V");
         }
     };
