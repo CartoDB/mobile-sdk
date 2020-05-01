@@ -1,3 +1,14 @@
+CARTO Mobile SDK 4.3.0
+-------------------
+
+### Changes/fixes:
+
+* Fixed linking issue with Xamarin iOS build
+* Minor optimizations for Android build when using JNI
+* Minor logging cleanup
+* Documentation changes
+
+
 CARTO Mobile SDK 4.3.0RC3
 -------------------
 
