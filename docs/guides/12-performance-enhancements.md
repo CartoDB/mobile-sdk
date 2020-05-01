@@ -134,4 +134,4 @@ All this is can be applied with just one line of code - as shown in the followin
     
 </div>
 
-The automatic simplification makes renderingfaster with some additional computation on the CPU.
+The automatic simplification makes rendering faster with some additional computation on the CPU.
