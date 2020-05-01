@@ -3,11 +3,165 @@
 #include "components/Exceptions.h"
 #include "utils/BitmapUtils.h"
 #include "utils/AndroidUtils.h"
+#include "utils/JNILocalFrame.h"
+#include "utils/JNIUniqueLocalRef.h"
 #include "utils/Log.h"
 
 #include <cmath>
 
 namespace carto {
+
+    struct BitmapCanvas::AndroidImpl::RectFClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID constructor;
+
+        explicit RectFClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/graphics/RectF")));
+            constructor = jenv->GetMethodID(clazz, "<init>", "(FFFF)V");
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::BitmapClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID createBitmap;
+        JNIUniqueGlobalRef<jobject> rgba8888BCFG;
+
+        explicit BitmapClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/graphics/Bitmap")));
+            createBitmap = jenv->GetStaticMethodID(clazz, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+            JNIUniqueLocalRef<jstring> configName(jenv, jenv->NewStringUTF("ARGB_8888"));
+            JNIUniqueLocalRef<jclass> bcfgClass(jenv, jenv->FindClass("android/graphics/Bitmap$Config"));
+            rgba8888BCFG = JNIUniqueGlobalRef<jobject>(jenv, jenv->NewGlobalRef(jenv->CallStaticObjectMethod(bcfgClass.get(), jenv->GetStaticMethodID(bcfgClass, "valueOf", "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;"), configName.get())));
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::CanvasClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID constructor;
+        jmethodID restore;
+        jmethodID save;
+        jmethodID clipRect;
+        jmethodID translate;
+        jmethodID drawRoundRect;
+        jmethodID drawBitmap;
+        jmethodID drawPath;
+
+        explicit CanvasClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/graphics/Canvas")));
+            constructor = jenv->GetMethodID(clazz, "<init>", "(Landroid/graphics/Bitmap;)V");
+            restore = jenv->GetMethodID(clazz, "restore", "()V");
+            save = jenv->GetMethodID(clazz, "save", "()I");
+            clipRect = jenv->GetMethodID(clazz, "clipRect", "(FFFF)Z");
+            translate = jenv->GetMethodID(clazz, "translate", "(FF)V");
+            drawRoundRect = jenv->GetMethodID(clazz, "drawRoundRect", "(Landroid/graphics/RectF;FFLandroid/graphics/Paint;)V");
+            drawBitmap = jenv->GetMethodID(clazz, "drawBitmap", "(Landroid/graphics/Bitmap;Landroid/graphics/Rect;Landroid/graphics/RectF;Landroid/graphics/Paint;)V");
+            drawPath = jenv->GetMethodID(clazz, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::PaintClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID constructor;
+        jmethodID setColor;
+        jmethodID setStrokeWidth;
+        jmethodID setStyle;
+        jmethodID setTextSize;
+        jmethodID setTypeface;
+        JNIUniqueGlobalRef<jobject> strokeStyle;
+        JNIUniqueGlobalRef<jobject> fillStyle;
+
+        explicit PaintClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/text/TextPaint")));
+            constructor = jenv->GetMethodID(clazz, "<init>", "(I)V");
+            setColor = jenv->GetMethodID(clazz, "setColor", "(I)V");
+            setStrokeWidth = jenv->GetMethodID(clazz, "setStrokeWidth", "(F)V");
+            setStyle = jenv->GetMethodID(clazz, "setStyle", "(Landroid/graphics/Paint$Style;)V");
+            setTextSize = jenv->GetMethodID(clazz, "setTextSize", "(F)V");
+            setTypeface = jenv->GetMethodID(clazz, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
+            jclass styleClass = jenv->FindClass("android/graphics/Paint$Style");
+            jmethodID styleValueOf = jenv->GetStaticMethodID(styleClass, "valueOf", "(Ljava/lang/String;)Landroid/graphics/Paint$Style;");
+            strokeStyle = JNIUniqueGlobalRef<jobject>(jenv, jenv->NewGlobalRef(jenv->CallStaticObjectMethod(styleClass, styleValueOf, jenv->NewStringUTF("STROKE"))));
+            fillStyle = JNIUniqueGlobalRef<jobject>(jenv, jenv->NewGlobalRef(jenv->CallStaticObjectMethod(styleClass, styleValueOf, jenv->NewStringUTF("FILL"))));
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::PathClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID constructor;
+        jmethodID moveTo;
+        jmethodID lineTo;
+        jmethodID close;
+
+        explicit PathClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/graphics/Path")));
+            constructor = jenv->GetMethodID(clazz, "<init>", "()V");
+            moveTo = jenv->GetMethodID(clazz, "moveTo", "(FF)V");
+            lineTo = jenv->GetMethodID(clazz, "lineTo", "(FF)V");
+            close = jenv->GetMethodID(clazz, "close", "()V");
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::TypefaceClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID create;
+
+        explicit TypefaceClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/graphics/Typeface")));
+            create = jenv->GetStaticMethodID(clazz, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::StaticLayoutClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID constructor;
+        jmethodID getLineCount;
+        jmethodID getLineWidth;
+        jmethodID getHeight;
+        jmethodID draw;
+        JNIUniqueGlobalRef<jobject> normalLayoutAlignment;
+
+        explicit StaticLayoutClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/text/StaticLayout")));
+            constructor = jenv->GetMethodID(clazz, "<init>", "(Ljava/lang/CharSequence;Landroid/text/TextPaint;ILandroid/text/Layout$Alignment;FFZ)V");
+            getLineCount = jenv->GetMethodID(clazz, "getLineCount", "()I");
+            getLineWidth = jenv->GetMethodID(clazz, "getLineWidth", "(I)F");
+            getHeight = jenv->GetMethodID(clazz, "getHeight", "()I");
+            draw = jenv->GetMethodID(clazz, "draw", "(Landroid/graphics/Canvas;)V");
+            JNIUniqueLocalRef<jstring> alignmentName(jenv, jenv->NewStringUTF("ALIGN_NORMAL"));
+            JNIUniqueLocalRef<jclass> layoutAlignmentClass(jenv, jenv->FindClass("android/text/Layout$Alignment"));
+            normalLayoutAlignment = JNIUniqueGlobalRef<jobject>(jenv, jenv->NewGlobalRef(jenv->CallStaticObjectMethod(layoutAlignmentClass.get(), jenv->GetStaticMethodID(layoutAlignmentClass, "valueOf", "(Ljava/lang/String;)Landroid/text/Layout$Alignment;"), alignmentName.get())));
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::CharSequenceClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID toString;
+
+        explicit CharSequenceClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("java/lang/CharSequence")));
+            toString = jenv->GetMethodID(clazz, "toString", "()Ljava/lang/String;");
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::TextUtilsClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID ellipsize;
+
+        explicit TextUtilsClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/text/TextUtils")));
+            ellipsize = jenv->GetStaticMethodID(clazz, "ellipsize", "(Ljava/lang/CharSequence;Landroid/text/TextPaint;FLandroid/text/TextUtils$TruncateAt;)Ljava/lang/CharSequence;");
+        }
+    };
+
+    struct BitmapCanvas::AndroidImpl::TextUtilsTruncateAtClass {
+        JNIUniqueGlobalRef<jclass> clazz;
+        jmethodID valueOf;
+
+        explicit TextUtilsTruncateAtClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv, jenv->NewGlobalRef(jenv->FindClass("android/text/TextUtils$TruncateAt")));
+            valueOf = jenv->GetStaticMethodID(clazz, "valueOf", "(Ljava/lang/String;)Landroid/text/TextUtils$TruncateAt;");
+        }
+    };
 
     BitmapCanvas::AndroidImpl::AndroidImpl(int width, int height) :
         _bitmapObject(),
@@ -15,8 +169,9 @@ namespace carto {
         _paintObject()
     {
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::BitmapCanvas::AndroidImpl");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::AndroidImpl");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::AndroidImpl: JNILocalFrame not valid");
             return;
         }
 
@@ -26,14 +181,14 @@ namespace carto {
                 jenv->ExceptionClear();
                 throw GenericException("Failed to create Bitmap instance. Bitmap too large?");
             }
-            _bitmapObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(bitmapObject));
+            _bitmapObject = JNIUniqueGlobalRef<jobject>(jenv, jenv->NewGlobalRef(bitmapObject));
 
             jobject canvasObject = jenv->NewObject(GetCanvasClass()->clazz, GetCanvasClass()->constructor, _bitmapObject.get());
             if (jenv->ExceptionCheck()) {
                 jenv->ExceptionClear();
                 throw GenericException("Failed to create Canvas instance");
             }
-            _canvasObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(canvasObject));
+            _canvasObject = JNIUniqueGlobalRef<jobject>(jenv, jenv->NewGlobalRef(canvasObject));
         }
 
         jobject paintObject = jenv->NewObject(GetPaintClass()->clazz, GetPaintClass()->constructor, (jint)1); // 1 = ANTIALIAS_FLAG
@@ -41,7 +196,7 @@ namespace carto {
             jenv->ExceptionClear();
             throw GenericException("Failed to create Paint instance");
         }
-        _paintObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(paintObject));
+        _paintObject = JNIUniqueGlobalRef<jobject>(jenv, jenv->NewGlobalRef(paintObject));
     }
 
     BitmapCanvas::AndroidImpl::~AndroidImpl() {
@@ -49,8 +204,9 @@ namespace carto {
 
     void BitmapCanvas::AndroidImpl::setDrawMode(DrawMode mode) {
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::setDrawMode");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::setDrawMode");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::setDrawMode: JNILocalFrame not valid");
             return;
         }
 
@@ -68,8 +224,9 @@ namespace carto {
 
     void BitmapCanvas::AndroidImpl::setColor(const Color& color) {
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::setColor");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::setColor");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::setColor: JNILocalFrame not valid");
             return;
         }
 
@@ -78,8 +235,9 @@ namespace carto {
 
     void BitmapCanvas::AndroidImpl::setStrokeWidth(float width) {
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::setStrokeWidth");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::setStrokeWidth");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::setStrokeWidth: JNILocalFrame not valid");
             return;
         }
 
@@ -88,8 +246,9 @@ namespace carto {
 
     void BitmapCanvas::AndroidImpl::setFont(const std::string& name, float size) {
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::setFont");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::setFont");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::setFont: JNILocalFrame not valid");
             return;
         }
 
@@ -105,8 +264,9 @@ namespace carto {
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::pushClipRect");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::pushClipRect");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::pushClipRect: JNILocalFrame not valid");
             return;
         }
 
@@ -120,8 +280,9 @@ namespace carto {
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::popClipRect");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::popClipRect");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::popClipRect: JNILocalFrame not valid");
             return;
         }
 
@@ -138,8 +299,9 @@ namespace carto {
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::drawText");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::drawText");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::drawText: JNILocalFrame not valid");
             return;
         }
 
@@ -164,8 +326,9 @@ namespace carto {
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::drawRoundRect");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::drawRoundRect");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::drawRoundRect: JNILocalFrame not valid");
             return;
         }
 
@@ -183,25 +346,18 @@ namespace carto {
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::drawPolygon");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::drawPolygon");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::drawPolygon: JNILocalFrame not valid");
             return;
         }
 
-        jclass pathClass = jenv->FindClass("android/graphics/Path");
-        jmethodID pathConstructor = jenv->GetMethodID(pathClass, "<init>", "()V");
-        jobject pathObject = jenv->NewObject(pathClass, pathConstructor);
-
-        jmethodID moveTo = jenv->GetMethodID(pathClass, "moveTo", "(FF)V");
-        jenv->CallVoidMethod(pathObject, moveTo, (jfloat)poses[0].getX(), (jfloat)poses[0].getY());
-
-        jmethodID lineTo = jenv->GetMethodID(pathClass, "lineTo", "(FF)V");
-        for (size_t i = 1; i < poses.size(); i++) {
-            jenv->CallVoidMethod(pathObject, lineTo, (jfloat)poses[i].getX(), (jfloat)poses[i].getY());
+        jobject pathObject = jenv->NewObject(GetPathClass()->clazz, GetPathClass()->constructor);
+        jenv->CallVoidMethod(pathObject, GetPathClass()->moveTo, (jfloat)poses[0].getX(), (jfloat)poses[0].getY());
+        for (std::size_t i = 1; i < poses.size(); i++) {
+            jenv->CallVoidMethod(pathObject, GetPathClass()->lineTo, (jfloat)poses[i].getX(), (jfloat)poses[i].getY());
         }
-
-        jmethodID close = jenv->GetMethodID(pathClass, "close", "()V");
-        jenv->CallVoidMethod(pathObject, close);
+        jenv->CallVoidMethod(pathObject, GetPathClass()->close);
 
         jenv->CallVoidMethod(_canvasObject, GetCanvasClass()->drawPath, pathObject, _paintObject.get());
     }
@@ -216,8 +372,9 @@ namespace carto {
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::drawBitmap");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::drawBitmap");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::drawBitmap: JNILocalFrame not valid");
             return;
         }
 
@@ -232,8 +389,9 @@ namespace carto {
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-        AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::measureTextSize");
+        JNILocalFrame jframe(jenv, 32, "BitmapCanvas::AndroidImpl::measureTextSize");
         if (!jframe.isValid()) {
+            Log::Error("BitmapCanvas::AndroidImpl::measureTextSize: JNILocalFrame not valid");
             return ScreenBounds(ScreenPos(0, 0), ScreenPos(0, 0));
         }
 
@@ -273,22 +431,15 @@ namespace carto {
         }
 
         jstring truncateAtName = jenv->NewStringUTF("END");
-        jclass truncateAtClass = jenv->FindClass("android/text/TextUtils$TruncateAt");
-        jobject truncateAtObject = jenv->CallStaticObjectMethod(truncateAtClass, jenv->GetStaticMethodID(truncateAtClass, "valueOf", "(Ljava/lang/String;)Landroid/text/TextUtils$TruncateAt;"), truncateAtName);
+        jobject truncateAtObject = jenv->CallStaticObjectMethod(GetTextUtilsTruncateAtClass()->clazz, GetTextUtilsTruncateAtClass()->valueOf, truncateAtName);
 
         jstring textObject = jenv->NewStringUTF(text.c_str());
+        jobject charSeqObject = jenv->CallStaticObjectMethod(GetTextUtilsClass()->clazz, GetTextUtilsClass()->ellipsize, textObject, _paintObject.get(), (jfloat)maxWidth, truncateAtObject);
+        jstring ellipsizedTextObject = (jstring)jenv->CallObjectMethod(charSeqObject, GetCharSequenceClass()->toString);
 
-        jclass textUtilsClass = jenv->FindClass("android/text/TextUtils");
-        jmethodID ellipsize = jenv->GetStaticMethodID(textUtilsClass, "ellipsize", "(Ljava/lang/CharSequence;Landroid/text/TextPaint;FLandroid/text/TextUtils$TruncateAt;)Ljava/lang/CharSequence;");
-        jobject charSeqObject = jenv->CallStaticObjectMethod(textUtilsClass, ellipsize, textObject, _paintObject.get(), (jfloat)maxWidth, truncateAtObject);
-
-        jclass charSeqClass = jenv->FindClass("java/lang/CharSequence");
-        jmethodID toString = jenv->GetMethodID(charSeqClass, "toString", "()Ljava/lang/String;");
-        textObject = (jstring)jenv->CallObjectMethod(charSeqObject, toString);
-
-        const char* textStr = jenv->GetStringUTFChars(textObject, NULL);
-        text = textStr;
-        jenv->ReleaseStringUTFChars(textObject, textStr);
+        const char* ellipsizedTextStr = jenv->GetStringUTFChars(ellipsizedTextObject, NULL);
+        text = ellipsizedTextStr;
+        jenv->ReleaseStringUTFChars(ellipsizedTextObject, ellipsizedTextStr);
     }
 
     std::unique_ptr<BitmapCanvas::AndroidImpl::RectFClass>& BitmapCanvas::AndroidImpl::GetRectFClass() {
@@ -311,6 +462,11 @@ namespace carto {
         return cls;
     }
 
+    std::unique_ptr<BitmapCanvas::AndroidImpl::PathClass>& BitmapCanvas::AndroidImpl::GetPathClass() {
+        static std::unique_ptr<PathClass> cls(new PathClass(AndroidUtils::GetCurrentThreadJNIEnv()));
+        return cls;
+    }
+
     std::unique_ptr<BitmapCanvas::AndroidImpl::TypefaceClass>& BitmapCanvas::AndroidImpl::GetTypefaceClass() {
         static std::unique_ptr<TypefaceClass> cls(new TypefaceClass(AndroidUtils::GetCurrentThreadJNIEnv()));
         return cls;
@@ -318,6 +474,21 @@ namespace carto {
 
     std::unique_ptr<BitmapCanvas::AndroidImpl::StaticLayoutClass>& BitmapCanvas::AndroidImpl::GetStaticLayoutClass() {
         static std::unique_ptr<StaticLayoutClass> cls(new StaticLayoutClass(AndroidUtils::GetCurrentThreadJNIEnv()));
+        return cls;
+    }
+
+    std::unique_ptr<BitmapCanvas::AndroidImpl::CharSequenceClass>& BitmapCanvas::AndroidImpl::GetCharSequenceClass() {
+        static std::unique_ptr<CharSequenceClass> cls(new CharSequenceClass(AndroidUtils::GetCurrentThreadJNIEnv()));
+        return cls;
+    }
+
+    std::unique_ptr<BitmapCanvas::AndroidImpl::TextUtilsClass>& BitmapCanvas::AndroidImpl::GetTextUtilsClass() {
+        static std::unique_ptr<TextUtilsClass> cls(new TextUtilsClass(AndroidUtils::GetCurrentThreadJNIEnv()));
+        return cls;
+    }
+
+    std::unique_ptr<BitmapCanvas::AndroidImpl::TextUtilsTruncateAtClass>& BitmapCanvas::AndroidImpl::GetTextUtilsTruncateAtClass() {
+        static std::unique_ptr<TextUtilsTruncateAtClass> cls(new TextUtilsTruncateAtClass(AndroidUtils::GetCurrentThreadJNIEnv()));
         return cls;
     }
 

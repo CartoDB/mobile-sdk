@@ -21,17 +21,6 @@ namespace carto {
      */
     class AndroidUtils {
     public:
-        struct JNILocalFrame {
-            JNILocalFrame(JNIEnv* jenv, int count, const char* methodId);
-            ~JNILocalFrame();
-
-            bool isValid() const;
-
-        private:
-            JNIEnv* _jenv;
-            bool _valid;
-        };
-
         static void AttachJVM(JNIEnv* jenv);
         static void SetContext(jobject context);
 

@@ -9,10 +9,8 @@ the ['Usage' section](#usage).
 
 # Building
 **We strongly suggest to use the precompiled SDK versions that can be found in
-the samples below (in ['Usage' section](#usage)).** The precompiled libraries include 
-support for CARTO online services (basemaps, offline map packages, routing, etc).
-Also, getting all the SDK dependencies resolved and waiting for the build
-to complete can be very time-consuming.
+the samples below (in ['Usage' section](#usage)).** 
+Getting all the SDK dependencies resolved and waiting for the build to complete can be very time-consuming.
 
 ## Dependencies
 Use `git submodule` to resolve all source-level dependencies
