@@ -13,6 +13,7 @@ namespace carto {
         _taskRecords(),
         _workers(),
         _threads(),
+        _condition(),
         _mutex()
     {
     }
@@ -33,8 +34,8 @@ namespace carto {
             _condition.notify_all();
         }
         
-        for (const std::shared_ptr<std::thread>& thread : _threads) {
-            thread->detach();
+        for (const std::thread& thread : _threads) {
+            thread.detach();
         }
         
         _workers.clear();
@@ -56,7 +57,7 @@ namespace carto {
         // Add threads
         for (int i = _poolSize; i < poolSize; i++) {
             _workers.push_back(std::make_shared<TaskWorker>(shared_from_this()));
-            _threads.push_back(std::make_shared<std::thread>(&TaskWorker::operator(), _workers.back()));
+            _threads.push_back(std::thread(&TaskWorker::operator(), _workers.back()));
         }
     
         _poolSize = poolSize;
@@ -180,25 +181,18 @@ namespace carto {
     
         // If there are too many threads, remove this worker and it's thread
         if (static_cast<int>(_threads.size()) > _poolSize) {
-    
             // Find the index of the finished worker, it's thread will have the same index in _threads vector
-            int index = 0;
-            WorkerList::iterator it;
-            for (it = _workers.begin(); it != _workers.end(); ++it) {
-                const std::shared_ptr<TaskWorker>& listWorker = *it;
-                if (listWorker.get() == &worker) {
+            for (std::size_t index = 0; index < _workers.size(); index++) {
+                if (_workers[index].get() == &worker) {
                     // Remove thread and worker
-                    _workers.erase(it);
-                    _threads.at(index)->detach();
+                    _workers.erase(_workers.begin() + index);
+                    _threads.at(index).detach();
                     _threads.erase(_threads.begin() + index);
                     break;
                 }
-                index++;
             }
-    
             return true;
         }
-    
         return false;
     }
 
