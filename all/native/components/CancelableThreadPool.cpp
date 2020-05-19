@@ -189,6 +189,7 @@ namespace carto {
                 if (listWorker.get() == &worker) {
                     // Remove thread and worker
                     _workers.erase(it);
+                    _threads.at(index)->detach();
                     _threads.erase(_threads.begin() + index);
                     break;
                 }
