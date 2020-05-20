@@ -22,7 +22,6 @@ namespace carto {
     private:
         bool _log;
         int _timeout;
-        void* _connection;
     };
 
 }

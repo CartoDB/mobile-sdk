@@ -50,10 +50,6 @@ namespace carto {
             std::weak_ptr<CancelableThreadPool> _threadPool;
         };
     
-        typedef std::priority_queue<TaskRecord> TaskRecordQueue;
-        typedef std::vector<std::shared_ptr<TaskWorker> > WorkerList;
-        typedef std::vector<std::shared_ptr<std::thread> > ThreadList;
-    
         std::shared_ptr<CancelableTask> getNextTask();
     
         bool shouldTerminateWorker(TaskWorker& worker);
@@ -62,15 +58,14 @@ namespace carto {
     
         int _poolSize;
         long long _taskCount;
-        
         bool _stop;
     
-        TaskRecordQueue _taskRecords;
-        WorkerList _workers;
-        ThreadList _threads;
+        std::priority_queue<TaskRecord> _taskRecords;
+        std::vector<std::shared_ptr<TaskWorker> > _workers;
+        std::vector<std::thread> _threads;
     
-        mutable std::mutex _mutex;
         std::condition_variable _condition;
+        mutable std::mutex _mutex;
     };
     
 }

@@ -113,19 +113,11 @@ namespace carto {
 
     HTTPClient::IOSImpl::IOSImpl(bool log) :
         _log(log),
-        _timeout(-1),
-        _connection(nullptr)
+        _timeout(-1)
     {
-        URLConnection* connection = [[URLConnection alloc] init];
-        _connection = (__bridge_retained void*)connection;
     }
     
     HTTPClient::IOSImpl::~IOSImpl() {
-        @autoreleasepool {
-            URLConnection* connection = (__bridge_transfer URLConnection*)_connection;
-            [connection deinit];
-            _connection = nullptr;
-        }
     }
 
     void HTTPClient::IOSImpl::setTimeout(int milliseconds) {
@@ -184,13 +176,15 @@ namespace carto {
         };
 
         // Send the request synchronously
-        URLConnection* connection = (__bridge URLConnection*)_connection;
+        URLConnection* connection = [[URLConnection alloc] init];
         NSError* error = [connection sendSynchronousRequest:[mutableRequest copy] didReceiveResponse:handleResponse didReceiveData:handleData];
         if (error) {
             NSString* description = [error localizedDescription];
             throw NetworkException(std::string([description UTF8String]), request.url);
         }
+        [connection deinit];
 
+        // Return the cancelled state
         return cancel == NO;
     }
 
