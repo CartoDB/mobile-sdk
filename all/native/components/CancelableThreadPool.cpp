@@ -34,7 +34,7 @@ namespace carto {
             _condition.notify_all();
         }
         
-        for (const std::thread& thread : _threads) {
+        for (std::thread& thread : _threads) {
             thread.detach();
         }
         
