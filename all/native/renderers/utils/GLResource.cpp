@@ -9,8 +9,8 @@ namespace carto {
     }
 
     bool GLResource::isValid() const {
-        if (_manager.lock()) {
-            return true;
+        if (auto manager = _manager.lock()) {
+            return manager->getGLThreadId() != std::thread::id();
         }
         return false;
     }
