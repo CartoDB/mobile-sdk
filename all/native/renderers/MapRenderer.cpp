@@ -513,6 +513,11 @@ namespace carto {
     }
     
     void MapRenderer::onDrawFrame() {
+        if (!_surfaceCreated) {
+            Log::Error("MapRenderer::onDrawFrame: Surface not yet created");
+            return;
+        }
+
         _redrawPending = false;
 
         std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
