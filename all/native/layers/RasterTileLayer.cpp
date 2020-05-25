@@ -189,6 +189,35 @@ namespace carto {
         refresh();
     }
 
+    std::shared_ptr<vt::Tile> RasterTileLayer::createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const {
+        // Build tile bitmap from the original bitmap, by doing conversion, if necessary
+        std::shared_ptr<vt::TileBitmap> tileBitmap;
+        switch (bitmap->getColorFormat()) {
+        case ColorFormat::COLOR_FORMAT_GRAYSCALE:
+            tileBitmap = std::make_shared<vt::TileBitmap>(vt::TileBitmap::Type::COLORMAP, vt::TileBitmap::Format::GRAYSCALE, bitmap->getWidth(), bitmap->getHeight(), bitmap->getPixelData());
+            break;
+        case ColorFormat::COLOR_FORMAT_RGB:
+            tileBitmap = std::make_shared<vt::TileBitmap>(vt::TileBitmap::Type::COLORMAP, vt::TileBitmap::Format::RGB, bitmap->getWidth(), bitmap->getHeight(), bitmap->getPixelData());
+            break;
+        case ColorFormat::COLOR_FORMAT_RGBA:
+            tileBitmap = std::make_shared<vt::TileBitmap>(vt::TileBitmap::Type::COLORMAP, vt::TileBitmap::Format::RGBA, bitmap->getWidth(), bitmap->getHeight(), bitmap->getPixelData());
+            break;
+        default:
+            tileBitmap = std::make_shared<vt::TileBitmap>(vt::TileBitmap::Type::COLORMAP, vt::TileBitmap::Format::RGBA, bitmap->getWidth(), bitmap->getHeight(), bitmap->getRGBABitmap()->getPixelData());
+            break;
+        }
+
+        // Build actual vector tile using created colormap
+        float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
+        vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
+        std::shared_ptr<vt::TileBackground> tileBackground = std::make_shared<vt::TileBackground>(vt::Color(), std::shared_ptr<vt::BitmapPattern>());
+        std::shared_ptr<const vt::TileTransformer::VertexTransformer> vtTransformer = getTileTransformer()->createTileVertexTransformer(vtTile);
+        vt::TileLayerBuilder tileLayerBuilder(vtTile, 0, vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
+        tileLayerBuilder.addBitmap(tileBitmap);
+        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer(boost::optional<vt::CompOp>(), vt::FloatFunction(1));
+        return std::make_shared<vt::Tile>(vtTile, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
+    }
+
     void RasterTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
@@ -403,20 +432,20 @@ namespace carto {
                     bitmap = ExtractSubTile(_tile, dataSourceTile, bitmap);
                 }
                 std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
-                std::shared_ptr<vt::Tile> vtTile = CreateVectorTile(_tile, bitmap, tileTransformer);
-                std::size_t tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
+                std::shared_ptr<vt::Tile> vtTile = layer->createVectorTile(_tile, bitmap);
+                std::size_t vtTileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
 
                 if (!isInvalidated()) {
                     // Build the bitmap object
                     std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
                     if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
                         if (isPreloading()) {
-                            layer->_preloadingCache.put(_tile.getTileId(), vtTile, tileSize);
+                            layer->_preloadingCache.put(_tile.getTileId(), vtTile, vtTileSize);
                             if (tileData->getMaxAge() >= 0) {
                                 layer->_preloadingCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                             }
                         } else {
-                            layer->_visibleCache.put(_tile.getTileId(), vtTile, tileSize);
+                            layer->_visibleCache.put(_tile.getTileId(), vtTile, vtTileSize);
                             if (tileData->getMaxAge() >= 0) {
                                 layer->_visibleCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                             }
@@ -441,34 +470,6 @@ namespace carto {
         int h = bitmap->getHeight() >> deltaZoom;
         std::shared_ptr<Bitmap> subBitmap = bitmap->getSubBitmap(x, y, std::max(w, 1), std::max(h, 1));
         return subBitmap->getResizedBitmap(bitmap->getWidth(), bitmap->getHeight());
-    }
-
-    std::shared_ptr<vt::Tile> RasterTileLayer::FetchTask::CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) {
-        std::shared_ptr<vt::TileBitmap> tileBitmap;
-        switch (bitmap->getColorFormat()) {
-        case ColorFormat::COLOR_FORMAT_GRAYSCALE:
-            tileBitmap = std::make_shared<vt::TileBitmap>(vt::TileBitmap::Format::GRAYSCALE, bitmap->getWidth(), bitmap->getHeight(), bitmap->getPixelData());
-            break;
-        case ColorFormat::COLOR_FORMAT_RGB:
-            tileBitmap = std::make_shared<vt::TileBitmap>(vt::TileBitmap::Format::RGB, bitmap->getWidth(), bitmap->getHeight(), bitmap->getPixelData());
-            break;
-        case ColorFormat::COLOR_FORMAT_RGBA:
-            tileBitmap = std::make_shared<vt::TileBitmap>(vt::TileBitmap::Format::RGBA, bitmap->getWidth(), bitmap->getHeight(), bitmap->getPixelData());
-            break;
-        default:
-            tileBitmap = std::make_shared<vt::TileBitmap>(vt::TileBitmap::Format::RGBA, bitmap->getWidth(), bitmap->getHeight(), bitmap->getRGBABitmap()->getPixelData());
-            break;
-        }
-
-        float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
-        vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
-        std::shared_ptr<vt::TileBackground> tileBackground = std::make_shared<vt::TileBackground>(vt::Color(), std::shared_ptr<vt::BitmapPattern>());
-        std::shared_ptr<const vt::TileTransformer::VertexTransformer> vtTransformer = tileTransformer->createTileVertexTransformer(vtTile);
-        vt::TileLayerBuilder tileLayerBuilder(vtTile, 0, vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
-        tileLayerBuilder.addBitmap(tileBitmap);
-        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer(boost::optional<vt::CompOp>(), vt::FloatFunction(1));
-
-        return std::make_shared<vt::Tile>(vtTile, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
     }
 
     const int RasterTileLayer::DEFAULT_CULL_DELAY = 200;

@@ -59,6 +59,7 @@
 #import "NTSolidLayer.h"
 #import "NTRasterTileEventListener.h"
 #import "NTRasterTileLayer.h"
+#import "NTHillshadeRasterTileLayer.h"
 #import "NTTileLoadListener.h"
 #import "NTUTFGridEventListener.h"
 #import "NTVectorElementEventListener.h"

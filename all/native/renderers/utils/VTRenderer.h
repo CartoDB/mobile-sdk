@@ -24,7 +24,7 @@ namespace carto {
     protected:
         friend GLResourceManager;
 
-        VTRenderer(const std::weak_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader2D, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader3D);
+        VTRenderer(const std::weak_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
 
         virtual void create() const;
         virtual void destroy() const;

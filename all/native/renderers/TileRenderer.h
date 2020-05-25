@@ -68,6 +68,7 @@ namespace carto {
 
         static const std::string LIGHTING_SHADER_2D;
         static const std::string LIGHTING_SHADER_3D;
+        static const std::string LIGHTING_SHADER_NORMALMAP;
 
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
