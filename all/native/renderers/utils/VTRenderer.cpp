@@ -19,7 +19,7 @@ namespace carto {
     {
     }
 
-    void VTRenderer::create() const {
+    void VTRenderer::create() {
         if (!_tileRenderer) {
             Log::Debug("VTRenderer::create: Creating renderer");
 
@@ -31,7 +31,7 @@ namespace carto {
         }
     }
 
-    void VTRenderer::destroy() const {
+    void VTRenderer::destroy() {
         if (_tileRenderer) {
             Log::Debug("VTRenderer::destroy: Releasing renderer");
 

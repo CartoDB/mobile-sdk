@@ -10,12 +10,10 @@ namespace carto {
     }
 
     GLuint Shader::getProgId() const {
-        create();
         return _progId;
     }
     
     GLuint Shader::getUniformLoc(const std::string& uniformName) const {
-        create();
         auto it = _uniformMap.find(uniformName);
         if (it == _uniformMap.end()) {
             Log::Errorf("Shader::getUniformLoc: Uniform '%s' not found in shader '%s'", uniformName.c_str(), _name.c_str());
@@ -25,7 +23,6 @@ namespace carto {
     }
     
     GLuint Shader::getAttribLoc(const std::string& attribName) const {
-        create();
         auto it = _attribMap.find(attribName);
         if (it == _attribMap.end()) {
             Log::Errorf("Shader::getAttribLoc: Attribute '%s' not found in shader '%s'", attribName.c_str(), _name.c_str());
@@ -47,7 +44,7 @@ namespace carto {
     {
     }
 
-    void Shader::create() const {
+    void Shader::create() {
         enum { VAR_NAME_BUF_SIZE = 256 };
 
         if (_vertShaderId == 0) {
@@ -93,7 +90,7 @@ namespace carto {
         }
     }
 
-    void Shader::destroy() const {
+    void Shader::destroy() {
         if (_vertShaderId != 0) {
             glDeleteShader(_vertShaderId);
             _vertShaderId = 0;

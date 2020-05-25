@@ -56,12 +56,12 @@ namespace carto {
         return texture;
     }
         
-    void BitmapTextureCache::create() const {
+    void BitmapTextureCache::create() {
         std::lock_guard<std::mutex> lock(_mutex);
         _cache.clear();
     }
 
-    void BitmapTextureCache::destroy() const {
+    void BitmapTextureCache::destroy() {
         std::lock_guard<std::mutex> lock(_mutex);
         _cache.clear();
     }

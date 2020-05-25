@@ -28,12 +28,10 @@ namespace carto {
     }
 
     GLuint FrameBuffer::getFBOId() const {
-        create();
         return _fboId;
     }
 
     GLuint FrameBuffer::getColorTexId() const {
-        create();
         return _colorTexId;
     }
         
@@ -66,7 +64,7 @@ namespace carto {
     {
     }
 
-    void FrameBuffer::create() const {
+    void FrameBuffer::create() {
         if (_fboId == 0) {
             GLint oldFBOId = 0;
             glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBOId);
@@ -132,7 +130,7 @@ namespace carto {
         }
     }
 
-    void FrameBuffer::destroy() const {
+    void FrameBuffer::destroy() {
         if (_fboId != 0) {
             glDeleteFramebuffers(1, &_fboId);
             _fboId = 0;
