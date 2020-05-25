@@ -35,7 +35,7 @@ namespace carto {
             Log::Errorf("BitmapUtils::LoadBitmapFromFile: Ignore load due to size %d: %s", size, filePath.c_str());
             return std::shared_ptr<Bitmap>();
         }
-        std::vector<unsigned char> data(static_cast<size_t>(size));
+        std::vector<unsigned char> data(static_cast<std::size_t>(size));
         fread(data.data(), 1, size, fp.get());
         return Bitmap::CreateFromCompressed(data.data(), data.size());
     }
@@ -49,14 +49,9 @@ namespace carto {
 
         AndroidBitmapInfo bitmapInfo;
         AndroidBitmap_getInfo(jenv, androidBitmap, &bitmapInfo);
-        unsigned char* uncompressedData = nullptr;
-        if (AndroidBitmap_lockPixels(jenv, androidBitmap, reinterpret_cast<void **>(&uncompressedData)) != ANDROID_BITMAP_RESULT_SUCCESS) {
-            Log::Error("BitmapUtils::CreateBitmapFromAndroidBitmap: Failed to lock bitmap pixels");
-            return std::shared_ptr<Bitmap>();
-        }
 
-        unsigned int bytesPerPixel;
-        ColorFormat::ColorFormat colorFormat;
+        unsigned int bytesPerPixel = 0;
+        ColorFormat::ColorFormat colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
         switch (bitmapInfo.format) {
         case ANDROID_BITMAP_FORMAT_A_8:
             bytesPerPixel = 1;
@@ -77,14 +72,24 @@ namespace carto {
         case ANDROID_BITMAP_FORMAT_NONE:
         default:
             Log::Errorf("BitmapUtils::CreateBitmapFromAndroidBitmap: Unsupported color format: %d", bitmapInfo.format);
-            AndroidBitmap_unlockPixels(jenv, androidBitmap);
             return std::shared_ptr<Bitmap>();
         }
 
-        const std::shared_ptr<Bitmap>& bitmap = std::make_shared<Bitmap>(uncompressedData, bitmapInfo.width, bitmapInfo.height, colorFormat, bitmapInfo.width * bytesPerPixel);
-
+        unsigned char* uncompressedData = nullptr;
+        if (AndroidBitmap_lockPixels(jenv, androidBitmap, reinterpret_cast<void **>(&uncompressedData)) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            Log::Error("BitmapUtils::CreateBitmapFromAndroidBitmap: Failed to lock bitmap pixels");
+            return std::shared_ptr<Bitmap>();
+        }
+        std::shared_ptr<Bitmap> bitmap;
+        try {
+            bitmap = std::make_shared<Bitmap>(uncompressedData, bitmapInfo.width, bitmapInfo.height, colorFormat, bitmapInfo.width * bytesPerPixel);
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("BitmapUtils::CreateBitmapFromAndroidBitmap: Failed to create bitmap: %s", ex.what());
+            AndroidBitmap_unlockPixels(jenv, androidBitmap);
+            throw;
+        }
         AndroidBitmap_unlockPixels(jenv, androidBitmap);
-
         return bitmap;
     }
 

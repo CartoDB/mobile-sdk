@@ -720,7 +720,7 @@ namespace carto {
                 }
 
                 if (packageListData.size() != offset) {
-                    packageListData.resize(static_cast<size_t>(offset));
+                    packageListData.resize(static_cast<std::size_t>(offset));
                 }
                 packageListData.insert(packageListData.end(), buf, buf + size);
                 return true;
