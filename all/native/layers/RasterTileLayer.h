@@ -29,7 +29,7 @@ namespace carto {
     /**
      * A tile layer where each tile is a bitmap. Should be used together with corresponding data source.
      */
-    class RasterTileLayer: public TileLayer {
+    class RasterTileLayer : public TileLayer {
     public:
         /**
          * Constructs a RasterTileLayer object from a data source.
@@ -78,7 +78,6 @@ namespace carto {
             
         private:
             static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
-            static std::shared_ptr<vt::Tile> CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
         };
     
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
@@ -86,6 +85,8 @@ namespace carto {
         virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
         virtual void clearTiles(bool preloadingTiles);
         virtual void tilesChanged(bool removeTiles);
+
+        virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);

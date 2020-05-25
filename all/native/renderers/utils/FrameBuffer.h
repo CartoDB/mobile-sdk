@@ -35,8 +35,8 @@ namespace carto {
 
         FrameBuffer(const std::weak_ptr<GLResourceManager>& manager, int width, int height, bool color, bool depth, bool stencil);
 
-        virtual void create() const;
-        virtual void destroy() const;
+        virtual void create();
+        virtual void destroy();
 
     private:
         int _width;
@@ -45,9 +45,9 @@ namespace carto {
         bool _depth;
         bool _stencil;
     
-        mutable GLuint _fboId;
-        mutable GLuint _colorTexId;
-        mutable std::vector<GLuint> _depthStencilRBIds;
+        GLuint _fboId;
+        GLuint _colorTexId;
+        std::vector<GLuint> _depthStencilRBIds;
     };
     
 }

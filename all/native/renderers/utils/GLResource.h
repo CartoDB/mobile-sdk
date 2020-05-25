@@ -26,8 +26,8 @@ namespace carto {
 
         GLResource(const std::weak_ptr<GLResourceManager>& manager);
 
-        virtual void create() const = 0;
-        virtual void destroy() const = 0;
+        virtual void create() = 0;
+        virtual void destroy() = 0;
 
         const std::weak_ptr<GLResourceManager> _manager;
     };

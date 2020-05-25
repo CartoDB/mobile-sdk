@@ -24,17 +24,15 @@ namespace carto {
     protected:
         friend GLResourceManager;
 
-        VTRenderer(const std::weak_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader2D, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader3D);
+        VTRenderer(const std::weak_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
 
-        virtual void create() const;
-        virtual void destroy() const;
+        virtual void create();
+        virtual void destroy();
 
     private:
         const std::shared_ptr<vt::TileTransformer> _tileTransformer;
-        const boost::optional<vt::GLTileRenderer::LightingShader> _lightingShader2D;
-        const boost::optional<vt::GLTileRenderer::LightingShader> _lightingShader3D;
 
-        mutable std::shared_ptr<vt::GLTileRenderer> _tileRenderer;
+        std::shared_ptr<vt::GLTileRenderer> _tileRenderer;
     };
 
 }

@@ -28,8 +28,8 @@ namespace carto {
         
         Shader(const std::weak_ptr<GLResourceManager>& manager, const std::string& name, const std::string& vertSource, const std::string& fragSource);
 
-        virtual void create() const;
-        virtual void destroy() const;
+        virtual void create();
+        virtual void destroy();
 
     private:
         static GLuint LoadProg(const std::string& name, GLuint vertShaderId, GLuint fragShaderId);
@@ -39,12 +39,12 @@ namespace carto {
         const std::string _vertSource;
         const std::string _fragSource;
         
-        mutable GLuint _progId;
-        mutable GLuint _vertShaderId;
-        mutable GLuint _fragShaderId;
+        GLuint _progId;
+        GLuint _vertShaderId;
+        GLuint _fragShaderId;
         
-        mutable std::unordered_map<std::string, GLuint> _uniformMap;
-        mutable std::unordered_map<std::string, GLuint> _attribMap;
+        std::unordered_map<std::string, GLuint> _uniformMap;
+        std::unordered_map<std::string, GLuint> _attribMap;
     };
 
 }

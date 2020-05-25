@@ -276,27 +276,39 @@ namespace carto {
             return false; // safety check, should never happen
         }
 
-        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader2D;
-        if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
-            lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-                glUniform3fv(glGetUniformLocation(shaderProgram, "u_viewDir"), 1, _viewDir.data());
-            });
-        }
-        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader3D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_3D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-            if (auto options = _options.lock()) {
-                const Color& ambientLightColor = options->getAmbientLightColor();
-                glUniform4f(glGetUniformLocation(shaderProgram, "u_ambientColor"), ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f, ambientLightColor.getB() / 255.0f, ambientLightColor.getA() / 255.0f);
-                const Color& mainLightColor = options->getMainLightColor();
-                glUniform4f(glGetUniformLocation(shaderProgram, "u_lightColor"), mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f, mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
-                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
-                glUniform3fv(glGetUniformLocation(shaderProgram, "u_viewDir"), 1, _viewDir.data());
-            }
-        });
-
         Log::Debug("TileRenderer: Initializing renderer");
-        _vtRenderer = mapRenderer->getGLResourceManager()->create<VTRenderer>(_tileTransformer, lightingShader2D, lightingShader3D);
+        _vtRenderer = mapRenderer->getGLResourceManager()->create<VTRenderer>(_tileTransformer);
+
         if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer()) {
             tileRenderer->setVisibleTiles(_tiles, _horizontalLayerOffset == 0);
+
+            if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
+                vt::GLTileRenderer::LightingShader lightingShader2D(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_viewDir"), 1, _viewDir.data());
+                });
+                tileRenderer->setLightingShader2D(lightingShader2D);
+            }
+
+            vt::GLTileRenderer::LightingShader lightingShader3D(true, LIGHTING_SHADER_3D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+                if (auto options = _options.lock()) {
+                    const Color& ambientLightColor = options->getAmbientLightColor();
+                    glUniform4f(glGetUniformLocation(shaderProgram, "u_ambientColor"), ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f, ambientLightColor.getB() / 255.0f, ambientLightColor.getA() / 255.0f);
+                    const Color& mainLightColor = options->getMainLightColor();
+                    glUniform4f(glGetUniformLocation(shaderProgram, "u_lightColor"), mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f, mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_viewDir"), 1, _viewDir.data());
+                }
+            });
+            tileRenderer->setLightingShader3D(lightingShader3D);
+
+            vt::GLTileRenderer::LightingShader lightingShaderNormalMap(false, LIGHTING_SHADER_NORMALMAP, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+                if (auto options = _options.lock()) {
+                    const Color& ambientLightColor = options->getAmbientLightColor();
+                    glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), 0.0f, 0.0f, 0.0f, 1.0f); // ignore the ambient color for now
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _viewDir.data());
+                }
+            });
+            tileRenderer->setLightingShaderNormalMap(lightingShaderNormalMap);
         }
 
         return _vtRenderer && _vtRenderer->isValid();
@@ -324,6 +336,15 @@ namespace carto {
                 float lighting = max(0.0, dot(normal, u_viewDir)) * 0.5 + 0.5;
                 return vec4(color.rgb * lighting, color.a);
             }
+        }
+    )GLSL";
+
+    const std::string TileRenderer::LIGHTING_SHADER_NORMALMAP = R"GLSL(
+        uniform vec4 u_shadowColor;
+        uniform vec3 u_lightDir;
+        vec4 applyLighting(vec4 color, vec3 normal) {
+            float lighting = max(0.0, dot(normal, u_lightDir));
+            return vec4(u_shadowColor.rgb, color.a) * (1.0 - lighting);
         }
     )GLSL";
 
