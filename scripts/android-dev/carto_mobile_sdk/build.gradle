@@ -1,0 +1,58 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+//        ndk {
+//            abiFilters 'arm64-v8a', 'x86_64'
+//            abiFilters 'x86'
+//        }
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    defaultConfig {
+        externalNativeBuild {
+            cmake {
+                arguments "-DSINGLE_LIBRARY:BOOL=ON", "-DANDROID_STL=c++_static", "-DWRAPPER_DIR='$projectDir/../../../generated/android-java/wrappers'"
+            }
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path file("$projectDir/../../build/CMakeLists.txt")
+        }
+    }
+
+    sourceSets {
+        main {
+            // Changes the directory for Java sources. The default directory is
+            // 'src/main/java'.
+            java.srcDirs = ["$projectDir/../../../generated/android-java/proxies", "$projectDir/../../../android/java"]
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+}
