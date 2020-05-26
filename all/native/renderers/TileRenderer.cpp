@@ -9,6 +9,7 @@
 #include "renderers/utils/GLResourceManager.h"
 #include "renderers/utils/VTRenderer.h"
 #include "utils/Log.h"
+#include "utils/Const.h"
 
 #include <vt/Label.h>
 #include <vt/LabelCuller.h>
@@ -32,6 +33,8 @@ namespace carto {
         _horizontalLayerOffset(0),
         _viewDir(0, 0, 0),
         _mainLightDir(0, 0, 0),
+        _normalIlluminationDirection(320),
+        _mapRotation(0),
         _tiles(),
         _mutex()
     {
@@ -101,6 +104,8 @@ namespace carto {
         tileRenderer->setInteractionMode(_interactionMode);
         tileRenderer->setSubTileBlending(_subTileBlending);
 
+
+        _mapRotation = viewState.getRotation();
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {
             _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection())));
@@ -303,10 +308,12 @@ namespace carto {
 
             vt::GLTileRenderer::LightingShader lightingShaderNormalMap(false, LIGHTING_SHADER_NORMALMAP, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
                 if (auto options = _options.lock()) {
-                    const Color& ambientLightColor = options->getAmbientLightColor();
+//                    const Color& ambientLightColor = options->getAmbientLightColor();
+                    float azimuthal = (_normalIlluminationDirection - _mapRotation) * Const::DEG_TO_RAD;
                     glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), 0.0f, 0.0f, 0.0f, 1.0f); // ignore the ambient color for now
                     glUniform4f(glGetUniformLocation(shaderProgram, "u_highlightColor"), 1.0f, 1.0f, 1.0f, 0.0f);
                     glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _viewDir.data());
+                    glUniform1f(glGetUniformLocation(shaderProgram, "u_azimut"), azimuthal);
                 }
             });
             tileRenderer->setLightingShaderNormalMap(lightingShaderNormalMap);
@@ -344,19 +351,17 @@ namespace carto {
         uniform vec4 u_shadowColor;
         uniform vec4 u_highlightColor;
         uniform vec3 u_lightDir;
+        uniform float u_azimut;
         #define PI 3.141592653589793
-            vec4 applyLighting(vec4 color, vec3 normal) {
+
+        vec4 applyLighting(vec4 color, vec3 normal) {
             float lighting = max(0.0, dot(normal, u_lightDir));
             float aspect = normal.x != 0.0 ? atan(normal.y, -normal.x) : PI / 2.0 * (normal.y > 0.0 ? 1.0 : -1.0);
             float slope = atan(1.25 * length(normal));
 
             float intensity = u_lightDir.x;
-            // We add PI to make this property match the global light object, which adds PI/2 to the light's azimuthal
-            // position property to account for 0deg corresponding to north/the top of the viewport in the style spec
-            // and the original shader was written to accept (-illuminationDirection - 90) as the azimuthal.
-            float azimuth = u_lightDir.y + PI;
 
-            float shade = abs(mod((aspect + azimuth) / PI + 0.5, 2.0) - 1.0);
+            float shade = abs(mod((aspect + u_azimut) / PI + 0.5, 2.0) - 1.0);
             vec4 shade_color = mix(u_shadowColor, u_highlightColor, shade) * sin(slope) * clamp(0.5, 0.0, 1.0);
             return vec4(shade_color.rgb, color.a) * (1.0 - lighting);
         }

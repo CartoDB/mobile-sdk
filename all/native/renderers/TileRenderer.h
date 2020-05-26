@@ -80,6 +80,8 @@ namespace carto {
         int _labelOrder;
         int _buildingOrder;
         double _horizontalLayerOffset;
+        double _mapRotation;
+        double _normalIlluminationDirection;
         cglib::vec3<float> _viewDir;
         cglib::vec3<float> _mainLightDir;
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > _tiles;
