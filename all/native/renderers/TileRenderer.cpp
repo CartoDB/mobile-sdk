@@ -103,7 +103,8 @@ namespace carto {
 
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {
-            _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection())));
+            MapPos internalFocusPos = viewState.getProjectionSurface()->calculateMapPos(viewState.getFocusPos());
+            _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(internalFocusPos, options->getMainLightDirection())));
         }
 
         tileRenderer->startFrame(deltaSeconds * 3);
@@ -305,7 +306,7 @@ namespace carto {
                 if (auto options = _options.lock()) {
                     const Color& ambientLightColor = options->getAmbientLightColor();
                     glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), 0.0f, 0.0f, 0.0f, 1.0f); // ignore the ambient color for now
-                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _viewDir.data());
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
                 }
             });
             tileRenderer->setLightingShaderNormalMap(lightingShaderNormalMap);
