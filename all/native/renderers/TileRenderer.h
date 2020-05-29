@@ -22,6 +22,7 @@
 #include <vt/TileId.h>
 #include <vt/Tile.h>
 #include <vt/Bitmap.h>
+#include <vt/Styles.h>
 
 namespace carto {
     class Options;
@@ -49,6 +50,7 @@ namespace carto {
         void setSubTileBlending(bool enabled);
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
+        void setRasterFilterMode(vt::RasterFilterMode filterMode);
 
         void offsetLayerHorizontally(double offset);
     
@@ -79,6 +81,7 @@ namespace carto {
         bool _subTileBlending;
         int _labelOrder;
         int _buildingOrder;
+        vt::RasterFilterMode _rasterFilterMode;
         double _horizontalLayerOffset;
         double _mapRotation;
         double _normalIlluminationDirection;

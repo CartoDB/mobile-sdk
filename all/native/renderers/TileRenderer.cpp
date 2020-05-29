@@ -30,6 +30,7 @@ namespace carto {
         _subTileBlending(true),
         _labelOrder(0),
         _buildingOrder(1),
+        _rasterFilterMode(vt::RasterFilterMode::BILINEAR),
         _horizontalLayerOffset(0),
         _viewDir(0, 0, 0),
         _mainLightDir(0, 0, 0),
@@ -83,6 +84,11 @@ namespace carto {
         _buildingOrder = order;
     }
 
+    void TileRenderer::setRasterFilterMode(vt::RasterFilterMode filterMode) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _rasterFilterMode = filterMode;
+    }
+
     void TileRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         _horizontalLayerOffset += offset;
@@ -103,12 +109,14 @@ namespace carto {
         tileRenderer->setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
         tileRenderer->setInteractionMode(_interactionMode);
         tileRenderer->setSubTileBlending(_subTileBlending);
+        tileRenderer->setRasterFilterMode(_rasterFilterMode);
 
 
         _mapRotation = viewState.getRotation();
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {
-            _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection())));
+            MapPos internalFocusPos = viewState.getProjectionSurface()->calculateMapPos(viewState.getFocusPos());
+            _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(internalFocusPos, options->getMainLightDirection())));
         }
 
         tileRenderer->startFrame(deltaSeconds * 3);
@@ -312,7 +320,7 @@ namespace carto {
                     float azimuthal = (_normalIlluminationDirection - _mapRotation) * Const::DEG_TO_RAD;
                     glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), 0.0f, 0.0f, 0.0f, 1.0f); // ignore the ambient color for now
                     glUniform4f(glGetUniformLocation(shaderProgram, "u_highlightColor"), 1.0f, 1.0f, 1.0f, 0.0f);
-                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _viewDir.data());
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
                     glUniform1f(glGetUniformLocation(shaderProgram, "u_azimut"), azimuthal);
                 }
             });

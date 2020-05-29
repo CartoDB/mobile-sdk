@@ -74,6 +74,7 @@ namespace carto {
 
     RasterTileLayer::RasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         TileLayer(dataSource),
+        _tileFilterMode(RasterTileFilterMode::RASTER_TILE_FILTER_MODE_BILINEAR),
         _rasterTileEventListener(),
         _visibleTileIds(),
         _tempDrawDatas(),
@@ -96,6 +97,19 @@ namespace carto {
         _preloadingCache.resize(capacityInBytes);
     }
     
+    RasterTileFilterMode::RasterTileFilterMode RasterTileLayer::getTileFilterMode() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _tileFilterMode;
+    }
+
+    void RasterTileLayer::setTileFilterMode(RasterTileFilterMode::RasterTileFilterMode filterMode) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _tileFilterMode = filterMode;
+        }
+        redraw();
+    }
+
     std::shared_ptr<RasterTileEventListener> RasterTileLayer::getRasterTileEventListener() const {
         return _rasterTileEventListener.get();
     }
@@ -376,6 +390,17 @@ namespace carto {
             }
 
             _tileRenderer->setInteractionMode(_rasterTileEventListener.get() ? true : false);
+            switch (getTileFilterMode()) {
+            case RasterTileFilterMode::RASTER_TILE_FILTER_MODE_NEAREST:
+                _tileRenderer->setRasterFilterMode(vt::RasterFilterMode::NEAREST);
+                break;
+            case RasterTileFilterMode::RASTER_TILE_FILTER_MODE_BICUBIC:
+                _tileRenderer->setRasterFilterMode(vt::RasterFilterMode::BICUBIC);
+                break;
+            default:
+                _tileRenderer->setRasterFilterMode(vt::RasterFilterMode::BILINEAR);
+                break;
+            }
             bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
 
             if (opacity < 1.0f) {

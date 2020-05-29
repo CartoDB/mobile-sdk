@@ -26,6 +26,26 @@ namespace carto {
         class Tile;
     }
     
+    namespace RasterTileFilterMode {
+        /**
+         * Supported raster tile filtering modes.
+         */
+        enum RasterTileFilterMode {
+            /**
+             * No filter (nearest texel).
+             */
+            RASTER_TILE_FILTER_MODE_NEAREST,
+            /**
+             * Bilinear filter (interpolate between 4 closest texels).
+             */
+            RASTER_TILE_FILTER_MODE_BILINEAR,
+            /**
+             * Bicubic filter (interpolate between 16 closest texels).
+             */
+            RASTER_TILE_FILTER_MODE_BICUBIC
+        };
+    }
+
     /**
      * A tile layer where each tile is a bitmap. Should be used together with corresponding data source.
      */
@@ -57,6 +77,17 @@ namespace carto {
          */
         void setTextureCacheCapacity(std::size_t capacityInBytes);
     
+        /**
+         * Returns the current tile filter mode.
+         * @return The current tile filter mode. The default is bilinear.
+         */
+        RasterTileFilterMode::RasterTileFilterMode getTileFilterMode() const;
+        /**
+         * Sets the current tile filter mode.
+         * @param filterMode The new tile filter mode.
+         */
+        void setTileFilterMode(RasterTileFilterMode::RasterTileFilterMode filterMode);
+
         /**
          * Returns the raster tile event listener.
          * @return The raster tile event listener.
@@ -113,6 +144,8 @@ namespace carto {
         static const unsigned int EXTRA_TILE_FOOTPRINT;
         static const unsigned int DEFAULT_PRELOADING_CACHE_SIZE;
         
+        RasterTileFilterMode::RasterTileFilterMode _tileFilterMode;
+
         ThreadSafeDirectorPtr<RasterTileEventListener> _rasterTileEventListener;
 
         std::vector<long long> _visibleTileIds;
