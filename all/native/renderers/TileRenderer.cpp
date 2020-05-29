@@ -29,6 +29,7 @@ namespace carto {
         _subTileBlending(true),
         _labelOrder(0),
         _buildingOrder(1),
+        _rasterFilterMode(vt::RasterFilterMode::BILINEAR),
         _horizontalLayerOffset(0),
         _viewDir(0, 0, 0),
         _mainLightDir(0, 0, 0),
@@ -80,6 +81,11 @@ namespace carto {
         _buildingOrder = order;
     }
 
+    void TileRenderer::setRasterFilterMode(vt::RasterFilterMode filterMode) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _rasterFilterMode = filterMode;
+    }
+
     void TileRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         _horizontalLayerOffset += offset;
@@ -100,6 +106,7 @@ namespace carto {
         tileRenderer->setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
         tileRenderer->setInteractionMode(_interactionMode);
         tileRenderer->setSubTileBlending(_subTileBlending);
+        tileRenderer->setRasterFilterMode(_rasterFilterMode);
 
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {

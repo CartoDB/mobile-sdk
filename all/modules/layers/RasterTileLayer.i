@@ -21,6 +21,7 @@
 !polymorphic_shared_ptr(carto::RasterTileLayer, layers.RasterTileLayer)
 
 %attribute(carto::RasterTileLayer, std::size_t, TextureCacheCapacity, getTextureCacheCapacity, setTextureCacheCapacity)
+%attribute(carto::RasterTileLayer, carto::RasterTileFilterMode::RasterTileFilterMode, TileFilterMode, getTileFilterMode, setTileFilterMode)
 !attributestring_polymorphic(carto::RasterTileLayer, layers.RasterTileEventListener, RasterTileEventListener, getRasterTileEventListener, setRasterTileEventListener)
 %std_exceptions(carto::RasterTileLayer::RasterTileLayer)
 %ignore carto::RasterTileLayer::FetchTask;
