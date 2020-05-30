@@ -312,7 +312,8 @@ namespace carto {
             vt::GLTileRenderer::LightingShader lightingShaderNormalMap(false, LIGHTING_SHADER_NORMALMAP, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
                 if (auto options = _options.lock()) {
                     const Color& ambientLightColor = options->getAmbientLightColor();
-                    glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), 0.0f, 0.0f, 0.0f, 1.0f); // ignore the ambient color for now
+                    glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), 0.0f, 0.0f, 0.0f, 1.0f);
+                    glUniform4f(glGetUniformLocation(shaderProgram, "u_highlightColor"), 1.0f, 1.0f, 1.0f, 1.0f);
                     glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
                 }
             });
@@ -324,8 +325,8 @@ namespace carto {
 
     const std::string TileRenderer::LIGHTING_SHADER_2D = R"GLSL(
         uniform vec3 u_viewDir;
-        vec4 applyLighting(vec4 color, vec3 normal) {
-            float lighting = max(0.0, dot(normal, u_viewDir)) * 0.5 + 0.5;
+        vec4 applyLighting(lowp vec4 color, mediump vec3 normal) {
+            mediump float lighting = max(0.0, dot(normal, u_viewDir)) * 0.5 + 0.5;
             return vec4(color.rgb * lighting, color.a);
         }
     )GLSL";
@@ -335,13 +336,13 @@ namespace carto {
         uniform vec4 u_lightColor;
         uniform vec3 u_lightDir;
         uniform vec3 u_viewDir;
-        vec4 applyLighting(vec4 color, vec3 normal, float height, bool sideVertex) {
+        vec4 applyLighting(lowp vec4 color, mediump vec3 normal, highp_opt float height, lowp bool sideVertex) {
             if (sideVertex) {
-                vec3 dimmedColor = color.rgb * (1.0 - 0.5 / (1.0 + height * height));
-                vec3 lighting = max(0.0, dot(normal, u_lightDir)) * u_lightColor.rgb + u_ambientColor.rgb;
+                lowp vec3 dimmedColor = color.rgb * (1.0 - 0.5 / (1.0 + height * height));
+                mediump vec3 lighting = max(0.0, dot(normal, u_lightDir)) * u_lightColor.rgb + u_ambientColor.rgb;
                 return vec4(dimmedColor.rgb * lighting, color.a);
             } else {
-                float lighting = max(0.0, dot(normal, u_viewDir)) * 0.5 + 0.5;
+                mediump float lighting = max(0.0, dot(normal, u_viewDir)) * 0.5 + 0.5;
                 return vec4(color.rgb * lighting, color.a);
             }
         }
@@ -349,10 +350,12 @@ namespace carto {
 
     const std::string TileRenderer::LIGHTING_SHADER_NORMALMAP = R"GLSL(
         uniform vec4 u_shadowColor;
+        uniform vec4 u_highlightColor;
         uniform vec3 u_lightDir;
-        vec4 applyLighting(vec4 color, vec3 normal) {
-            float lighting = max(0.0, dot(normal, u_lightDir));
-            return vec4(u_shadowColor.rgb, color.a) * (1.0 - lighting);
+        vec4 applyLighting(lowp vec4 color, mediump vec3 normal, mediump float intensity) {
+            mediump float lighting = max(0.0, dot(normal, u_lightDir));
+            lowp vec4 shadeColor = mix(u_shadowColor, u_highlightColor, lighting);
+            return shadeColor * color * intensity;
         }
     )GLSL";
 
