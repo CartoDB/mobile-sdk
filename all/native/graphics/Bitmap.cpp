@@ -21,8 +21,16 @@ namespace {
     
         const unsigned char* _compressedDataPtr;
     };
-    
-    void readPngCallback(png_structp pngPtr, png_bytep data, png_size_t length) {
+
+    void reportPNGErrorCallback(png_structp pngPtr, png_const_charp message) {
+        carto::Log::Errorf("Bitmap: Error while loading PNG: %s", message);
+    }    
+
+    void reportPNGWarningCallback(png_structp pngPtr, png_const_charp message) {
+        carto::Log::Warnf("Bitmap: Warning while loading PNG: %s", message);
+    }    
+
+    void readPNGCallback(png_structp pngPtr, png_bytep data, png_size_t length) {
         LibPNGIOContainer* ioContainer = static_cast<LibPNGIOContainer*>(png_get_io_ptr(pngPtr));
         for (std::size_t i = 0; i < length; i++) {
             data[i] = ioContainer->_compressedDataPtr[i];
@@ -31,7 +39,7 @@ namespace {
         ioContainer->_compressedDataPtr += length;
     }
     
-    void writePngCallback(png_structp pngPtr, png_bytep data, png_size_t length) {
+    void writePNGCallback(png_structp pngPtr, png_bytep data, png_size_t length) {
         std::vector<unsigned char>* compressedData = static_cast<std::vector<unsigned char>* >(png_get_io_ptr(pngPtr));
         compressedData->reserve(compressedData->size() + length);
         for (std::size_t i = 0; i < length; i++) {
@@ -128,9 +136,13 @@ namespace carto {
     std::shared_ptr<BinaryData> Bitmap::getPixelDataPtr() const {
         return std::make_shared<BinaryData>(_pixelData);
     }
-    
+
     std::shared_ptr<BinaryData> Bitmap::compressToPng() const {
-        png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+        return compressToPNG();
+    }
+    
+    std::shared_ptr<BinaryData> Bitmap::compressToPNG() const {
+        png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, reportPNGErrorCallback, reportPNGWarningCallback);
         if (!pngPtr) {
             Log::Error("Bitmap::compressToPng: Failed to compress bitmap to PNG");
             return std::shared_ptr<BinaryData>();
@@ -151,7 +163,7 @@ namespace carto {
     
         // Set callback for writing data
         std::vector<unsigned char> compressedData;
-        png_set_write_fn(pngPtr, &compressedData, writePngCallback, NULL);
+        png_set_write_fn(pngPtr, &compressedData, writePNGCallback, NULL);
     
         int colorType;
         bool unpremultiply = false;
@@ -741,7 +753,7 @@ namespace carto {
     }
     
     bool Bitmap::loadPNG(const unsigned char* compressedData, std::size_t dataSize) {
-        png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+        png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, reportPNGErrorCallback, reportPNGWarningCallback);
         if (!pngPtr) {
             Log::Error("Bitmap::loadPNG: Failed to load PNG");
             return false;
@@ -769,7 +781,7 @@ namespace carto {
     
         // Set callback method for reading data
         LibPNGIOContainer ioContainer(compressedData);
-        png_set_read_fn(pngPtr, &ioContainer, readPngCallback);
+        png_set_read_fn(pngPtr, &ioContainer, readPNGCallback);
     
         // Read all the info up to the image data
         png_read_info(pngPtr, infoPtr);
