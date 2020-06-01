@@ -14,7 +14,9 @@ python swigpp-objc.py --profile nmlmodellodtree+valhalla
 
 ### 3. Compile the SDK in debug mode
 
+```
 python build-ios.py --profile nmlmodellodtree+valhalla --configuration Debug
+```
 
 ### 4. Use any project (for example, hellomap from mobile-ios-samples)
 
