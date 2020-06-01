@@ -22,6 +22,7 @@
 #include <vt/TileId.h>
 #include <vt/Tile.h>
 #include <vt/Bitmap.h>
+#include <vt/Styles.h>
 
 namespace carto {
     class Options;
@@ -49,6 +50,7 @@ namespace carto {
         void setSubTileBlending(bool enabled);
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
+        void setRasterFilterMode(vt::RasterFilterMode filterMode);
 
         void offsetLayerHorizontally(double offset);
     
@@ -68,6 +70,7 @@ namespace carto {
 
         static const std::string LIGHTING_SHADER_2D;
         static const std::string LIGHTING_SHADER_3D;
+        static const std::string LIGHTING_SHADER_NORMALMAP;
 
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
@@ -78,6 +81,7 @@ namespace carto {
         bool _subTileBlending;
         int _labelOrder;
         int _buildingOrder;
+        vt::RasterFilterMode _rasterFilterMode;
         double _horizontalLayerOffset;
         cglib::vec3<float> _viewDir;
         cglib::vec3<float> _mainLightDir;

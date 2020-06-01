@@ -26,11 +26,11 @@ namespace carto {
 
         NMLResources(const std::weak_ptr<GLResourceManager>& manager);
 
-        virtual void create() const;
-        virtual void destroy() const;
+        virtual void create();
+        virtual void destroy();
 
     private:
-        mutable std::shared_ptr<nml::GLResourceManager> _resourceManager;
+        std::shared_ptr<nml::GLResourceManager> _resourceManager;
     };
 
 }

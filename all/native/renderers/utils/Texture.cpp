@@ -28,7 +28,6 @@ namespace carto {
     }
 
     GLuint Texture::getTexId() const {
-        create();
         return _texId;
     }
 
@@ -58,7 +57,7 @@ namespace carto {
         _sizeInBytes = static_cast<std::size_t>((_mipmaps ? MIPMAP_SIZE_MULTIPLIER : 1.0) * _bitmap->getWidth() * _bitmap->getHeight() * _bitmap->getBytesPerPixel());
     }
 
-    void Texture::create() const {
+    void Texture::create() {
         if (_texId == 0) {
             _texId = LoadFromBitmap(*_bitmap, _mipmaps, _repeat);
 
@@ -66,7 +65,7 @@ namespace carto {
         }
     }
 
-    void Texture::destroy() const {
+    void Texture::destroy() {
         if (_texId != 0) {
             glDeleteTextures(1, &_texId);
             _texId = 0;

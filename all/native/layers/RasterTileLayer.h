@@ -26,10 +26,30 @@ namespace carto {
         class Tile;
     }
     
+    namespace RasterTileFilterMode {
+        /**
+         * Supported raster tile filtering modes.
+         */
+        enum RasterTileFilterMode {
+            /**
+             * No filter (nearest texel).
+             */
+            RASTER_TILE_FILTER_MODE_NEAREST,
+            /**
+             * Bilinear filter (interpolate between 4 closest texels).
+             */
+            RASTER_TILE_FILTER_MODE_BILINEAR,
+            /**
+             * Bicubic filter (interpolate between 16 closest texels).
+             */
+            RASTER_TILE_FILTER_MODE_BICUBIC
+        };
+    }
+
     /**
      * A tile layer where each tile is a bitmap. Should be used together with corresponding data source.
      */
-    class RasterTileLayer: public TileLayer {
+    class RasterTileLayer : public TileLayer {
     public:
         /**
          * Constructs a RasterTileLayer object from a data source.
@@ -58,6 +78,17 @@ namespace carto {
         void setTextureCacheCapacity(std::size_t capacityInBytes);
     
         /**
+         * Returns the current tile filter mode.
+         * @return The current tile filter mode. The default is bilinear.
+         */
+        RasterTileFilterMode::RasterTileFilterMode getTileFilterMode() const;
+        /**
+         * Sets the current tile filter mode.
+         * @param filterMode The new tile filter mode.
+         */
+        void setTileFilterMode(RasterTileFilterMode::RasterTileFilterMode filterMode);
+
+        /**
          * Returns the raster tile event listener.
          * @return The raster tile event listener.
          */
@@ -78,7 +109,6 @@ namespace carto {
             
         private:
             static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
-            static std::shared_ptr<vt::Tile> CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
         };
     
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
@@ -86,6 +116,8 @@ namespace carto {
         virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
         virtual void clearTiles(bool preloadingTiles);
         virtual void tilesChanged(bool removeTiles);
+
+        virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
@@ -112,6 +144,8 @@ namespace carto {
         static const unsigned int EXTRA_TILE_FOOTPRINT;
         static const unsigned int DEFAULT_PRELOADING_CACHE_SIZE;
         
+        RasterTileFilterMode::RasterTileFilterMode _tileFilterMode;
+
         ThreadSafeDirectorPtr<RasterTileEventListener> _rasterTileEventListener;
 
         std::vector<long long> _visibleTileIds;

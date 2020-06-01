@@ -20,7 +20,7 @@ namespace carto {
     {
     }
 
-    void NMLResources::create() const {
+    void NMLResources::create() {
         if (!_resourceManager) {
             Log::Debug("NMLResources::create: Creating renderer");
 
@@ -31,7 +31,7 @@ namespace carto {
         }
     }
 
-    void NMLResources::destroy() const {
+    void NMLResources::destroy() {
         if (_resourceManager) {
             Log::Debug("NMLResources::destroy: Releasing renderer");
 

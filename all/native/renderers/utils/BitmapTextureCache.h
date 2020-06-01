@@ -35,8 +35,8 @@ namespace carto {
 
         BitmapTextureCache(const std::weak_ptr<GLResourceManager>& manager, std::size_t capacityInBytes);
 
-        virtual void create() const;
-        virtual void destroy() const;
+        virtual void create();
+        virtual void destroy();
 
     private:
         mutable cache::timed_lru_cache<std::shared_ptr<Bitmap>, std::shared_ptr<Texture> > _cache;

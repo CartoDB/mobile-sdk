@@ -35,8 +35,8 @@ namespace carto {
 
         Texture(const std::weak_ptr<GLResourceManager>& manager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat);
 
-        virtual void create() const;
-        virtual void destroy() const;
+        virtual void create();
+        virtual void destroy();
 
     private:
         static const int MAX_ANISOTROPY;
@@ -51,7 +51,7 @@ namespace carto {
         std::size_t _sizeInBytes;
         cglib::vec2<float> _texCoordScale;
     
-        mutable GLuint _texId;
+        GLuint _texId;
     };
     
 }
