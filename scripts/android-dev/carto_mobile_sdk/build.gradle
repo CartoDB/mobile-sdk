@@ -28,7 +28,7 @@ android {
     defaultConfig {
         externalNativeBuild {
             cmake {
-                arguments "-DSINGLE_LIBRARY:BOOL=ON", "-DANDROID_STL=c++_static", "-DWRAPPER_DIR='$projectDir/../../../generated/android-java/wrappers'"
+                arguments "-DSINGLE_LIBRARY:BOOL=ON", "-DANDROID_STL=c++_static", "-DSDK_CPP_DEFINES=''", "-DWRAPPER_DIR=${projectDir.absolutePath.replaceAll('\\\\', '/')}/../../../generated/android-java/wrappers"
             }
         }
     }
