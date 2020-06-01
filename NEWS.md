@@ -1,3 +1,20 @@
+CARTO Mobile SDK 4.3.1RC1
+-------------------
+
+### Changes/fixes:
+
+* Added HillshadeRasterTileLayer to the SDK. It can be used to add additional height-based shading to the map.
+* Added getTileFilterMode/setTileFilterMode methods to RasterTileLayer. This allows to choose raster tile filtering mode between point, bilinear and bicubic filters.
+* Changed lighting vector calculation for globe mode - the lighting vector is now always based on the local tangent frame of focus point
+* Deprecated compressToPng method in Bitmap class, use compressToPNG instead
+* Fixed issues with HTTPTileDataSource when multiple tile download threads were used on iOS, by making HTTPClient thread safe
+* Fixed potential native crash when thread pool is downsized
+* Fixed thread race between layers and renderers when GL context was lost
+* Fixed compatibility issues with older GPUs not supporting high precision in fragment shaders
+* Slightly better error reporting for CartoCSS errors
+* Slightly better error reporting for PNG reading errors
+
+
 CARTO Mobile SDK 4.3.0
 -------------------
 
