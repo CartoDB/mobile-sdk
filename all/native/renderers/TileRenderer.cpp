@@ -336,7 +336,7 @@ namespace carto {
         uniform vec4 u_lightColor;
         uniform vec3 u_lightDir;
         uniform vec3 u_viewDir;
-        vec4 applyLighting(lowp vec4 color, mediump vec3 normal, highp_opt float height, lowp bool sideVertex) {
+        vec4 applyLighting(lowp vec4 color, mediump vec3 normal, highp_opt float height, bool sideVertex) {
             if (sideVertex) {
                 lowp vec3 dimmedColor = color.rgb * (1.0 - 0.5 / (1.0 + height * height));
                 mediump vec3 lighting = max(0.0, dot(normal, u_lightDir)) * u_lightColor.rgb + u_ambientColor.rgb;
