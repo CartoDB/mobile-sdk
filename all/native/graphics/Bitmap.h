@@ -129,8 +129,15 @@ namespace carto {
         /**
          * Compresses this bitmap to a png.
          * @return A byte vector of the png's data.
+         * @deprecated Use compressToPNG.
          */
         std::shared_ptr<BinaryData> compressToPng() const;
+    
+        /**
+         * Compresses this bitmap to a PNG format.
+         * @return A byte vector of the PNG's data.
+         */
+        std::shared_ptr<BinaryData> compressToPNG() const;
     
         /**
          * Compresses this bitmap to a internal format.
@@ -208,7 +215,6 @@ namespace carto {
         
         unsigned int _width;
         unsigned int _height;
-    
         unsigned int _bytesPerPixel;
         ColorFormat::ColorFormat _colorFormat;
     
