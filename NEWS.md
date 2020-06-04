@@ -1,3 +1,11 @@
+CARTO Mobile SDK 4.3.1
+-------------------
+
+### Changes/fixes:
+
+* Minor documentation updates
+
+
 CARTO Mobile SDK 4.3.1RC1
 -------------------
 
