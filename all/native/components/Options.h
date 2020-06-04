@@ -139,6 +139,7 @@ namespace carto {
         /**
          * Sets the direction of the main light. The main light affects all lighting enabled models
          * in the scene equally from a certain direction. This light can be used to simulate sun or moon light.
+         * The direction is always measured based on the local tangent frame of the focus point. 
          * @param direction The new direction vector for the main light. (0,0,-1) means straight down, (-0.707,0,-0.707) means
          *        from east with a 45 degree angle. The direction vector will be normalized.
          */
