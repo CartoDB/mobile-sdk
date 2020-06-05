@@ -38,7 +38,7 @@ namespace carto {
         _maxClusterZoom(Const::MAX_SUPPORTED_ZOOM_LEVEL),
         _animatedClusters(true),
         _dpiScale(1),
-        _clusters(),
+        _clusters(std::make_shared<std::vector<Cluster> >()),
         _projectionSurface(),
         _singletonClusterCount(0),
         _rootClusterIdx(-1),
@@ -173,11 +173,7 @@ namespace carto {
         bool refresh = false;
         {
             std::lock_guard<std::mutex> lock(layer->_clusterMutex);
-            refresh = layer->_refreshRootCluster;
-            if (!layer->_clusters) {
-                refresh = true;
-            }
-            layer->_refreshRootCluster = false;
+            std::swap(refresh, layer->_refreshRootCluster);
         }
         if (refresh) {
             layer->rebuildClusters(vectorElements);
@@ -448,9 +444,6 @@ namespace carto {
 
     bool ClusteredVectorLayer::renderClusters(const ViewState& viewState, float deltaSeconds) {
         std::lock_guard<std::mutex> lock(_clusterMutex);
-        if (!_clusters) {
-            return false;
-        }
         if (viewState.getProjectionSurface() != _projectionSurface) {
             return false;
         }
