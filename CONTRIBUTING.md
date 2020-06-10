@@ -17,8 +17,8 @@ After that, there are several rules you should follow when a new pull request is
 
 ## Development environments
 
-* [iOS instructions](https://github.com/CartoDB/mobile-sdk/scripts/ios-dev)
-* [Android instructions](https://github.com/CartoDB/mobile-sdk/scripts/android-dev)
+* [iOS instructions](https://github.com/CartoDB/mobile-sdk/tree/master/scripts/ios-dev)
+* [Android instructions](https://github.com/CartoDB/mobile-sdk/tree/master/scripts/android-dev)
 
 ## Directories
 
