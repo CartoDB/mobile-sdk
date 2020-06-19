@@ -7,6 +7,7 @@
 #ifndef _CARTO_HILLSHADERASTERTILELAYER_H_
 #define _CARTO_HILLSHADERASTERTILELAYER_H_
 
+#include "graphics/Color.h"
 #include "layers/RasterTileLayer.h"
 
 namespace carto {
@@ -46,12 +47,38 @@ namespace carto {
          * @param heightScale The relative height scale. Actual height is multiplied by this values.
          */
         void setHeightScale(float heightScale);
-    
+
+        /**
+         * Returns the shadow color of the layer.
+         * @return The shadow color of the layer.
+         */
+        Color getShadowColor() const;
+        /**
+         * Sets the shadow color of the layer.
+         * @param color The new shadow color of the layer.
+         */
+        void setShadowColor(const Color& color);
+
+        /**
+         * Returns the highlight color of the layer.
+         * @return The highlight color of the layer.
+         */
+        Color getHighlightColor() const;
+        /**
+         * Sets the highlight color of the layer.
+         * @param color The new highlight color of the layer.
+         */
+        void setHighlightColor(const Color& color);
+
     protected:
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
+
         virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const;
 
         float _contrast;
         float _heightScale;
+        Color _shadowColor;
+        Color _highlightColor;
     };
     
 }

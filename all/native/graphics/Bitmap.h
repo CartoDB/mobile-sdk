@@ -57,7 +57,7 @@ namespace carto {
              */
             COLOR_FORMAT_RGB_565 = 3
         };
-    };
+    }
     
     /**
      * A class that provides the functionality to store, compress, uncompress and resize basic image formats.

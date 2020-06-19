@@ -36,7 +36,7 @@ namespace carto {
              */
             RENDER_PROJECTION_MODE_SPHERICAL
         };
-    };
+    }
     
     namespace PanningMode {
         /**
@@ -63,7 +63,7 @@ namespace carto {
              */
             PANNING_MODE_STICKY_FINAL
         };
-    };
+    }
     
     namespace PivotMode {
         /**
@@ -79,7 +79,7 @@ namespace carto {
              */
             PIVOT_MODE_CENTERPOINT
         };
-    };
+    }
     
     /**
      * A class containing various options for rendering and map manipulation.

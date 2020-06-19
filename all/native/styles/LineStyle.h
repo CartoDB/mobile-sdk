@@ -31,7 +31,7 @@ namespace carto {
              */
             LINE_END_TYPE_ROUND
         };
-    };
+    }
     
     namespace LineJoinType {
         /**
@@ -57,7 +57,7 @@ namespace carto {
              */
             LINE_JOIN_TYPE_ROUND
         };
-    };
+    }
     
     class Bitmap;
     

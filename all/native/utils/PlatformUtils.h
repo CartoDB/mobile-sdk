@@ -22,7 +22,7 @@ namespace carto {
             PLATFORM_TYPE_XAMARIN_IOS,
             PLATFORM_TYPE_XAMARIN_ANDROID
         };
-    };
+    }
     
     class PlatformUtils {
     public:

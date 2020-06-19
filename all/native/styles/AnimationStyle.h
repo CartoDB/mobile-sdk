@@ -35,7 +35,7 @@ namespace carto {
              */
             ANIMATION_TYPE_SPRING
         };
-    };
+    }
     
     /**
      * A class describing animation effect.

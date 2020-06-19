@@ -12,7 +12,13 @@
 namespace carto {
 
     namespace ThreadPriority {
-        enum ThreadPriority {MINIMUM = 20, LOW = 10, NORMAL = 0, HIGH = -10, MAXIMUM = -20};
+        enum ThreadPriority {
+            MINIMUM = 20,
+            LOW     = 10,
+            NORMAL  = 0,
+            HIGH    = -10,
+            MAXIMUM = -20
+        };
     }
 
     class ThreadUtils {

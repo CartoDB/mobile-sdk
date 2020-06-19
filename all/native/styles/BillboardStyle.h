@@ -35,7 +35,7 @@ namespace carto {
              */
             BILLBOARD_ORIENTATION_GROUND
         };
-    };
+    }
     
     namespace BillboardScaling {
         /**

@@ -115,7 +115,7 @@ namespace carto {
     }
         
     void CancelableThreadPool::TaskWorker::operator ()() {
-        ThreadUtils::SetThreadPriority(ThreadPriority::MINIMUM);
+        ThreadUtils::SetThreadPriority(ThreadPriority::LOW);
         while (true) {
             auto threadPool = _threadPool.lock();
             if (!threadPool) {

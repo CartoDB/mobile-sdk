@@ -47,7 +47,7 @@ namespace carto {
              */
             VECTOR_TILE_RENDER_ORDER_LAST = 1
         };
-    };
+    }
     
     /**
      * A tile layer where each tile is a bitmap. Should be used together with corresponding data source.
