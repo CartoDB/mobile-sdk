@@ -171,7 +171,8 @@ namespace carto {
                 int posIndex = static_cast<int>(pointIndex + instr.getGeometryIndex());
                 float turnAngle = CalculateTurnAngle(epsg3857Points, posIndex);
                 float azimuth = CalculateAzimuth(epsg3857Points, posIndex);
-                instructions.emplace_back(action, posIndex, streetName, turnAngle, azimuth, distance, time);
+                std::string instruction = "";
+                instructions.emplace_back(action, posIndex, streetName, instruction, turnAngle, azimuth, distance, time);
                 instructions.back().setGeometryTag(geometryTag);
             }
         }

@@ -87,7 +87,8 @@ namespace carto {
                 std::string streetName = instr.getAddress();
                 float turnAngle = CalculateTurnAngle(epsg3857Points, posIndex);
                 float azimuth = CalculateAzimuth(epsg3857Points, posIndex);
-                instructions.emplace_back(action, posIndex, streetName, turnAngle, azimuth, distance, time);
+                std::string instruction = "";
+                instructions.emplace_back(action, posIndex, streetName, instruction, turnAngle, azimuth, distance, time);
             }
         }
 
@@ -149,11 +150,12 @@ namespace carto {
                 continue;
             }
             
+            std::string instruction = "";
             std::string streetName = routeInstruction[1].GetString();
             int posIndex = routeInstruction[3].GetInt();
             float turnAngle = CalculateTurnAngle(epsg3857Points, posIndex);
             float azimuth = static_cast<float>(routeInstruction[7].GetDouble());
-            instructions.emplace_back(action, posIndex, streetName, turnAngle, azimuth, distance, time);
+            instructions.emplace_back(action, posIndex, streetName, instruction, turnAngle, azimuth, distance, time);
         }
         
         return std::make_shared<RoutingResult>(proj, points, instructions);

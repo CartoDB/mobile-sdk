@@ -10,6 +10,7 @@ namespace carto {
         _action(RoutingAction::ROUTING_ACTION_NO_TURN),
         _pointIndex(-1),
         _streetName(),
+        _instruction(),
         _turnAngle(0),
         _azimuth(0),
         _distance(0),
@@ -18,10 +19,11 @@ namespace carto {
     {
     }
 
-    RoutingInstruction::RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, float turnAngle, float azimuth, double distance, double time) :
+    RoutingInstruction::RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, const std::string& instruction, float turnAngle, float azimuth, double distance, double time) :
         _action(action),
         _pointIndex(pointIndex),
         _streetName(streetName),
+        _instruction(instruction),
         _turnAngle(turnAngle),
         _azimuth(azimuth),
         _distance(distance),
@@ -43,6 +45,9 @@ namespace carto {
 
     const std::string& RoutingInstruction::getStreetName() const {
         return _streetName;
+    }
+    const std::string& RoutingInstruction::getInstruction() const {
+        return _instruction;
     }
 
     float RoutingInstruction::getTurnAngle() const {

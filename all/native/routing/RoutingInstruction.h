@@ -120,7 +120,7 @@ namespace carto {
          * @param distance The distance to move along the given street in meters.
          * @param time The approximate duration of the instruction in seconds.
          */
-        RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, float turnAngle, float azimuth, double distance, double time);
+        RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, const std::string& instruction, float turnAngle, float azimuth, double distance, double time);
         virtual ~RoutingInstruction();
         
         /**
@@ -138,6 +138,7 @@ namespace carto {
          * @return The name of the street.
          */
         const std::string& getStreetName() const;
+        const std::string& getInstruction() const;
         /**
          * Returns the turn angle of the action.
          * @return The turn angle in degrees.
@@ -190,6 +191,7 @@ namespace carto {
         RoutingAction::RoutingAction _action;
         int _pointIndex;
         std::string _streetName;
+        std::string _instruction;
         float _turnAngle;
         float _azimuth;
         double _distance;

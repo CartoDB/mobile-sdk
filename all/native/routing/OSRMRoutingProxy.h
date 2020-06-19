@@ -7,7 +7,7 @@
 #ifndef _CARTO_OSRMROUTINGPROXY_H_
 #define _CARTO_OSRMROUTINGPROXY_H_
 
-#ifdef _CARTO_ROUTING_SUPPORT
+//#ifdef _CARTO_ROUTING_SUPPORT
 
 #include "core/MapPos.h"
 #include "routing/RoutingInstruction.h"
@@ -51,4 +51,4 @@ namespace carto {
 
 #endif
 
-#endif
+//#endif

@@ -537,11 +537,13 @@ namespace carto {
                         const picojson::array& streetNames = maneuver.get("street_names").get<picojson::array>();
                         streetName = !streetNames.empty() ? streetNames[0].get<std::string>() : std::string("");
                     }
+                    std::string instruction = maneuver.get("instruction").get<std::string>();
 
                     instructions.emplace_back(
                         action,
                         pointIndex,
                         streetName,
+                        instruction,
                         turnAngle,
                         azimuth,
                         maneuver.get("length").get<double>() * 1000.0,
