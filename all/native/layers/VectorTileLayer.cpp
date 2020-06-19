@@ -109,8 +109,12 @@ namespace carto {
     }
     
     void VectorTileLayer::setVectorTileEventListener(const std::shared_ptr<VectorTileEventListener>& eventListener) {
+        std::shared_ptr<VectorTileEventListener> oldEventListener = _vectorTileEventListener.get();
         _vectorTileEventListener.set(eventListener);
-        tilesChanged(false); // we must reload the tiles, we do not keep full element information if this is not required
+        _tileRenderer->setInteractionMode(eventListener.get() ? true : false);
+        if (eventListener && !oldEventListener) {
+            tilesChanged(false); // we must reload the tiles, we do not keep full element information if this is not required
+        }
     }
     
     bool VectorTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
@@ -345,11 +349,7 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-            float clickRadius = 0;
-            {
-                std::lock_guard<std::recursive_mutex> lock(_mutex);
-                clickRadius = _clickRadius;
-            }
+            float clickRadius = getClickRadius();
 
             for (int pass = 0; pass < 2; pass++) {
                 std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
@@ -424,7 +424,6 @@ namespace carto {
 
             _tileRenderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
             _tileRenderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
-            _tileRenderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
             _tileRenderer->setSubTileBlending(false);
             bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
 

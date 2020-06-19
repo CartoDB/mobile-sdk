@@ -44,7 +44,6 @@ namespace carto {
             }
             mapRenderer->clearAndBindScreenFBO(backgroundColor, false, false);
 
-            _tileRenderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
             _tileRenderer->setSubTileBlending(false);
             bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
 

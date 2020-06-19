@@ -115,8 +115,12 @@ namespace carto {
     }
     
     void RasterTileLayer::setRasterTileEventListener(const std::shared_ptr<RasterTileEventListener>& eventListener) {
+        std::shared_ptr<RasterTileEventListener> oldEventListener = _rasterTileEventListener.get();
         _rasterTileEventListener.set(eventListener);
-        tilesChanged(false); // we must reload the tiles, we do not keep full element information if this is not required
+        _tileRenderer->setInteractionMode(eventListener.get() ? true : false);
+        if (eventListener && !oldEventListener) {
+            tilesChanged(false); // we must reload the tiles, we do not keep full element information if this is not required
+        }
     }
     
     bool RasterTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
@@ -201,6 +205,18 @@ namespace carto {
             _preloadingCache.clear();
         }
         refresh();
+    }
+
+    vt::RasterFilterMode RasterTileLayer::getRasterFilterMode() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        switch (_tileFilterMode) {
+        case RasterTileFilterMode::RASTER_TILE_FILTER_MODE_NEAREST:
+            return vt::RasterFilterMode::NEAREST;
+        case RasterTileFilterMode::RASTER_TILE_FILTER_MODE_BICUBIC:
+            return vt::RasterFilterMode::BICUBIC;
+        default:
+            return vt::RasterFilterMode::BILINEAR;
+        }
     }
 
     std::shared_ptr<vt::Tile> RasterTileLayer::createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const {
@@ -389,18 +405,7 @@ namespace carto {
                 mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), false, false);
             }
 
-            _tileRenderer->setInteractionMode(_rasterTileEventListener.get() ? true : false);
-            switch (getTileFilterMode()) {
-            case RasterTileFilterMode::RASTER_TILE_FILTER_MODE_NEAREST:
-                _tileRenderer->setRasterFilterMode(vt::RasterFilterMode::NEAREST);
-                break;
-            case RasterTileFilterMode::RASTER_TILE_FILTER_MODE_BICUBIC:
-                _tileRenderer->setRasterFilterMode(vt::RasterFilterMode::BICUBIC);
-                break;
-            default:
-                _tileRenderer->setRasterFilterMode(vt::RasterFilterMode::BILINEAR);
-                break;
-            }
+            _tileRenderer->setRasterFilterMode(getRasterFilterMode());
             bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
 
             if (opacity < 1.0f) {

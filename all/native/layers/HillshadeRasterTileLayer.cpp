@@ -1,5 +1,7 @@
 #include "HillshadeRasterTileLayer.h"
 #include "graphics/Bitmap.h"
+#include "renderers/MapRenderer.h"
+#include "renderers/TileRenderer.h"
 #include "utils/Log.h"
 
 #include <array>
@@ -18,7 +20,9 @@ namespace carto {
     HillshadeRasterTileLayer::HillshadeRasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         RasterTileLayer(dataSource),
         _contrast(0.5f),
-        _heightScale(1.0f)
+        _heightScale(1.0f),
+        _shadowColor(0, 0, 0, 255),
+        _highlightColor(255, 255, 255, 255)
     {
     }
     
@@ -51,6 +55,56 @@ namespace carto {
         tilesChanged(false);
     }
 
+    Color HillshadeRasterTileLayer::getShadowColor() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _shadowColor;
+    }
+
+    void HillshadeRasterTileLayer::setShadowColor(const Color& color) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _shadowColor = color;
+        }
+        redraw();
+    }
+
+    Color HillshadeRasterTileLayer::getHighlightColor() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _highlightColor;
+    }
+
+    void HillshadeRasterTileLayer::setHighlightColor(const Color& color) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _highlightColor = color;
+        }
+        redraw();
+    }
+
+    bool HillshadeRasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
+        updateTileLoadListener();
+
+        if (auto mapRenderer = getMapRenderer()) {
+            float opacity = getOpacity();
+
+            if (opacity < 1.0f) {
+                mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), false, false);
+            }
+
+            _tileRenderer->setRasterFilterMode(getRasterFilterMode());
+            _tileRenderer->setNormalMapShadowColor(getShadowColor());
+            _tileRenderer->setNormalMapHighlightColor(getHighlightColor());
+            bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
+
+            if (opacity < 1.0f) {
+                mapRenderer->blendAndUnbindScreenFBO(opacity);
+            }
+
+            return refresh;
+        }
+        return false;
+    }
+    
     std::shared_ptr<vt::Tile> HillshadeRasterTileLayer::createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const {
         std::uint8_t alpha = 0;
         std::array<float, 4> scales;

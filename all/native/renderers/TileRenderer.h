@@ -51,6 +51,8 @@ namespace carto {
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
         void setRasterFilterMode(vt::RasterFilterMode filterMode);
+        void setNormalMapShadowColor(const Color& color);
+        void setNormalMapHighlightColor(const Color& color);
 
         void offsetLayerHorizontally(double offset);
     
@@ -82,6 +84,8 @@ namespace carto {
         int _labelOrder;
         int _buildingOrder;
         vt::RasterFilterMode _rasterFilterMode;
+        Color _normalMapShadowColor;
+        Color _normalMapHighlightColor;
         double _horizontalLayerOffset;
         cglib::vec3<float> _viewDir;
         cglib::vec3<float> _mainLightDir;

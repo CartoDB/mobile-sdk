@@ -19,6 +19,8 @@
 
 #include <stdext/timed_lru_cache.h>
 
+#include <vt/Styles.h>
+
 namespace carto {
     class TileDrawData;
     class RasterTileEventListener;
@@ -117,6 +119,8 @@ namespace carto {
         virtual void clearTiles(bool preloadingTiles);
         virtual void tilesChanged(bool removeTiles);
 
+        virtual vt::RasterFilterMode getRasterFilterMode() const;
+
         virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
@@ -137,6 +141,8 @@ namespace carto {
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
+        RasterTileFilterMode::RasterTileFilterMode _tileFilterMode;
+
     private:    
         static const int DEFAULT_CULL_DELAY;
         static const int PRELOADING_PRIORITY_OFFSET;
@@ -144,8 +150,6 @@ namespace carto {
         static const unsigned int EXTRA_TILE_FOOTPRINT;
         static const unsigned int DEFAULT_PRELOADING_CACHE_SIZE;
         
-        RasterTileFilterMode::RasterTileFilterMode _tileFilterMode;
-
         ThreadSafeDirectorPtr<RasterTileEventListener> _rasterTileEventListener;
 
         std::vector<long long> _visibleTileIds;

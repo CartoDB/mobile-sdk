@@ -13,6 +13,7 @@ namespace carto {
     
     /**
      * A tile layer that displays an overlay hillshading. Should be used together with corresponding data source that encodes height in RGBA image.
+     * The shading is based on the direction of the main light source, which can be configured using Options class.
      * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
     class HillshadeRasterTileLayer : public RasterTileLayer {
