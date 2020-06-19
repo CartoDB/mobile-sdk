@@ -20,7 +20,7 @@ You can find detailed instructions on [API Keys page](../API-keys/)
   // use the latest version number from https://github.com/CartoDB/mobile-sdk/releases
 
   dependencies {
-      compile 'com.carto:carto-mobile-sdk:4.2.2@aar'
+      compile 'com.carto:carto-mobile-sdk:4.3.1@aar'
   }
   {% endhighlight %}
  
@@ -215,7 +215,7 @@ You can find detailed instructions on [API Keys page](../API-keys/)
 
   // Add to your CocoaPods Podfile:
   // use the latest version number from https://github.com/CartoDB/mobile-sdk/releases
-  pod 'CartoMobileSDK', '4.2.2'
+  pod 'CartoMobileSDK', '4.3.1'
 
 {% endhighlight %}
 
@@ -225,24 +225,14 @@ You can find detailed instructions on [API Keys page](../API-keys/)
 pod install
 {% endhighlight %}
 
-4)  Modify Controller for **Map View**:
+4) Modify Controller for **Map View**:
 
   - Replace `YOUR_LICENSE_KEY` with your Mobile App License API, see App Registration above.
 
 In **Objective-C apps** you need some special tricks:
 
-  - Extend ViewController and add MapView manipulation code into it. _Ensure it is Objective C++, not plain Objective C class_
+  - Extend **ViewController** and add **MapView** manipulation code into it. _Ensure it is Objective C++, not plain Objective C class_
   - Rename `ViewController.m` (comes with template) to `ViewController.mm`, to avoid Objective C++ compilation issues
-  - Implement **ViewController.h** to extend **GLKViewController**, instead of *UIViewController*
-
-in **Swift apps** you need one special trick:
-
- - Add YOURPROJECT.Swift-Bridging-Header.h to your project with simply one line:
- 
-{% highlight swift linenos %}
- #import <CartoMobileSDK/CartoMobileSDK.h>
-{% endhighlight %}
-  
 
 
 <div class="js-tabs-mobilesdk">
@@ -256,31 +246,42 @@ in **Swift apps** you need one special trick:
   </ul>
 
   <div id="tab-swift">
-    {% highlight swift linenos %}
-    
-    // following would go to ViewController.swift in simple app:
-    
-    var License = "YOUR_LICENSE_KEY";
+  {% highlight swift linenos %}
+  import UIKit
+  import CartoMobileSDK
 
-    
-    // MapView initialization in code: initialize and set it as view
-     let mapView = NTMapView();
-     view = mapView;
-        
-     let baseLayer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
-     mapView?.getLayers().add(baseLayer);
-    
-    {% endhighlight %}
+  class ViewController: UIViewController {
+
+    override func viewDidLoad() {
+      super.viewDidLoad()
+  
+      // The initial step: register your license. 
+      let license = "YOUR_LICENSE_KEY"
+      NTMapView.registerLicense(license)
+      
+      // MapView initialization in code: initialize and set it as view
+      let mapView = NTMapView()
+      view = mapView
+          
+      let baseLayer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER)
+      mapView?.getLayers().add(baseLayer)
+    }
+  }
+  
+  {% endhighlight %}
   </div>
 
   <div id="tab-objectivec">
   {% highlight objc linenos %}
-  #import  <GLKit/GLKit.h>
+  // ViewController.h
+  #import <UIKit/UIKit.h>
 
-  @interface ViewController : GLKViewController
+  @interface ViewController : UIViewController
 
   @end
 
+
+  // ViewController.mm
   #import "ViewController.h"
   #import <CartoMobileSDK/CartoMobileSDK.h>
 
@@ -347,43 +348,43 @@ The default storyboard template uses **UIView** class, you must use **NTMapView*
     {% highlight swift linenos %}
     
     // MapView initialization in code: initialize and set it as view
-    let mapView = NTMapView();
-    view = mapView;
+    let mapView = NTMapView()
+    view = mapView
 
     // Get base projection from mapView
-    let projection = mapView?.getOptions().getBaseProjection();
-    
-   // Create a vector data source, bucket where we'll put objects
-    let source = NTLocalVectorDataSource(projection: projection);
-    
-    // Initialize layer
-    let layer = NTVectorLayer(dataSource: source);
-    
-    // Add layer
-    mapView?.getLayers().add(layer);
-    
-    // define marker location. Make sure to use projection fromWgs84 to have proper coordinate system
-    let tallinn = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.426939));
+    let projection = mapView?.getOptions().getBaseProjection()
     
     // Create a vector data source, bucket where we'll put objects
-    let source = NTLocalVectorDataSource(projection: projection);
+    let source = NTLocalVectorDataSource(projection: projection)
+    
+    // Initialize layer
+    let layer = NTVectorLayer(dataSource: source)
+    
+    // Add layer
+    mapView?.getLayers().add(layer)
+    
+    // Define marker location. Make sure to use projection fromWgs84 to have proper coordinate system
+    let tallinn = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.426939))
+    
+    // Create a vector data source, bucket where we'll put objects
+    let source = NTLocalVectorDataSource(projection: projection)
 
     // Initialize layer with datasource, add it to MapView
-    let layer = NTVectorLayer(dataSource: source);
-    self.getLayers().add(layer);
+    let layer = NTVectorLayer(dataSource: source)
+    self.getLayers().add(layer)
 
     // define marker style        
-    let builder = NTMarkerStyleBuilder();
-    builder?.setSize(15);
-    builder?.setColor(NTColor(r: 0, g: 255, b: 0, a: 255)); // green, alpha = no transarency
+    let builder = NTMarkerStyleBuilder()
+    builder?.setSize(15)
+    builder?.setColor(NTColor(r: 0, g: 255, b: 0, a: 255)) // green, alpha = no transarency
     
     // create marker and add to DataSource    
-    let marker = NTMarker(pos: tallinn, style: builder?.buildStyle());
-    source?.add(marker);
+    let marker = NTMarker(pos: tallinn, style: builder?.buildStyle())
+    source?.add(marker)
 
     // zoom map view focus to the marker                
-    mapView?.setFocus(tallinn, durationSeconds: 0);
-    mapView?.setZoom(15, durationSeconds: 0);
+    mapView?.setFocus(tallinn, durationSeconds: 0)
+    mapView?.setZoom(15, durationSeconds: 0)
     
     {% endhighlight %}
   </div>
@@ -519,7 +520,7 @@ Follow these steps to add native apps to your Xamarin Android package.
 
 Follow these steps to add apps to your Xamarin iOS package.
 
-1) **Add Map object to app view**. When using Storyboards, use *OpenGL ES View Controller* (GLKit.GLKViewController) as a template for the map and replace *GLKView* with *MapView* as the underlying view class.
+1) **Add Map object to app view**. 
 In the example below, it is assumed that the outlet name of the map view is *Map*.
 
 2) **Initiate map, set base layer**
@@ -531,15 +532,11 @@ Add into MainViewController.cs:
   using Carto.Layers;
   using Carto.DataSources;
 
-  public class MainViewController : GLKit.GLKViewController
+  public class MainViewController : UIKit.UIViewController
   {
       public override void ViewDidLoad ()
       {
           base.ViewDidLoad();
-
-          // GLKViewController-specific parameters for smoother animations
-          ResumeOnDidBecomeActive = false;
-          PreferredFramesPerSecond = 60;
 
           // Register license BEFORE creating MapView 
           MapView.RegisterLicense("YOUR_LICENSE_KEY");
@@ -550,15 +547,6 @@ Add into MainViewController.cs:
           // Set online base layer.
           // Note: assuming here that Map is an outlet added to the controller.
           Map.Layers.Add(baseLayer);
-      }
-
-      public override void ViewWillAppear(bool animated)
-      {
-          base.ViewWillAppear(animated);
-
-          // GLKViewController-specific, do on-demand rendering instead of constant redrawing
-          // This is VERY IMPORTANT as it stops battery drain when nothing changes on the screen!
-          Paused = true;
       }
   }
   {% endhighlight %}
@@ -613,42 +601,45 @@ As app ID use same UUID as in your project's *Package.appmanifest > Packaging > 
 
 It is much simpler to create a MapView object with code. A definition of a base layer is enough for the minimal map configuration.
 
-{% highlight csharp linenos %}
+  {% highlight csharp linenos %}
 
-using Carto.Core;
-using Carto.Graphics;
-using Carto.DataSources;
-using Carto.Projections;
-using Carto.Layers;
-using Carto.Styles;
-using Carto.VectorElements;
+  using Carto.Core;
+  using Carto.Graphics;
+  using Carto.DataSources;
+  using Carto.Projections;
+  using Carto.Layers;
+  using Carto.Styles;
+  using Carto.VectorElements;
 
- protected async override void OnLaunched(LaunchActivatedEventArgs e)
-   {
-   if (mapView == null)
+  sealed partial class App : Windows.UI.Xaml.Application
+  {
+      protected override void OnLaunched(LaunchActivatedEventArgs e)
       {
-            // 1. Register CARTO app license
-            Carto.Ui.MapView.RegisterLicense("YOUR_LICENSE_KEY");
+          if (mapView == null)
+          {
+              // 1. Register CARTO app license
+              Carto.Ui.MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
-            // 2. Create map view and initialize
-            mapView = new Carto.Ui.MapView();
+              // 2. Create map view and initialize
+              mapView = new Carto.Ui.MapView();
 
-            // 3. Online vector base layer
-            var baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleVoyager);
+              // 3. Online vector base layer
+              var baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleVoyager);
 
-            // 4. Set online base layer.
-            // Note: assuming here that Map is an outlet added to the controller.
-            mapView.Layers.Add(baseLayer);
-        }
+              // 4. Set online base layer.
+              // Note: assuming here that Map is an outlet added to the controller.
+              mapView.Layers.Add(baseLayer);
+          }
 
-        // Place the page in the current window and ensure that it is active.
-        Windows.UI.Xaml.Window.Current.Content = mapView;
-        Windows.UI.Xaml.Window.Current.Activate();
-    }
+          // Place the page in the current window and ensure that it is active.
+          Windows.UI.Xaml.Window.Current.Content = mapView;
+          Windows.UI.Xaml.Window.Current.Activate();
+      }
 
-    private Carto.Ui.MapView mapView; 
+      private Carto.Ui.MapView mapView; 
+  }
 
-{% endhighlight %}
+  {% endhighlight %}
 
 3) **Add Marker points** to the map
 
