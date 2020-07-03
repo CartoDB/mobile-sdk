@@ -5,7 +5,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_VALHALLA_ROUTING_SUPPORT) && defined(_CARTO_PACKAGEMANAGER_SUPPORT)
 
-!proxy_imports(carto::PackageManagerValhallaRoutingService, packagemanager.PackageManager, core.Variant, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
+!proxy_imports(carto::PackageManagerValhallaRoutingService, packagemanager.PackageManager, core.Variant, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult, datasources.TileDataSource, rastertiles.ElevationDecoder)
 
 %{
 #include "routing/PackageManagerValhallaRoutingService.h"
@@ -20,6 +20,8 @@
 %import "core/Variant.i"
 %import "routing/RoutingService.i"
 %import "packagemanager/PackageManager.i"
+%import "datasources/TileDataSource.i"
+%import "rastertiles/ElevationDecoder.i"
 
 !polymorphic_shared_ptr(carto::PackageManagerValhallaRoutingService, routing.PackageManagerValhallaRoutingService)
 

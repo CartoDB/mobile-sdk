@@ -23,6 +23,8 @@ namespace sqlite3pp {
 }
 
 namespace carto {
+    class TileDataSource;
+    class ElevationDecoder;
 
     /**
      * A routing service that uses routing packages from package manager.
@@ -56,6 +58,8 @@ namespace carto {
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
+        void connectElevationDataSource(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<ElevationDecoder>& elevationDecoder);
+
     protected:
         class PackageManagerListener : public PackageManager::OnChangeListener {
         public:
@@ -78,6 +82,8 @@ namespace carto {
 
     private:
         std::shared_ptr<PackageManagerListener> _packageManagerListener;
+        std::shared_ptr<TileDataSource> _elevationDataSource;
+        std::shared_ptr<ElevationDecoder> _elevationDecoder;
     };
     
 }

@@ -8,7 +8,9 @@
 #define _CARTO_HILLSHADERASTERTILELAYER_H_
 
 #include "graphics/Color.h"
+#include "components/DirectorPtr.h"
 #include "layers/RasterTileLayer.h"
+#include "rastertiles/ElevationDecoder.h"
 
 namespace carto {
     
@@ -23,7 +25,7 @@ namespace carto {
          * Constructs a HillshadeRasterTileLayer object from a data source.
          * @param dataSource The data source from which this layer loads data.
          */
-        explicit HillshadeRasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource);
+        explicit HillshadeRasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<ElevationDecoder>& elevationDecoder);
         virtual ~HillshadeRasterTileLayer();
 
         /**
@@ -69,16 +71,45 @@ namespace carto {
          * @param color The new highlight color of the layer.
          */
         void setHighlightColor(const Color& color);
+        /**
+         * Returns the illumination direction of the layer.
+         * @return direction in degrees.
+         */
+        float getIlluminationDirection() const;
+        /**
+         * Sets the illumination direction.
+         * @param direction in degrees.
+         */
+        void setIlluminationDirection(float direction);
+        /**
+         * Returns wheter the illumination direction should change with the map rotation.
+         * @return enabled
+         */
+        bool getIlluminationMapRotationEnabled() const;
+        /**
+         * Sets wheter the illumination direction should change with the map rotation.
+         * @param enabled whether to enable or not.
+         */
+        void setIlluminationMapRotationEnabled(bool enabled);
+
+        int getElevation(MapPos& pos) const;
+        std::vector<int> getElevations(const std::vector<MapPos> poses) const;
 
     protected:
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
 
         virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const;
 
+        std::shared_ptr<Bitmap> getMapTileBitmap(const MapTile& mapTile) const;
+
+        const DirectorPtr<ElevationDecoder> _elevationDecoder;
+   
         float _contrast;
         float _heightScale;
         Color _shadowColor;
         Color _highlightColor;
+        float _illuminationDirection;
+        bool _illuminationMapRotationEnabled;
     };
     
 }

@@ -53,6 +53,8 @@ namespace carto {
         void setRasterFilterMode(vt::RasterFilterMode filterMode);
         void setNormalMapShadowColor(const Color& color);
         void setNormalMapHighlightColor(const Color& color);
+        void setNormalIlluminationMapRotationEnabled(bool enabled);
+        void setNormalIlluminationDirection(float direction);
 
         void offsetLayerHorizontally(double offset);
     
@@ -89,6 +91,10 @@ namespace carto {
         double _horizontalLayerOffset;
         cglib::vec3<float> _viewDir;
         cglib::vec3<float> _mainLightDir;
+        double _normalIlluminationDirection;
+        bool _normalIlluminationMapRotationEnabled;
+        double _mapRotation;
+
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > _tiles;
         
         mutable std::mutex _mutex;

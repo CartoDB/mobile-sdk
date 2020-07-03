@@ -9,6 +9,7 @@
 #include "renderers/utils/GLResourceManager.h"
 #include "renderers/utils/VTRenderer.h"
 #include "utils/Log.h"
+#include "utils/Const.h"
 
 #include <vt/Label.h>
 #include <vt/LabelCuller.h>
@@ -35,6 +36,9 @@ namespace carto {
         _horizontalLayerOffset(0),
         _viewDir(0, 0, 0),
         _mainLightDir(0, 0, 0),
+        _normalIlluminationMapRotationEnabled(false),
+        _normalIlluminationDirection(45),
+        _mapRotation(0),
         _tiles(),
         _mutex()
     {
@@ -97,6 +101,15 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _normalMapHighlightColor = color;
     }
+    void TileRenderer::setNormalIlluminationDirection(float direction) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _normalIlluminationDirection = direction;
+    }
+
+    void TileRenderer::setNormalIlluminationMapRotationEnabled(bool enabled) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _normalIlluminationMapRotationEnabled = enabled;
+    }
 
     void TileRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -120,6 +133,8 @@ namespace carto {
         tileRenderer->setSubTileBlending(_subTileBlending);
         tileRenderer->setRasterFilterMode(_rasterFilterMode);
 
+
+        _mapRotation = viewState.getRotation();
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {
             MapPos internalFocusPos = viewState.getProjectionSurface()->calculateMapPos(viewState.getFocusPos());
@@ -322,9 +337,15 @@ namespace carto {
             tileRenderer->setLightingShader3D(lightingShader3D);
 
             vt::GLTileRenderer::LightingShader lightingShaderNormalMap(false, LIGHTING_SHADER_NORMALMAP, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+                float azimuthal = _normalIlluminationDirection * Const::DEG_TO_RAD;
+                if (_normalIlluminationMapRotationEnabled) {
+                    azimuthal -= _mapRotation * Const::DEG_TO_RAD;
+                }
+                MapVec viewDir = MapVec(std::cos(azimuthal), std::sin(azimuthal));
+                cglib::vec3<float> cViewDir(viewDir.getX(), viewDir.getY(), 1);
                 glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), _normalMapShadowColor.getR() / 255.0f, _normalMapShadowColor.getG() / 255.0f, _normalMapShadowColor.getB() / 255.0f, _normalMapShadowColor.getA() / 255.0f);
                 glUniform4f(glGetUniformLocation(shaderProgram, "u_highlightColor"), _normalMapHighlightColor.getR() / 255.0f, _normalMapHighlightColor.getG() / 255.0f, _normalMapHighlightColor.getB() / 255.0f, _normalMapHighlightColor.getA() / 255.0f);
-                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
+                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1,cViewDir.data() );
             });
             tileRenderer->setLightingShaderNormalMap(lightingShaderNormalMap);
         }

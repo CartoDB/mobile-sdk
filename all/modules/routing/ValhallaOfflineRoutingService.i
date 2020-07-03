@@ -5,7 +5,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_VALHALLA_ROUTING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
-!proxy_imports(carto::ValhallaOfflineRoutingService, core.Variant, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
+!proxy_imports(carto::ValhallaOfflineRoutingService, core.Variant, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult, datasources.TileDataSource, rastertiles.ElevationDecoder)
 
 %{
 #include "routing/ValhallaOfflineRoutingService.h"
@@ -19,6 +19,8 @@
 
 %import "core/Variant.i"
 %import "routing/RoutingService.i"
+%import "datasources/TileDataSource.i"
+%import "rastertiles/ElevationDecoder.i"
 
 !polymorphic_shared_ptr(carto::ValhallaOfflineRoutingService, routing.ValhallaOfflineRoutingService)
 
