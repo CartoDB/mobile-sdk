@@ -47,10 +47,12 @@ namespace carto {
     
             void operator()();
     
+            bool _busy; // guarded by _threadPool mutex
+            int _currentTaskPriority; // guarded by _threadPool mutex
             std::weak_ptr<CancelableThreadPool> _threadPool;
         };
     
-        std::shared_ptr<CancelableTask> getNextTask();
+        bool getNextTask(std::shared_ptr<CancelableTask>& task, int& priority);
     
         bool shouldTerminateWorker(TaskWorker& worker);
     

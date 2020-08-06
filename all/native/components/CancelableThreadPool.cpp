@@ -2,8 +2,6 @@
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
 
-#include "core/MapPos.h"
-
 namespace carto {
 
     CancelableThreadPool::CancelableThreadPool() :
@@ -78,6 +76,21 @@ namespace carto {
             // Push task to queue, increase global task count
             _taskRecords.push(TaskRecord(task, priority, _taskCount));
             _taskCount++;
+
+            // Check if all executors are busy executing lower priority tasks.
+            // In that case add a new worker thread to process the current task.
+            bool createWorker = true;
+            for (const std::shared_ptr<TaskWorker>& worker : _workers) {
+                if (!worker->_busy || worker->_currentTaskPriority >= priority) {
+                    createWorker = false;
+                    break;
+                }
+            }
+            if (createWorker) {
+                Log::Debugf("CancelableThreadPool: Adding worker %d to the pool", (int)_workers.size());
+                _workers.push_back(std::make_shared<TaskWorker>(shared_from_this()));
+                _threads.push_back(std::thread(&TaskWorker::operator(), _workers.back()));
+            }
     
             // If there are any waiting threads, notify one of them
             _condition.notify_one();
@@ -111,11 +124,14 @@ namespace carto {
     }
     
     CancelableThreadPool::TaskWorker::TaskWorker(const std::shared_ptr<CancelableThreadPool>& threadPool) :
-        _threadPool(threadPool) {
+        _busy(false),
+        _currentTaskPriority(0),
+        _threadPool(threadPool)
+    {
     }
         
     void CancelableThreadPool::TaskWorker::operator ()() {
-        ThreadUtils::SetThreadPriority(ThreadPriority::LOW);
+        ThreadUtils::SetThreadPriority(ThreadPriority::MINIMUM);
         while (true) {
             auto threadPool = _threadPool.lock();
             if (!threadPool) {
@@ -143,33 +159,46 @@ namespace carto {
                     }
                 }
                 
-                std::shared_ptr<CancelableTask> task = threadPool->getNextTask();
-                if (task) {
+                std::shared_ptr<CancelableTask> task;
+                int priority = DEFAULT_PRIORITY;
+                if (threadPool->getNextTask(task, priority)) {
+                    {
+                        std::lock_guard<std::mutex> lock(threadPool->_mutex);
+                        _busy = true;
+                        _currentTaskPriority = priority;
+                    }
+
                     task->operator ()();
+
+                    {
+                        std::lock_guard<std::mutex> lock(threadPool->_mutex);
+                        _busy = false;
+                        _currentTaskPriority = DEFAULT_PRIORITY;
+                    }
                 } else {
+                    if (threadPool->shouldTerminateWorker(*this)) {
+                        return;
+                    }
                     break;
                 }
-    
-                if (threadPool->shouldTerminateWorker(*this)) {
-                    return;
-                }
-    
+
                 // Check for interruption
                 std::this_thread::yield();
             }
         }
     }
     
-    std::shared_ptr<CancelableTask> CancelableThreadPool::getNextTask() {
+    bool CancelableThreadPool::getNextTask(std::shared_ptr<CancelableTask>& task, int& priority) {
         std::lock_guard<std::mutex> lock(_mutex);
     
         // Return the next highest priority task from the task queue
-        std::shared_ptr<CancelableTask> task;
         if (_taskRecords.size() > 0) {
             task = _taskRecords.top()._task;
+            priority = _taskRecords.top()._priority;
             _taskRecords.pop();
+            return true;
         }
-        return task;
+        return false;
     }
     
     bool CancelableThreadPool::shouldTerminateWorker(TaskWorker& worker) {
@@ -178,13 +207,14 @@ namespace carto {
         if (_stop) {
             return true;
         }
-    
+
         // If there are too many threads, remove this worker and it's thread
         if (static_cast<int>(_threads.size()) > _poolSize) {
             // Find the index of the finished worker, it's thread will have the same index in _threads vector
             for (std::size_t index = 0; index < _workers.size(); index++) {
                 if (_workers[index].get() == &worker) {
                     // Remove thread and worker
+                    Log::Debugf("CancelableThreadPool: Removing worker %d from the pool", (int)index);
                     _workers.erase(_workers.begin() + index);
                     _threads.at(index).detach();
                     _threads.erase(_threads.begin() + index);
