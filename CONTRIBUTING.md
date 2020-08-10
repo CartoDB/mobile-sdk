@@ -1,7 +1,7 @@
 ## How to contribute:
 
 * [Add issues](https://github.com/CartoDB/mobile-sdk/issues) for found bugs and new feature ideas. Check first if issue for specific thing does not already exist
-* See readme.md for compilation guides
+* See [README.md](https://github.com/CartoDB/mobile-sdk/README.md) for compilation guides
 * Use Pull Requests to contribute with own code additions
 
 Additional developer channels and more detailed guidelines will be added soon.
@@ -14,6 +14,11 @@ After that, there are several rules you should follow when a new pull request is
 
 - Title has to be descriptive. If you are fixing a bug don't use the ticket title or number.
 - Explain what you have achieved in the description and choose a reviewer (it has to be a CARTO team member) of your code. If you have doubts, just ask for one.
+
+## Development environments
+
+* [iOS instructions](https://github.com/CartoDB/mobile-sdk/tree/master/scripts/ios-dev)
+* [Android instructions](https://github.com/CartoDB/mobile-sdk/tree/master/scripts/android-dev)
 
 ## Directories
 
