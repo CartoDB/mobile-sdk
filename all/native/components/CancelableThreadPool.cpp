@@ -54,7 +54,7 @@ namespace carto {
             return;
         }
 
-        // Note: won't have an effect immediately
+        // Note: won't have an immediate effect
         _poolSize = poolSize;
     }
     
@@ -75,7 +75,6 @@ namespace carto {
             _taskCount++;
 
             // Check if we need to create a new worker.
-            // If not, add a new worker thread to process the current task.
             bool createWorker = static_cast<int>(_threads.size()) < _poolSize;
             if (!createWorker) {
                 bool foundIdleWorker = false;
@@ -102,7 +101,7 @@ namespace carto {
                 _threads.push_back(std::thread(&TaskWorker::operator(), _workers.back()));
             }
     
-            // If there are any waiting threads, notify all of them
+            // If there are any waiting threads, notify all of them as not all workers may be able to process the task
             _condition.notify_all();
         }
     }

@@ -48,7 +48,7 @@ namespace carto {
             void operator()();
     
             std::weak_ptr<CancelableThreadPool> _threadPool;
-            int _priority;
+            int _priority; // mutable, guarded by _threadPool->_mutex
         };
     
         bool getNextTask(std::shared_ptr<CancelableTask>& task, int priority);
