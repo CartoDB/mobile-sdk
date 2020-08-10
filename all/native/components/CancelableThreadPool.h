@@ -43,16 +43,15 @@ namespace carto {
         };
     
         struct TaskWorker : public ThreadWorker {
-            TaskWorker(const std::shared_ptr<CancelableThreadPool>& threadPool);
+            TaskWorker(const std::shared_ptr<CancelableThreadPool>& threadPool, int priority);
     
             void operator()();
     
-            bool _busy; // guarded by _threadPool mutex
-            int _currentTaskPriority; // guarded by _threadPool mutex
             std::weak_ptr<CancelableThreadPool> _threadPool;
+            int _priority;
         };
     
-        bool getNextTask(std::shared_ptr<CancelableTask>& task, int& priority);
+        bool getNextTask(std::shared_ptr<CancelableTask>& task, int priority);
     
         bool shouldTerminateWorker(TaskWorker& worker);
     
