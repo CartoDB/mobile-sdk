@@ -1,3 +1,16 @@
+CARTO Mobile SDK 4.3.2RC1
+-------------------
+
+### Changes/fixes:
+
+* Added two new properties to HillshadeRasterTileLayer: shadow color and highlight color
+* Minor optimization: avoid tile reloading when listener is disconnected from the layer.
+* Slighlty higher background thread priority for tile/data loading tasks
+* Added dynamic thread creation to CancelableThreadPool when all workers are busy with lower priority tasks. 
+* Fixed transform/orientation being ignored when flipping vector tile labels
+* Enabled SIMD optimizations for WebP image library for slight performance boost
+
+
 CARTO Mobile SDK 4.3.1
 -------------------
 
