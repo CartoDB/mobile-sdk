@@ -126,13 +126,12 @@ namespace carto
             MapTile mapTile = TileUtils::CalculateMapTile(dataSourcePos, dataSource->getMaxZoom(), projection);
             MapTile flippedMapTile = mapTile.getFlipped();
             long long tileId = mapTile.getTileId();
-            std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>::iterator iter(indexedTiles.lower_bound(tileId));
-            Log::Debugf("ElevationDecoder::getElevations: %d, %d, %d, %d",it->getY(),it->getY(), tileId, iter == indexedTiles.end());
+            std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>::iterator iter(indexedTiles.find(tileId));
             if (iter == indexedTiles.end()) {
                 std::shared_ptr<Bitmap> tileBitmap = getMapTileBitmap(dataSource, flippedMapTile);
                 MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, projection);
                 std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = std::make_pair(tileBounds, tileBitmap);
-                indexedTiles.insert(std::pair<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>(iter->first, pair));
+                indexedTiles.insert(std::pair<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>(tileId, pair));
                 int altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
                 results.push_back(altitude);
             } else {
