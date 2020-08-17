@@ -6,8 +6,6 @@
 #include "packagemanager/handlers/ValhallaRoutingPackageHandler.h"
 #include "projections/Projection.h"
 #include "routing/ValhallaRoutingProxy.h"
-#include "datasources/TileDataSource.h"
-#include "rastertiles/ElevationDecoder.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -21,9 +19,7 @@ namespace carto {
         _profile("pedestrian"),
         _configuration(ValhallaRoutingProxy::GetDefaultConfiguration()),
         _cachedPackageDatabases(),
-        _mutex(),
-        _elevationDataSource(),
-        _elevationDecoder()
+        _mutex()
     {
         if (!packageManager) {
             throw NullArgumentException("Null packageManager");
@@ -132,7 +128,7 @@ namespace carto {
                 _cachedPackageDatabases = packageDatabases;
             }
 
-            result = ValhallaRoutingProxy::CalculateRoute(_cachedPackageDatabases, _profile, _configuration, request, _elevationDataSource, _elevationDecoder);
+            result = ValhallaRoutingProxy::CalculateRoute(_cachedPackageDatabases, _profile, _configuration, request);
         });
 
         return result;
@@ -152,10 +148,6 @@ namespace carto {
         // Impossible
     }
 
-    void PackageManagerValhallaRoutingService::connectElevationDataSource(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<ElevationDecoder>& elevationDecoder) {
-        _elevationDataSource = dataSource;
-        _elevationDecoder = elevationDecoder;
-    }
 }
 
 #endif

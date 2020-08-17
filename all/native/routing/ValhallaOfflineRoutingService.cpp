@@ -3,8 +3,6 @@
 #include "ValhallaOfflineRoutingService.h"
 #include "components/Exceptions.h"
 #include "routing/ValhallaRoutingProxy.h"
-#include "datasources/TileDataSource.h"
-#include "rastertiles/ElevationDecoder.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -18,9 +16,7 @@ namespace carto {
         _database(),
         _profile("pedestrian"),
         _configuration(ValhallaRoutingProxy::GetDefaultConfiguration()),
-        _mutex(),
-        _elevationDataSource(),
-        _elevationDecoder()
+        _mutex()
     {
         _database.reset(new sqlite3pp::database());
         if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
@@ -86,12 +82,7 @@ namespace carto {
         }
 
         std::lock_guard<std::mutex> lock(_mutex);
-        return ValhallaRoutingProxy::CalculateRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, _profile, _configuration, request, _elevationDataSource, _elevationDecoder);
-    }
-
-    void ValhallaOfflineRoutingService::connectElevationDataSource(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<ElevationDecoder>& elevationDecoder) {
-        _elevationDataSource = dataSource;
-        _elevationDecoder = elevationDecoder;
+        return ValhallaRoutingProxy::CalculateRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, _profile, _configuration, request);
     }
 }
 

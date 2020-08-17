@@ -7,8 +7,6 @@
 #include "components/Exceptions.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
-#include "datasources/TileDataSource.h"
-#include "rastertiles/ElevationDecoder.h"
 #include "routing/RoutingRequest.h"
 #include "routing/RoutingResult.h"
 #include "routing/RouteMatchingRequest.h"
@@ -217,8 +215,7 @@ namespace carto {
         return ParseRouteMatchingResult(request->getProjection(), resultString);
     }
 
-    std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RoutingRequest>& request, const std::shared_ptr<TileDataSource>& elevationDataSource,
-        const std::shared_ptr<ElevationDecoder>& elevationDecoder) {
+    std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RoutingRequest>& request) {
         std::string resultString;
         try {
             std::stringstream ss;
@@ -231,14 +228,6 @@ namespace carto {
             valhalla::ParseApi(SerializeRoutingRequest(profile, request), valhalla::Options::route, api);
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
-            if (elevationDecoder && elevationDataSource) {
-                auto lambdaGet = [elevationDecoder, elevationDataSource](const valhalla::midgard::PointLL& coords){
-                    const MapPos pos(coords.x(), coords.y()); 
-                    return elevationDecoder->getElevation(elevationDataSource, pos);
-                };
-                auto objFunc = valhalla::skadi::GetHeightFunc(lambdaGet);
-                lokiworker.get_sample().set_get_func(objFunc);
-            }
             lokiworker.route(api);
             valhalla::thor::thor_worker_t thorworker(configTree, reader);
             thorworker.route(api);

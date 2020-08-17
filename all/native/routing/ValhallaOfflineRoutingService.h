@@ -21,8 +21,6 @@ namespace sqlite3pp {
 }
 
 namespace carto {
-    class TileDataSource;
-    class ElevationDecoder;
 
     /**
      * An offline routing service that uses Valhalla routing tiles.
@@ -57,15 +55,11 @@ namespace carto {
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
-        void connectElevationDataSource(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<ElevationDecoder>& elevationDecoder);
-
     private:
         std::shared_ptr<sqlite3pp::database> _database;
         std::string _profile;
         Variant _configuration;
         mutable std::mutex _mutex;
-        std::shared_ptr<TileDataSource> _elevationDataSource;
-        std::shared_ptr<ElevationDecoder> _elevationDecoder;
     };
     
 }
