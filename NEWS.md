@@ -1,3 +1,11 @@
+CARTO Mobile SDK 4.3.2RC2
+-------------------
+
+### Changes/fixes:
+
+* Fixed multiline RTL text formatting in VT renderer
+
+
 CARTO Mobile SDK 4.3.2RC1
 -------------------
 
