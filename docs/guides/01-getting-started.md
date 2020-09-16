@@ -20,7 +20,7 @@ You can find detailed instructions on [API Keys page](../API-keys/)
   // use the latest version number from https://github.com/CartoDB/mobile-sdk/releases
 
   dependencies {
-      compile 'com.carto:carto-mobile-sdk:4.3.1@aar'
+      compile 'com.carto:carto-mobile-sdk:4.3.2@aar'
   }
   {% endhighlight %}
  
@@ -215,7 +215,7 @@ You can find detailed instructions on [API Keys page](../API-keys/)
 
   // Add to your CocoaPods Podfile:
   // use the latest version number from https://github.com/CartoDB/mobile-sdk/releases
-  pod 'CartoMobileSDK', '4.3.1'
+  pod 'CartoMobileSDK', '4.3.2'
 
 {% endhighlight %}
 
