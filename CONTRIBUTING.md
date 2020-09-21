@@ -1,7 +1,7 @@
 ## How to contribute:
 
 * [Add issues](https://github.com/CartoDB/mobile-sdk/issues) for found bugs and new feature ideas. Check first if issue for specific thing does not already exist
-* See [README.md](https://github.com/CartoDB/mobile-sdk/README.md) for compilation guides
+* See [README.md](https://github.com/CartoDB/mobile-sdk/blob/master/README.md) for compilation guides
 * Use Pull Requests to contribute with own code additions
 
 Additional developer channels and more detailed guidelines will be added soon.
@@ -29,5 +29,5 @@ After that, there are several rules you should follow when a new pull request is
 * winphone - Windows Phone-specific (C++, C#) code, Swig wrapper config and helpers
 * dotnet - generic C# code shared by Xamarin and Windows Phone builds
 * assets - images and style files sources used for map rendering. Converted to C++ headers
-* doc - documentation, published in CARTO docs site
+* docs - documentation, published in CARTO docs site
 * scripts - scripts for building SDK (using Python, CMake, Swig and other tools)
