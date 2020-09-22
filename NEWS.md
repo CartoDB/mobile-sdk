@@ -1,3 +1,12 @@
+CARTO Mobile SDK 4.3.2
+-------------------
+
+### Changes/fixes:
+
+* Fixed PersistentCacheTileDataSource not working with large cache files
+* Changed PersistentCacheTileDataSource to be more conservative when estimating cache file size
+
+
 CARTO Mobile SDK 4.3.2RC2
 -------------------
 
