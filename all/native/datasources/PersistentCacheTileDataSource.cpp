@@ -194,6 +194,7 @@ namespace carto {
         try {
             // Get tile ids and sizes ordered by the timestamp from the database
             std::vector<std::pair<long long, std::size_t> > tileInfos;
+            tileInfos.reserve(_cache.capacity() / (EXTRA_TILE_FOOTPRINT + 1));
             sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed) FROM persistent_cache ORDER BY time ASC");
             for (auto it = query.begin(); it != query.end(); ++it) {
                 long long tileId = (*it).get<std::uint64_t>(0);
