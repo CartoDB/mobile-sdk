@@ -187,27 +187,38 @@ namespace carto {
     }
     
     void PersistentCacheTileDataSource::loadTileInfo() {
+        struct TileInfo {
+            std::uint64_t tileId;
+            std::size_t tileSize;
+            std::uint64_t time;
+        };
+
         if (!_database) {
             return;
         }
 
         try {
             // Get tile ids and sizes ordered by the timestamp from the database
-            std::vector<std::pair<long long, std::size_t> > tileInfos;
+            std::vector<TileInfo> tileInfos;
             tileInfos.reserve(_cache.capacity() / (EXTRA_TILE_FOOTPRINT + 1));
-            sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed) FROM persistent_cache ORDER BY time ASC");
+            sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed), time FROM persistent_cache");
             for (auto it = query.begin(); it != query.end(); ++it) {
-                long long tileId = (*it).get<std::uint64_t>(0);
-                std::size_t tileSize = static_cast<std::size_t>((*it).get<std::uint64_t>(1));
-                tileInfos.emplace_back(tileId, tileSize);
+                TileInfo tileInfo;
+                tileInfo.tileId = (*it).get<std::uint64_t>(0);
+                tileInfo.tileSize = static_cast<std::size_t>((*it).get<std::uint64_t>(1));
+                tileInfo.time = (*it).get<std::uint64_t>(2);
+                tileInfos.push_back(tileInfo);
             }
             query.finish();
 
+            // Sort the tiles
+            std::sort(tileInfos.begin(), tileInfos.end(), [](const TileInfo& tileInfo1, const TileInfo& tileInfo2) {
+                return tileInfo1.time < tileInfo2.time;
+            });
+
             // Now store the queried items in cache. This may result in eviction of some of the items.
-            for (std::pair<long long, std::size_t> tileInfo : tileInfos) {
-                long long tileId = tileInfo.first;
-                std::size_t tileSize = tileInfo.second;
-                _cache.put(tileId, createTileId(tileId), tileSize + EXTRA_TILE_FOOTPRINT);
+            for (const TileInfo& tileInfo : tileInfos) {
+                _cache.put(tileInfo.tileId, createTileId(tileInfo.tileId), tileInfo.tileSize + EXTRA_TILE_FOOTPRINT);
             }
         }
         catch (const std::exception& ex) {
