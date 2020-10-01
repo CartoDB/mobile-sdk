@@ -13,7 +13,6 @@
 #include <vt/Label.h>
 #include <vt/LabelCuller.h>
 #include <vt/TileTransformer.h>
-#include <vt/GLTileRenderer.h>
 #include <vt/GLExtensions.h>
 
 #include <cglib/mat.h>
@@ -227,7 +226,7 @@ namespace carto {
         return true;
     }
 
-    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
+    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<vt::GLTileRenderer::GeometryIntersectionInfo>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_vtRenderer) {
@@ -238,19 +237,20 @@ namespace carto {
             return;
         }
 
-        tileRenderer->findGeometryIntersections(ray, results, radius, true, false);
+        std::vector<cglib::ray3<double> > rays = { ray };
+        tileRenderer->findGeometryIntersections(rays, radius, radius, true, false, results);
         if (_labelOrder == 0) {
-            tileRenderer->findLabelIntersections(ray, results, radius, true, false);
+            tileRenderer->findLabelIntersections(rays, radius, true, false, results);
         }
         if (_buildingOrder == 0) {
-            tileRenderer->findGeometryIntersections(ray, results, radius, false, true);
+            tileRenderer->findGeometryIntersections(rays, radius, radius, false, true, results);
         }
         if (_labelOrder == 0) {
-            tileRenderer->findLabelIntersections(ray, results, radius, false, true);
+            tileRenderer->findLabelIntersections(rays, radius, false, true, results);
         }
     }
         
-    void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
+    void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<vt::GLTileRenderer::GeometryIntersectionInfo>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_vtRenderer) {
@@ -261,18 +261,19 @@ namespace carto {
             return;
         }
 
+        std::vector<cglib::ray3<double> > rays = { ray };
         if (_labelOrder == 1) {
-            tileRenderer->findLabelIntersections(ray, results, radius, true, false);
+            tileRenderer->findLabelIntersections(rays, radius, true, false, results);
         }
         if (_buildingOrder == 1) {
-            tileRenderer->findGeometryIntersections(ray, results, radius, false, true);
+            tileRenderer->findGeometryIntersections(rays, radius, radius, false, true, results);
         }
         if (_labelOrder == 1) {
-            tileRenderer->findLabelIntersections(ray, results, radius, false, true);
+            tileRenderer->findLabelIntersections(rays, radius, false, true, results);
         }
     }
 
-    void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const {
+    void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<vt::GLTileRenderer::BitmapIntersectionInfo>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_vtRenderer) {
@@ -283,7 +284,8 @@ namespace carto {
             return;
         }
 
-        tileRenderer->findBitmapIntersections(ray, results);
+        std::vector<cglib::ray3<double> > rays = { ray };
+        tileRenderer->findBitmapIntersections(rays, results);
     }
 
     bool TileRenderer::initializeRenderer() {

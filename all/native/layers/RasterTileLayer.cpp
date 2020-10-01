@@ -333,35 +333,31 @@ namespace carto {
         DirectorPtr<RasterTileEventListener> eventListener = _rasterTileEventListener;
 
         if (eventListener) {
-            std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > > hitResults;
+            std::vector<vt::GLTileRenderer::BitmapIntersectionInfo> hitResults;
             _tileRenderer->calculateRayIntersectedBitmaps(ray, viewState, hitResults);
 
-            for (const std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> >& hitResult : hitResults) {
-                vt::TileId vtTileId = std::get<0>(hitResult);
-                double t = std::get<1>(hitResult);
-                const vt::TileBitmap& tileBitmap = std::get<2>(hitResult);
-                cglib::vec2<float> tilePos = std::get<3>(hitResult);
-
-                if (tileBitmap.getData().empty() || tileBitmap.getWidth() < 1 || tileBitmap.getHeight() < 1) {
+            for (const vt::GLTileRenderer::BitmapIntersectionInfo& hitResult : hitResults) {
+                std::shared_ptr<const vt::TileBitmap> tileBitmap = hitResult.bitmap;
+                if (!tileBitmap || tileBitmap->getData().empty() || tileBitmap->getWidth() < 1 || tileBitmap->getHeight() < 1) {
                     Log::Warnf("RasterTileLayer::calculateRayIntersectedElements: Bitmap data not available");
                     continue;
                 }
 
                 std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-                float x = tilePos(0) * tileBitmap.getWidth();
-                float y = tilePos(1) * tileBitmap.getHeight();
-                std::array<std::uint8_t, 4> interpolatedComponents = readTileBitmapColor(tileBitmap, x - 0.5f, y - 0.5f);
+                float x = hitResult.uv(0) * tileBitmap->getWidth();
+                float y = hitResult.uv(1) * tileBitmap->getHeight();
+                std::array<std::uint8_t, 4> interpolatedComponents = readTileBitmapColor(*tileBitmap, x - 0.5f, y - 0.5f);
                 Color interpolatedColor(interpolatedComponents[0], interpolatedComponents[1], interpolatedComponents[2], interpolatedComponents[3]);
 
                 int nx = static_cast<int>(std::floor(x));
                 int ny = static_cast<int>(std::floor(y));
-                std::array<std::uint8_t, 4> nearestComponents = readTileBitmapColor(tileBitmap, nx, ny);
+                std::array<std::uint8_t, 4> nearestComponents = readTileBitmapColor(*tileBitmap, nx, ny);
                 Color nearestColor(nearestComponents[0], nearestComponents[1], nearestComponents[2], nearestComponents[3]);
 
-                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr), nearestColor, interpolatedColor);
+                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(MapTile(hitResult.tileId.x, hitResult.tileId.y, hitResult.tileId.zoom, _frameNr), nearestColor, interpolatedColor);
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, ray(t), ray(t), false));
+                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, ray(hitResult.rayT), ray(hitResult.rayT), false));
             }
         }
 
