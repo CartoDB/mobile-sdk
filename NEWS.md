@@ -1,3 +1,13 @@
+CARTO Mobile SDK 4.3.3RC1
+-------------------
+
+### Changes/fixes:
+
+* Fixed PersistentCacheTileDataSource not working with large cache files
+* Faster initialization of PeristentCacheTileDataSource with large database files
+* Tweaks and fixes to vector tile feature click detection, marker images are now used to detect transparent pixels
+
+
 CARTO Mobile SDK 4.3.2
 -------------------
 
