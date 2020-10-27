@@ -2,6 +2,7 @@
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "utils/Log.h"
+#include "utils/TileUtils.h"
 #include "core/BinaryData.h"
 #include "projections/EPSG3857.h"
 #include "projections/Projection.h"
@@ -66,12 +67,12 @@ namespace {
         return std::array<std::uint8_t, 4> { { static_cast<std::uint8_t>(result[0]), static_cast<std::uint8_t>(result[1]), static_cast<std::uint8_t>(result[2]), static_cast<std::uint8_t>(result[3]) } };
     }
 
-    int readPixelAltitude(const std::shared_ptr<carto::Bitmap>& tileBitmap, const carto::MapBounds& tileBounds, const carto::MapPos& pos, const std::array<float, 4>& components) {
+    double readPixelAltitude(const std::shared_ptr<carto::Bitmap>& tileBitmap, const carto::MapBounds& tileBounds, const carto::MapPos& pos, const std::array<float, 4>& components) {
         int tileSize = tileBitmap->getWidth();
         float pixelX = (pos.getX() - tileBounds.getMin().getX()) / (tileBounds.getMax().getX() - tileBounds.getMin().getX()) * tileSize;
         float pixelY = tileSize - (pos.getY() - tileBounds.getMin().getY()) / (tileBounds.getMax().getY() - tileBounds.getMin().getY()) * tileSize;
         std::array<std::uint8_t, 4> interpolatedComponents = readTileBitmapColor(tileBitmap, pixelX - 0.5f, pixelY - 0.5f);
-        int altitude = std::round(components[0] * (float)interpolatedComponents[0] + components[1] * (float)interpolatedComponents[1] + components[2] * (float)interpolatedComponents[2] + components[3] * (float)interpolatedComponents[3]/255.0f);
+        int altitude = (double)(components[0] * (float)interpolatedComponents[0] + components[1] * (float)interpolatedComponents[1] + components[2] * (float)interpolatedComponents[2] + components[3] * (float)interpolatedComponents[3]/255.0f);
         return altitude;
     }
 }
@@ -264,12 +265,56 @@ namespace carto
         return tileBitmap;
     }
 
-    int HillshadeRasterTileLayer::getElevation(MapPos &pos) const
+    double HillshadeRasterTileLayer::getElevation(const MapPos &pos) const
     {
-        return _elevationDecoder->getElevation(getDataSource(), pos);
-  }
-    std::vector<int> HillshadeRasterTileLayer::getElevations(const std::vector<MapPos> poses) const
+        std::shared_ptr<TileDataSource> dataSource = getDataSource();
+        // we need to transform pos to dataSource projection
+        // TODO: how to check if pos is in Wgs84?
+        std::shared_ptr<Projection> projection = dataSource->getProjection();
+        MapPos dataSourcePos = projection->fromWgs84(pos);
+
+        // The tile is flipped so to get the bitmap we need to flip it
+        MapTile mapTile = TileUtils::CalculateMapTile(dataSourcePos, dataSource->getMaxZoom(), projection);
+        MapTile flippedMapTile = mapTile.getFlipped();
+
+        std::shared_ptr<Bitmap> tileBitmap = getMapTileBitmap(flippedMapTile);
+        if (!tileBitmap) {
+            Log::Error("ElevationDecoder::getElevation: Null tile bitmap");
+            return -1000000;
+        }
+        std::array<float, 4> components = _elevationDecoder->getColorComponentCoefficients();
+        return readPixelAltitude(tileBitmap, TileUtils::CalculateMapTileBounds(mapTile, projection), dataSourcePos, components);
+    }
+    std::vector<double> HillshadeRasterTileLayer::getElevations(const std::vector<MapPos> poses) const
     {
-        return _elevationDecoder->getElevations(getDataSource(), poses);
+        std::shared_ptr<TileDataSource> dataSource = getDataSource();
+        std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>> indexedTiles;
+        std::vector<double> results;
+        std::shared_ptr<Projection> projection = dataSource->getProjection();
+        std::array<float, 4> components = _elevationDecoder->getColorComponentCoefficients();
+        for (auto it = poses.begin(); it != poses.end(); it++) {
+            // TODO: how to check if pos is in Wgs84?
+            MapPos dataSourcePos = projection->fromWgs84(*it);
+            // The tile is flipped so to get the bitmap we need to flip it
+            MapTile mapTile = TileUtils::CalculateMapTile(dataSourcePos, dataSource->getMaxZoom(), projection);
+            MapTile flippedMapTile = mapTile.getFlipped();
+            long long tileId = mapTile.getTileId();
+            std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>::iterator iter(indexedTiles.find(tileId));
+            if (iter == indexedTiles.end()) {
+                std::shared_ptr<Bitmap> tileBitmap = getMapTileBitmap(flippedMapTile);
+                MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, projection);
+                std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = std::make_pair(tileBounds, tileBitmap);
+                indexedTiles.insert(std::pair<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>(tileId, pair));
+                double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
+                results.push_back(altitude);
+            } else {
+                std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = iter->second;
+                const std::shared_ptr<Bitmap>& tileBitmap = pair.second;
+                const MapBounds& tileBounds = pair.first;
+                double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
+                results.push_back(altitude);
+            }
+        }
+        return results;
     }
 } // namespace carto

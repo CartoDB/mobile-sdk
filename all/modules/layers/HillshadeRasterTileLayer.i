@@ -3,7 +3,7 @@
 
 %module HillshadeRasterTileLayer
 
-!proxy_imports(carto::HillshadeRasterTileLayer, core.MapPos, core.MapPosVector, core.IntVector, datasources.TileDataSource, rastertiles.ElevationDecoder, graphics.Color, layers.RasterTileLayer)
+!proxy_imports(carto::HillshadeRasterTileLayer, core.MapPos, core.MapPosVector, core.DoubleVector, datasources.TileDataSource, rastertiles.ElevationDecoder, graphics.Color, layers.RasterTileLayer)
 
 %{
 #include "layers/HillshadeRasterTileLayer.h"
@@ -18,7 +18,7 @@
 %import "rastertiles/ElevationDecoder.i"
 %import "graphics/Color.i"
 %import "layers/RasterTileLayer.i"
-%import "core/IntVector.i"
+%import "core/DoubleVector.i"
 
 !polymorphic_shared_ptr(carto::HillshadeRasterTileLayer, layers.HillshadeRasterTileLayer)
 

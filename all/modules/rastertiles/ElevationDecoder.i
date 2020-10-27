@@ -3,7 +3,7 @@
 
 %module ElevationDecoder
 
-!proxy_imports(carto::ElevationDecoder, graphics.Color, core.MapPos, core.MapPosVector, core.IntVector, datasources.TileDataSource)
+!proxy_imports(carto::ElevationDecoder, graphics.Color)
 
 %{
 #include "rastertiles/ElevationDecoder.h"
@@ -14,9 +14,6 @@
 %include <cartoswig.i>
 
 %import "graphics/Color.i"
-%import "core/MapPos.i"
-%import "datasources/TileDataSource.i"
-%import "core/IntVector.i"
 
 !polymorphic_shared_ptr(carto::ElevationDecoder, rastertiles.ElevationDecoder)
 

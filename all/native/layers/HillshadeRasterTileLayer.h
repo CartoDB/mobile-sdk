@@ -92,8 +92,8 @@ namespace carto {
          */
         void setIlluminationMapRotationEnabled(bool enabled);
 
-        int getElevation(MapPos& pos) const;
-        std::vector<int> getElevations(const std::vector<MapPos> poses) const;
+        double getElevation(const MapPos& pos) const;
+        std::vector<double> getElevations(const std::vector<MapPos> poses) const;
 
     protected:
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);

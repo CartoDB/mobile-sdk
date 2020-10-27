@@ -8,8 +8,6 @@
 #define _CARTO_ELEVATIONDECODER_H_
 
 #include "graphics/Color.h"
-#include "core/MapTile.h"
-#include "core/MapPos.h"
 
 #include <memory>
 #include <string>
@@ -22,8 +20,6 @@
 #include <mapnikvt/Map.h>
 
 namespace carto {
-    class Bitmap;
-    class TileDataSource;
     /**
      * Abstract base class for raster elevation decoders.
      */
@@ -35,15 +31,9 @@ namespace carto {
         ElevationDecoder();
         virtual ~ElevationDecoder();
         
-        virtual float decodeHeight(const Color& encodedHeight) const;
+        virtual double decodeHeight(const Color& encodedHeight) const;
         virtual std::array<float, 4> getVectorTileScales() const = 0;
         virtual std::array<float, 4> getColorComponentCoefficients() const = 0;
-
-        int getElevation(std::shared_ptr<TileDataSource> dataSource, const MapPos &pos) const;
-        std::vector<int> getElevations(std::shared_ptr<TileDataSource> dataSource, const std::vector<MapPos> poses) const;
-
-    protected:
-        std::shared_ptr<Bitmap> getMapTileBitmap(std::shared_ptr<TileDataSource> dataSource, const MapTile& mapTile) const;
 
     };
         
