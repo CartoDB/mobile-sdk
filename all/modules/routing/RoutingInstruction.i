@@ -24,6 +24,7 @@
 %attribute(carto::RoutingInstruction, RoutingAction::RoutingAction, Action, getAction)
 %attribute(carto::RoutingInstruction, int, PointIndex, getPointIndex)
 %attribute(carto::RoutingInstruction, std::string, StreetName, getStreetName)
+%attribute(carto::RoutingInstruction, std::string, Instruction, getInstruction)
 %attribute(carto::RoutingInstruction, float, TurnAngle, getTurnAngle)
 %attribute(carto::RoutingInstruction, float, Azimuth, getAzimuth)
 %attribute(carto::RoutingInstruction, double, Distance, getDistance)
