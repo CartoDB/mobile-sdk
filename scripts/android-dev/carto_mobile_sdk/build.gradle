@@ -28,7 +28,7 @@ android {
     defaultConfig {
         externalNativeBuild {
             cmake {
-                arguments "-DSINGLE_LIBRARY:BOOL=ON", "-DANDROID_STL=c++_static", "-DSDK_CPP_DEFINES=''", "-DWRAPPER_DIR=${projectDir.absolutePath.replaceAll('\\\\', '/')}/../../../generated/android-java/wrappers"
+                arguments "-DINCLUDE_VALHALLA:BOOL=ON -DSINGLE_LIBRARY:BOOL=ON", "-DANDROID_STL=c++_static", "-DSDK_CPP_DEFINES='-D_CARTO_SERVICES_SUPPORT -D_CARTO_SEARCH_SUPPORT -D_CARTO_GEOCODING_SUPPORT -D_CARTO_ROUTING_SUPPORT -D_CARTO_OFFLINE_SUPPORT -D_CARTO_PACKAGEMANAGER_SUPPORT -D_CARTO_LICENSEMANAGER_SUPPORT -D_CARTO_EDITABLE_SUPPORT -D_CARTO_WKBT_SUPPORT -D_CARTO_VALHALLA_ROUTING_SUPPORT'", "-DWRAPPER_DIR=${projectDir.absolutePath.replaceAll('\\\\', '/')}/../../../generated/android-java/wrappers"
             }
         }
     }
