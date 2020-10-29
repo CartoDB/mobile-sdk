@@ -46,6 +46,7 @@ namespace carto {
     const std::string& RoutingInstruction::getStreetName() const {
         return _streetName;
     }
+
     const std::string& RoutingInstruction::getInstruction() const {
         return _instruction;
     }
@@ -148,6 +149,9 @@ namespace carto {
         ss << "RoutingInstruction [action=" << actionName;
         if (!_streetName.empty()) {
             ss << ", streetName=" << _streetName;
+        }
+        if (!_instruction.empty()) {
+            ss << ", instruction=" << _instruction;
         }
         ss << ", azimuth=" << _azimuth;
         if (_turnAngle != 0) {
