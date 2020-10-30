@@ -31,9 +31,8 @@ namespace carto {
         ElevationDecoder();
         virtual ~ElevationDecoder();
         
-        virtual double decodeHeight(const Color& encodedHeight) const;
         virtual std::array<float, 4> getVectorTileScales() const = 0;
-        virtual std::array<float, 4> getColorComponentCoefficients() const = 0;
+        virtual std::array<double, 4> getColorComponentCoefficients() const = 0;
 
     };
         

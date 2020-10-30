@@ -28,10 +28,10 @@ namespace carto {
         virtual ~MapBoxElevationDataDecoder();
 
         virtual std::array<float, 4> getVectorTileScales() const;
-        virtual std::array<float, 4> getColorComponentCoefficients() const;
+        virtual std::array<double, 4> getColorComponentCoefficients() const;
 
     private :
-        static const std::array<float, 4> COMPONENTS;
+        static const std::array<double, 4> COMPONENTS;
         static const std::array<float, 4> SCALES;
     };
 

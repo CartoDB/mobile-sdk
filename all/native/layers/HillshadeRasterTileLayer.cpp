@@ -67,12 +67,12 @@ namespace {
         return std::array<std::uint8_t, 4> { { static_cast<std::uint8_t>(result[0]), static_cast<std::uint8_t>(result[1]), static_cast<std::uint8_t>(result[2]), static_cast<std::uint8_t>(result[3]) } };
     }
 
-    double readPixelAltitude(const std::shared_ptr<carto::Bitmap>& tileBitmap, const carto::MapBounds& tileBounds, const carto::MapPos& pos, const std::array<float, 4>& components) {
+    double readPixelAltitude(const std::shared_ptr<carto::Bitmap>& tileBitmap, const carto::MapBounds& tileBounds, const carto::MapPos& pos, const std::array<double, 4>& components) {
         int tileSize = tileBitmap->getWidth();
         float pixelX = (pos.getX() - tileBounds.getMin().getX()) / (tileBounds.getMax().getX() - tileBounds.getMin().getX()) * tileSize;
         float pixelY = tileSize - (pos.getY() - tileBounds.getMin().getY()) / (tileBounds.getMax().getY() - tileBounds.getMin().getY()) * tileSize;
-        std::array<std::uint8_t, 4> interpolatedComponents = readTileBitmapColor(tileBitmap, pixelX - 0.5f, pixelY - 0.5f);
-        int altitude = (double)(components[0] * (float)interpolatedComponents[0] + components[1] * (float)interpolatedComponents[1] + components[2] * (float)interpolatedComponents[2] + components[3] * (float)interpolatedComponents[3]/255.0f);
+        std::array<std::uint8_t, 4> interpolatedComponents = readTileBitmapColor(tileBitmap, std::round(pixelX), std::round(pixelY));
+        double altitude = (components[0] * interpolatedComponents[0] + components[1] * interpolatedComponents[1] + components[2] * interpolatedComponents[2] + components[3] * interpolatedComponents[3]/255.0f);
         return altitude;
     }
 }
@@ -282,7 +282,7 @@ namespace carto
             Log::Error("ElevationDecoder::getElevation: Null tile bitmap");
             return -1000000;
         }
-        std::array<float, 4> components = _elevationDecoder->getColorComponentCoefficients();
+        std::array<double, 4> components = _elevationDecoder->getColorComponentCoefficients();
         return readPixelAltitude(tileBitmap, TileUtils::CalculateMapTileBounds(mapTile, projection), dataSourcePos, components);
     }
     std::vector<double> HillshadeRasterTileLayer::getElevations(const std::vector<MapPos> poses) const
@@ -291,7 +291,7 @@ namespace carto
         std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>> indexedTiles;
         std::vector<double> results;
         std::shared_ptr<Projection> projection = dataSource->getProjection();
-        std::array<float, 4> components = _elevationDecoder->getColorComponentCoefficients();
+        std::array<double, 4> components = _elevationDecoder->getColorComponentCoefficients();
         for (auto it = poses.begin(); it != poses.end(); it++) {
             // TODO: how to check if pos is in Wgs84?
             MapPos dataSourcePos = projection->fromWgs84(*it);
