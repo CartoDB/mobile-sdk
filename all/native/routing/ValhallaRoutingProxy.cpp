@@ -511,7 +511,7 @@ namespace carto {
                 std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(legInfo.get("shape").get<std::string>());
                 points.reserve(points.size() + shape.size());
                 epsg3857Points.reserve(epsg3857Points.size() + shape.size());
-                for (std::size_t i = 0; i <= shape.size(); i++) {
+                for (std::size_t i = 0; i < shape.size(); i++) {
                     const valhalla::midgard::PointLL& point = shape.at(i);
                     points.push_back(proj->fromLatLong(point.second, point.first));
                 }
@@ -526,12 +526,11 @@ namespace carto {
                         action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
                     }
 
-                    std::size_t pointIndexEpsg3857 = points.size();
+                    std::size_t pointIndexEpsg3857 = epsg3857Points.size();
                     std::size_t pointIndex = maneuver.get("begin_shape_index").get<std::int64_t>();
                     for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
                         const valhalla::midgard::PointLL& point = shape.at(j);
                         epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
-                        // points.push_back(proj->fromLatLong(point.second, point.first));
                     }
 
                     float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndexEpsg3857);
