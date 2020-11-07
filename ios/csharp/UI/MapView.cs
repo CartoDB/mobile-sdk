@@ -79,7 +79,7 @@
 
             _active = true;
 
-            _scale = (float) UIScreen.MainScreen.Scale;
+            _scale = (float) UIScreen.MainScreen.NativeScale;
 
             _baseMapView = new BaseMapView();
             _baseMapView.SetRedrawRequestListener(new MapRedrawRequestListener(this));
@@ -97,6 +97,7 @@
                     Log.Fatal("MapView.InitGL: Failed to create OpenGLES 2.0 context");
                 }
                 this.Context = _viewContext;
+                this.ContentScaleFactor = _scale;
 
                 DrawableColorFormat = GLKViewDrawableColorFormat.RGBA8888;
                 DrawableDepthFormat = GLKViewDrawableDepthFormat.Format24;
