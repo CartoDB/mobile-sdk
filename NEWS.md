@@ -1,3 +1,20 @@
+CARTO Mobile SDK 4.3.3
+-------------------
+
+### Changes/fixes:
+
+* Fixed regression in label ray-hit detection routine when using globe mode
+
+
+CARTO Mobile SDK 4.3.3RC2
+-------------------
+
+### Changes/fixes:
+
+* Fixed critical content scaling issue on iPhone Plus devices
+* Started using API 30 as compilation target on Android
+
+
 CARTO Mobile SDK 4.3.3RC1
 -------------------
 
