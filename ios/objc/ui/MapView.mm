@@ -105,18 +105,17 @@ static const int NATIVE_NO_COORDINATE = -1;
 #endif
     self.multipleTouchEnabled = YES;
 
-    @synchronized(self) {
-        if (_viewContext) {
-            [NTGLContext setCurrentContext:_viewContext];
+    if (_viewContext) {
+        [NTGLContext setCurrentContext:_viewContext];
 
-            [_baseMapView onSurfaceCreated];
+        [_baseMapView onSurfaceCreated];
 
-            CGFloat drawableWidth = self.bounds.size.width * _scale;
-            CGFloat drawableHeight = self.bounds.size.height * _scale;
-            self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
-            [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
-        }
+        CGFloat drawableWidth = self.bounds.size.width * _scale;
+        CGFloat drawableHeight = self.bounds.size.height * _scale;
+        self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
+        [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
     }
+
     [self setNeedsDisplay];
 }
 
