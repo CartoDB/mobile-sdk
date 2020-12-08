@@ -22,6 +22,7 @@
         private float _scale = 1;
         private NSObject _didEnterBackgroundNotificationObserver;
         private NSObject _willEnterForegroundNotificationObserver;
+        private MapRedrawRequestListener _redrawRequestListener;
 
         private UITouch _pointer1 = null;
         private UITouch _pointer2 = null;
@@ -82,33 +83,30 @@
             _scale = (float) UIScreen.MainScreen.NativeScale;
 
             _baseMapView = new BaseMapView();
-            _baseMapView.SetRedrawRequestListener(new MapRedrawRequestListener(this));
             _baseMapView.GetOptions().DPI = 160 * _scale;
 
-            DispatchQueue.MainQueue.DispatchAsync (
-                new System.Action(InitGL)
-            );
-        }
+            _redrawRequestListener = new MapRedrawRequestListener(this);
+            _baseMapView.SetRedrawRequestListener(_redrawRequestListener);
 
-        private void InitGL() {
-            lock (this) {
-                _viewContext = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
-                if (_viewContext == null) {
-                    Log.Fatal("MapView.InitGL: Failed to create OpenGLES 2.0 context");
-                }
-                this.Context = _viewContext;
-                this.ContentScaleFactor = _scale;
+            _viewContext = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
+            if (_viewContext == null) {
+                Log.Fatal("MapView.InitGL: Failed to create OpenGLES 2.0 context");
+            }
+            this.Context = _viewContext;
+            this.ContentScaleFactor = _scale;
 
-                DrawableColorFormat = GLKViewDrawableColorFormat.RGBA8888;
-                DrawableDepthFormat = GLKViewDrawableDepthFormat.Format24;
-                DrawableMultisample = GLKViewDrawableMultisample.None;
-                DrawableStencilFormat = GLKViewDrawableStencilFormat.Format8;
-                MultipleTouchEnabled = true;
+            DrawableColorFormat = GLKViewDrawableColorFormat.RGBA8888;
+            DrawableDepthFormat = GLKViewDrawableDepthFormat.Format24;
+            DrawableMultisample = GLKViewDrawableMultisample.None;
+            DrawableStencilFormat = GLKViewDrawableStencilFormat.Format8;
+            MultipleTouchEnabled = true;
 
+            if (_viewContext != null) {
                 EAGLContext.SetCurrentContext(_viewContext);
                 _baseMapView.OnSurfaceCreated();
                 _baseMapView.OnSurfaceChanged((int) (Bounds.Size.Width * _scale), (int) (Bounds.Size.Height * _scale));
             }
+
             SetNeedsDisplay();
         }
 
@@ -152,19 +150,30 @@
 
         protected override void Dispose(bool disposing) {
             lock (this) {
-                if (_viewContext != null) {
+                if (_redrawRequestListener != null) {
+                    _redrawRequestListener.Detach();
+                    _redrawRequestListener = null;
+                }
+                if (_baseMapView != null) {
+                    _baseMapView.SetRedrawRequestListener(null);
                     _baseMapView.OnSurfaceDestroyed();
+                    _baseMapView = null;
+                }
+                if (_viewContext != null) {
                     if (EAGLContext.CurrentContext == _viewContext) {
                         EAGLContext.SetCurrentContext(null);
                     }
-                    _baseMapView.SetRedrawRequestListener(null);
-                    _baseMapView = null;
                     _viewContext = null;
                 }
+                if (_didEnterBackgroundNotificationObserver != null) {
+                    NSNotificationCenter.DefaultCenter.RemoveObserver(_didEnterBackgroundNotificationObserver);
+                    _didEnterBackgroundNotificationObserver = null;
+                }
+                if (_willEnterForegroundNotificationObserver != null) {
+                    NSNotificationCenter.DefaultCenter.RemoveObserver(_willEnterForegroundNotificationObserver);
+                    _willEnterForegroundNotificationObserver = null;
+                }
             }
-
-            NSNotificationCenter.DefaultCenter.RemoveObserver(_didEnterBackgroundNotificationObserver);
-            NSNotificationCenter.DefaultCenter.RemoveObserver(_willEnterForegroundNotificationObserver);
 
             base.Dispose(disposing);
         }
