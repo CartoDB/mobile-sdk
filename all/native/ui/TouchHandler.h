@@ -68,7 +68,17 @@ namespace carto {
         friend class BaseMapView;
     
     private:
-        enum GestureMode { SINGLE_POINTER_CLICK_GUESS, DUAL_POINTER_CLICK_GUESS, SINGLE_POINTER_PAN, SINGLE_POINTER_ZOOM, DUAL_POINTER_GUESS, DUAL_POINTER_TILT, DUAL_POINTER_ROTATE, DUAL_POINTER_SCALE, DUAL_POINTER_FREE };
+        enum GestureMode {
+            SINGLE_POINTER_CLICK_GUESS,
+            DUAL_POINTER_CLICK_GUESS,
+            SINGLE_POINTER_PAN,
+            SINGLE_POINTER_ZOOM,
+            DUAL_POINTER_GUESS,
+            DUAL_POINTER_TILT,
+            DUAL_POINTER_ROTATE,
+            DUAL_POINTER_SCALE,
+            DUAL_POINTER_FREE
+        };
     
         class MapRendererListener : public MapRenderer::OnChangeListener {
         public:

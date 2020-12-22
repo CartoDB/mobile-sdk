@@ -232,6 +232,7 @@ namespace carto {
                     auto deltaTime = std::chrono::steady_clock::now() - _startTime;
                     switch (_clickMode) {
                     case NO_CLICK:
+                        _chosen = true;
                         break;
                     case LONG_CLICK:
                         if (!_clickTypeDetection || deltaTime >= LONG_CLICK_MIN_DURATION) {
@@ -273,6 +274,7 @@ namespace carto {
                 // Click type was detected, stop running
                 std::lock_guard<std::mutex> lock(_mutex);
                 _running = false;
+                _clickMode = NO_CLICK;
             }
         }
     }
