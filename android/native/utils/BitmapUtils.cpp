@@ -48,7 +48,10 @@ namespace carto {
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
 
         AndroidBitmapInfo bitmapInfo;
-        AndroidBitmap_getInfo(jenv, androidBitmap, &bitmapInfo);
+        if (AndroidBitmap_getInfo(jenv, androidBitmap, &bitmapInfo) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            Log::Error("BitmapUtils::CreateBitmapFromAndroidBitmap: Failed to read Android bitmap info");
+            return std::shared_ptr<Bitmap>();
+        }
 
         unsigned int bytesPerPixel = 0;
         ColorFormat::ColorFormat colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
