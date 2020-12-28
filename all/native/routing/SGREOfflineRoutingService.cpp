@@ -26,6 +26,7 @@ namespace carto {
         _featureData(geoJSON.toPicoJSON()),
         _config(config.toPicoJSON()),
         _profile(),
+        _routingParameters(),
         _cachedRouteFinder(),
         _mutex()
     {
@@ -36,6 +37,7 @@ namespace carto {
         _featureData(),
         _config(config.toPicoJSON()),
         _profile(),
+        _routingParameters(),
         _cachedRouteFinder(),
         _mutex()
     {
@@ -53,6 +55,20 @@ namespace carto {
     }
 
     SGREOfflineRoutingService::~SGREOfflineRoutingService() {
+    }
+
+    float SGREOfflineRoutingService::getRoutingParameter(const std::string& param) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        auto it = _routingParameters.find(param);
+        if (it != _routingParameters.end()) {
+            return it->second;
+        }
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    void SGREOfflineRoutingService::setRoutingParameter(const std::string& param, float value) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _routingParameters[param] = value;
     }
 
     std::string SGREOfflineRoutingService::getProfile() const {
@@ -77,26 +93,25 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        std::shared_ptr<sgre::RouteFinder> routeFinder;
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (!_cachedRouteFinder) {
-                try {
-                    sgre::RuleList ruleList;
-                    if (_config.contains("rules")) {
-                        ruleList = sgre::RuleList::parse(_config.get("rules"));
-                    }
-                    ruleList.filter(_profile);
-                    sgre::GraphBuilder graphBuilder(std::move(ruleList));
-                    graphBuilder.importGeoJSON(_featureData);
-                    _cachedRouteFinder = sgre::RouteFinder::create(graphBuilder.build(), _config);
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (!_cachedRouteFinder) {
+            try {
+                sgre::RuleList ruleList;
+                if (_config.contains("rules")) {
+                    ruleList = sgre::RuleList::parse(_config.get("rules"));
                 }
-                catch (const std::exception& ex) {
-                    throw GenericException("Failed to create routing graph", ex.what());
-                }
+                ruleList.filter(_profile);
+                sgre::GraphBuilder graphBuilder(std::move(ruleList));
+                graphBuilder.importGeoJSON(_featureData);
+                _cachedRouteFinder = sgre::RouteFinder::create(graphBuilder.build(), _config);
             }
-            routeFinder = _cachedRouteFinder;
+            catch (const std::exception& ex) {
+                throw GenericException("Failed to create routing graph", ex.what());
+            }
         }
+
+        std::shared_ptr<sgre::RouteFinder> routeFinder = _cachedRouteFinder;
+        routeFinder->setParameters(_routingParameters);
 
         std::shared_ptr<Projection> proj = request->getProjection();
         EPSG3857 epsg3857;
