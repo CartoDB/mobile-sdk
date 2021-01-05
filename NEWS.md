@@ -1,3 +1,15 @@
+CARTO Mobile SDK 4.3.4RC1
+-------------------
+
+### Changes/fixes:
+
+* Added support for setting routing parameters to SGREOfflineRoutingService (setRoutingParameter, getRoutingParameter methods)
+* Fixed critical Xamarin iOS synchronization redrawing/disposing issues, causing exceptions
+* Fixed VectorTileLayer rendering issue related to opacity handling
+* Fixed watermark options being ignored after initial rendering
+* Additional safety checks in Android bitmap conversions
+
+
 CARTO Mobile SDK 4.3.3
 -------------------
 
