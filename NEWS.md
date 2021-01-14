@@ -7,6 +7,7 @@ CARTO Mobile SDK 4.3.4RC1
 * Fixed critical Xamarin iOS synchronization redrawing/disposing issues, causing exceptions
 * Fixed VectorTileLayer rendering issue related to opacity handling
 * Fixed watermark options being ignored after initial rendering
+* Fixed non-opaque highlight/shadow color handling in HillshadeRasterTileLayer
 * Additional safety checks in Android bitmap conversions
 
 

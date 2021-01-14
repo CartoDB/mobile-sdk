@@ -324,8 +324,10 @@ namespace carto {
             tileRenderer->setLightingShader3D(lightingShader3D);
 
             vt::GLTileRenderer::LightingShader lightingShaderNormalMap(false, LIGHTING_SHADER_NORMALMAP, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-                glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), _normalMapShadowColor.getR() / 255.0f, _normalMapShadowColor.getG() / 255.0f, _normalMapShadowColor.getB() / 255.0f, _normalMapShadowColor.getA() / 255.0f);
-                glUniform4f(glGetUniformLocation(shaderProgram, "u_highlightColor"), _normalMapHighlightColor.getR() / 255.0f, _normalMapHighlightColor.getG() / 255.0f, _normalMapHighlightColor.getB() / 255.0f, _normalMapHighlightColor.getA() / 255.0f);
+                float shadowAlpha = _normalMapShadowColor.getA() / 255.0f;
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), _normalMapShadowColor.getR() * shadowAlpha / 255.0f, _normalMapShadowColor.getG() * shadowAlpha / 255.0f, _normalMapShadowColor.getB() * shadowAlpha / 255.0f, shadowAlpha);
+                float highlightAlpha = _normalMapHighlightColor.getA() / 255.0f;
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_highlightColor"), _normalMapHighlightColor.getR() * highlightAlpha / 255.0f, _normalMapHighlightColor.getG() * highlightAlpha / 255.0f, _normalMapHighlightColor.getB() * highlightAlpha / 255.0f, highlightAlpha);
                 glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
             });
             tileRenderer->setLightingShaderNormalMap(lightingShaderNormalMap);
