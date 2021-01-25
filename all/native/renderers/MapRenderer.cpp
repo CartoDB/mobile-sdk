@@ -503,13 +503,20 @@ namespace carto {
     }
 
     void MapRenderer::onSurfaceChanged(int width, int height) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _viewState.setScreenSize(width, height);
-        _viewState.calculateViewState(*_options);
-        _viewState.clampZoom(*_options);
-        _viewState.clampFocusPos(*_options);
-        _screenFrameBuffers.clear(); // reset, as this depends on the surface dimensions
-        _surfaceChanged = true;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _viewState.setScreenSize(width, height);
+            _viewState.calculateViewState(*_options);
+            _viewState.clampZoom(*_options);
+            _viewState.clampFocusPos(*_options);
+            _screenFrameBuffers.clear(); // reset, as this depends on the surface dimensions
+            _surfaceChanged = true;
+        }
+
+        DirectorPtr<MapRendererListener> mapRendererListener = _mapRendererListener;
+        if (mapRendererListener) {
+            mapRendererListener->onSurfaceChanged(width, height);
+        }
     }
     
     void MapRenderer::onDrawFrame() {
