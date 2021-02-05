@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
                    By carto.com
                    DESC
 
-  s.homepage     = "https://carto.com/mobile/"
+  s.homepage     = "https://carto.com/developers/mobile-sdk/"
   s.screenshots  = "https://github.com/CartoDB/mobile-ios-samples/blob/gh-pages/carto-mobile-sdk-animated.gif?raw=true"
 
   s.license      = { :type => "BSD" }
