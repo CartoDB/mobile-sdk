@@ -1,3 +1,13 @@
+CARTO Mobile SDK 4.3.4
+-------------------
+
+### Changes/fixes:
+
+* Fixed out of range memory access issues when packing large VT geometries
+* Fixed an issue in VT line clipping implementation causing missing initial vertices in border cases
+* Optimizations when converting GeoJSON data to vector tile format (GeoJSONVectorTileDataSource)
+
+
 CARTO Mobile SDK 4.3.4RC1
 -------------------
 
