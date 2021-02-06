@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
                    * 2.5D view - tilting, rotating, navigation view
                    * 3D models on map
                    * Use your custom map data sources
-                   * Same API for iOS, Android, Xamarin, Windows Phone
+                   * Same API for iOS, Android, Xamarin, Universal Windows Platform
                    
                    By carto.com
                    DESC
