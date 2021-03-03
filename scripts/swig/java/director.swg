@@ -114,9 +114,21 @@ namespace Swig {
 
   protected:
 #if defined (_MSC_VER) && (_MSC_VER<1300)
+    struct SwigDirectorMethod;
+    friend struct SwigDirectorMethod;
     class JNIEnvWrapper;
     friend class JNIEnvWrapper;
 #endif
+    /* Utility class for method wrapping */
+    struct SwigDirectorMethod {
+      const char *name;
+      const char *desc;
+      jmethodID methid;
+      SwigDirectorMethod(JNIEnv *jenv, jclass baseclass, const char *name, const char *desc) : name(name), desc(desc) {
+        methid = jenv->GetMethodID(baseclass, name, desc);
+      }
+    };
+
     /* Utility class for managing the JNI environment */
     class JNIEnvWrapper {
       const Director *director_;
@@ -203,6 +215,11 @@ namespace Swig {
     void swig_java_change_ownership(JNIEnv *jenv, jobject jself, bool take_or_release) {
       std::lock_guard<std::recursive_mutex> lock(swig_director_mutex_);
       swig_self_.java_change_ownership(jenv, jself, take_or_release);
+    }
+
+    static jclass swig_new_global_ref(JNIEnv *jenv, const char *classname) {
+      jclass clz = jenv->FindClass(classname);
+      return clz ? (jclass)jenv->NewGlobalRef(clz) : 0;
     }
 
     // Carto-specific methods
