@@ -12,12 +12,12 @@ Pod::Spec.new do |s|
                    * 2.5D view - tilting, rotating, navigation view
                    * 3D models on map
                    * Use your custom map data sources
-                   * Same API for iOS, Android, Xamarin, Windows Phone
+                   * Same API for iOS, Android, Xamarin, Universal Windows Platform
                    
                    By carto.com
                    DESC
 
-  s.homepage     = "https://carto.com/mobile/"
+  s.homepage     = "https://carto.com/developers/mobile-sdk/"
   s.screenshots  = "https://github.com/CartoDB/mobile-ios-samples/blob/gh-pages/carto-mobile-sdk-animated.gif?raw=true"
 
   s.license      = { :type => "BSD" }

@@ -713,7 +713,7 @@ namespace carto {
         // Create decompressing object, set data source
         jpeg_create_decompress(&cinfo);
         unsigned char* compressedDataPtr = const_cast<unsigned char*>(compressedData);
-        jpeg_mem_src(&cinfo, compressedDataPtr, dataSize);
+        jpeg_mem_src(&cinfo, compressedDataPtr, static_cast<unsigned long>(dataSize));
     
         // Read headers, prepare to decompress
         jpeg_read_header(&cinfo, TRUE);

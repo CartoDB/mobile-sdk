@@ -23,6 +23,7 @@
 #include <memory>
 #include <thread>
 #include <vector>
+#include <map>
 
 namespace carto {
     class CameraPanEvent;
@@ -179,9 +180,8 @@ namespace carto {
         
         std::shared_ptr<OptionsListener> _optionsListener;
 
-        std::vector<std::pair<GLuint, GLuint> > _currentBoundFBOs;
-
-        std::shared_ptr<FrameBuffer> _screenFrameBuffer;
+        std::vector<std::pair<GLuint, GLuint> > _screenBoundFBOs;
+        std::map<GLuint, std::shared_ptr<FrameBuffer> > _screenFrameBuffers;
         std::shared_ptr<Shader> _screenBlendShader;
         
         BackgroundRenderer _backgroundRenderer;

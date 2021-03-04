@@ -17,7 +17,15 @@ namespace carto {
         virtual ~MapRendererListener() { }
         
         /**
-         * Listener method that gets called at the start of the rendering process.
+         * Listener method that gets called when the rendering surface initialized and its size is updated.
+         * The method can be used to check when it is safe to call methods that depend on view size,
+         * like moveToFitBounds, screenToMap, mapToScreen.
+         * This method is called from GL renderer thread, not from main thread.
+         */
+        virtual void onSurfaceChanged(int width, int height) { }
+        
+        /**
+         * Listener method that gets called at the start of the rendering frame.
          * The method can be used to synchronize vector elements with renderer state, for example
          * to force marker to be always at the center of the screen (focus point).
          * This method is called from GL renderer thread, not from main thread.
@@ -25,7 +33,7 @@ namespace carto {
         virtual void onBeforeDrawFrame() { }
         
         /**
-         * Listener method that gets called at the end of the rendering process.
+         * Listener method that gets called at the end of the rendering frame.
          * This method is called from GL renderer thread, not from main thread.
          */
         virtual void onAfterDrawFrame() { }

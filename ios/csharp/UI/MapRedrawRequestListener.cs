@@ -12,15 +12,32 @@
             _viewRef = new WeakReference<GLKView>(view);
         }
 
-        public override void OnRedrawRequested() {
-            GLKView view = null;
-            if (_viewRef.TryGetTarget (out view)) {
-                if (view != null) { // check probably not needed
-                    DispatchQueue.MainQueue.DispatchAsync (
-                        new System.Action (view.SetNeedsDisplay)
-                    );
+        public void Detach() {
+            lock (this) {
+                _viewRef.SetTarget(null);
+            }
+        }
+
+        private void SetNeedsDisplay() {
+            try {
+                GLKView view = null;
+                lock (this) {
+                    _viewRef.TryGetTarget(out view);
+                }
+
+                if (view != null) {
+                    view.SetNeedsDisplay();
                 }
             }
+            catch (System.Exception e) {
+                Carto.Utils.Log.Error("MapRedrawRequestListener.SetNeedsDisplay: " + e);
+            }
+        }
+
+        public override void OnRedrawRequested() {
+            DispatchQueue.MainQueue.DispatchAsync (
+                new System.Action (SetNeedsDisplay)
+            );
         }
     }
 }

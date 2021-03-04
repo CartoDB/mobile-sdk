@@ -45,8 +45,8 @@ namespace carto {
         _vtLabelPlacementWorker(std::make_shared<VTLabelPlacementWorker>()),
         _vtLabelPlacementThread(),
         _optionsListener(),
-        _currentBoundFBOs(),
-        _screenFrameBuffer(),
+        _screenBoundFBOs(),
+        _screenFrameBuffers(),
         _screenBlendShader(),
         _backgroundRenderer(*options, *layers),
         _watermarkRenderer(*options),
@@ -491,8 +491,8 @@ namespace carto {
         _glResourceManager->setGLThreadId(std::this_thread::get_id());
 
         // Reset screen blending state
-        _currentBoundFBOs.clear();
-        _screenFrameBuffer.reset();
+        _screenBoundFBOs.clear();
+        _screenFrameBuffers.clear();
         _screenBlendShader.reset();
 
         // Notify renderers about the event
@@ -503,13 +503,20 @@ namespace carto {
     }
 
     void MapRenderer::onSurfaceChanged(int width, int height) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _viewState.setScreenSize(width, height);
-        _viewState.calculateViewState(*_options);
-        _viewState.clampZoom(*_options);
-        _viewState.clampFocusPos(*_options);
-        _screenFrameBuffer.reset(); // reset, as this depends on the surface dimensions
-        _surfaceChanged = true;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _viewState.setScreenSize(width, height);
+            _viewState.calculateViewState(*_options);
+            _viewState.clampZoom(*_options);
+            _viewState.clampFocusPos(*_options);
+            _screenFrameBuffers.clear(); // reset, as this depends on the surface dimensions
+            _surfaceChanged = true;
+        }
+
+        DirectorPtr<MapRendererListener> mapRendererListener = _mapRendererListener;
+        if (mapRendererListener) {
+            mapRendererListener->onSurfaceChanged(width, height);
+        }
     }
     
     void MapRenderer::onDrawFrame() {
@@ -618,8 +625,8 @@ namespace carto {
         }
 
         // Reset screen blending state
-        _currentBoundFBOs.clear();
-        _screenFrameBuffer.reset();
+        _screenBoundFBOs.clear();
+        _screenFrameBuffers.clear();
         _screenBlendShader.reset();
 
         // Notify renderers about the event
@@ -635,13 +642,14 @@ namespace carto {
         GLint prevBoundFBO = 0;
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevBoundFBO);
         GLuint bufferMask = GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0) | (stencil ? GL_STENCIL_BUFFER_BIT : 0);
-        _currentBoundFBOs.emplace_back(static_cast<GLuint>(prevBoundFBO), bufferMask);
+        _screenBoundFBOs.emplace_back(static_cast<GLuint>(prevBoundFBO), bufferMask);
 
-        if (!_screenFrameBuffer) {
-            _screenFrameBuffer = _glResourceManager->create<FrameBuffer>(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
+        std::shared_ptr<FrameBuffer>& frameBuffer = _screenFrameBuffers[bufferMask];
+        if (!frameBuffer || !frameBuffer->isValid()) {
+            frameBuffer = _glResourceManager->create<FrameBuffer>(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, _screenFrameBuffer->getFBOId());
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer->getFBOId());
 
         glClearColor(color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f);
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -667,20 +675,21 @@ namespace carto {
     void MapRenderer::blendAndUnbindScreenFBO(float opacity) {
         static const GLfloat screenVertices[8] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
 
-        if (_currentBoundFBOs.empty()) {
+        if (_screenBoundFBOs.empty()) {
             Log::Error("MapRenderer::blendAndUnbindScreenFBO: No bound FBOs");
             return;
         }
 
-        GLuint prevBoundFBO = _currentBoundFBOs.back().first;
-        GLuint bufferMask = _currentBoundFBOs.back().second;
-        _currentBoundFBOs.pop_back();
+        GLuint prevBoundFBO = _screenBoundFBOs.back().first;
+        GLuint bufferMask = _screenBoundFBOs.back().second;
+        _screenBoundFBOs.pop_back();
         
-        if (!_screenFrameBuffer || !_screenFrameBuffer->isValid()) {
+        std::shared_ptr<FrameBuffer>& frameBuffer = _screenFrameBuffers[bufferMask];
+        if (!frameBuffer || !frameBuffer->isValid()) {
             return; // should not happen, just safety
         }
         if (bufferMask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
-            _screenFrameBuffer->discard(false, (bufferMask & GL_DEPTH_BUFFER_BIT) != 0, (bufferMask & GL_STENCIL_BUFFER_BIT) != 0);
+            frameBuffer->discard(false, (bufferMask & GL_DEPTH_BUFFER_BIT) != 0, (bufferMask & GL_STENCIL_BUFFER_BIT) != 0);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, prevBoundFBO);
@@ -699,7 +708,7 @@ namespace carto {
         
         glUniform1i(_screenBlendShader->getUniformLoc("u_tex"), 0);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, _screenFrameBuffer->getColorTexId());
+        glBindTexture(GL_TEXTURE_2D, frameBuffer->getColorTexId());
 
         glUniform4f(_screenBlendShader->getUniformLoc("u_color"), opacity, opacity, opacity, opacity);
         glUniform2f(_screenBlendShader->getUniformLoc("u_invScreenSize"), 1.0f / _viewState.getWidth(), 1.0f / _viewState.getHeight());

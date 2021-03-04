@@ -48,8 +48,6 @@ namespace carto {
         
         cglib::mat4x4<float> _modelviewProjectionMat;
         
-        bool _surfaceChanged;
-    
         std::shared_ptr<Shader> _shader;
         GLuint _u_tex;
         GLuint _u_mvpMat;

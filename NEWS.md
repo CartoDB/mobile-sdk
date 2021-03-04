@@ -1,3 +1,57 @@
+CARTO Mobile SDK 4.3.4
+-------------------
+
+### Changes/fixes:
+
+* Fixed out of range memory access issues when packing large VT geometries
+* Fixed an issue in VT line clipping implementation causing missing initial vertices in border cases
+* Optimizations when converting GeoJSON data to vector tile format (GeoJSONVectorTileDataSource)
+
+
+CARTO Mobile SDK 4.3.4RC1
+-------------------
+
+### Changes/fixes:
+
+* Added support for setting routing parameters to SGREOfflineRoutingService (setRoutingParameter, getRoutingParameter methods)
+* Added 'placement-priority' support for vector tile labels, allowing setting priorities for individual labels
+* Added onSurfaceChanged event to MapRendererListener. This method is called when map is resized.
+* Reduced rendering artifacts of wide dashed lines in vector tile renderer
+* Better precision when compressing vector tile coordinates, fixes rare visual artifacts
+* Fixed critical Xamarin iOS synchronization redrawing/disposing issues, causing exceptions
+* Fixed VectorTileLayer rendering issue related to opacity handling
+* Fixed watermark options being ignored after initial rendering
+* Fixed non-opaque highlight/shadow color handling in HillshadeRasterTileLayer
+* Additional safety checks in Android bitmap conversions
+
+
+CARTO Mobile SDK 4.3.3
+-------------------
+
+### Changes/fixes:
+
+* Fixed regression in label ray-hit detection routine when using globe mode
+
+
+CARTO Mobile SDK 4.3.3RC2
+-------------------
+
+### Changes/fixes:
+
+* Fixed critical content scaling issue on iPhone Plus devices
+* Started using API 30 as compilation target on Android
+
+
+CARTO Mobile SDK 4.3.3RC1
+-------------------
+
+### Changes/fixes:
+
+* Fixed PersistentCacheTileDataSource not working with large cache files
+* Faster initialization of PeristentCacheTileDataSource with large database files
+* Tweaks and fixes to vector tile feature click detection, marker images are now used to detect transparent pixels
+
+
 CARTO Mobile SDK 4.3.2
 -------------------
 

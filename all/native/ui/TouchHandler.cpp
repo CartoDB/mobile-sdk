@@ -158,13 +158,15 @@ namespace carto {
             }
             break;
     
-        case ACTION_CANCEL: {
+        case ACTION_CANCEL:
+            {
                 std::lock_guard<std::mutex> lock(_mutex);
                 _pointersDown = 0;
                 _clickHandlerWorker->cancel();
                 _gestureMode = SINGLE_POINTER_CLICK_GUESS;
             }
             break;
+
         case ACTION_POINTER_1_UP:
             switch (_gestureMode) {
             case SINGLE_POINTER_CLICK_GUESS:
