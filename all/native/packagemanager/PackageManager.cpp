@@ -88,6 +88,7 @@ namespace carto {
                 _taskQueue = std::make_shared<PersistentTaskQueue>(createLocalFilePath(taskDbFileName));
             }
             catch (const std::exception& ex) {
+                Log::Errorf("PackageManager: Second error while constructing PackageManager::PersistentTaskQueue: %s", ex.what());
                 throw FileException("Failed to create/open package manager task queue database", taskDbFileName);
             }
         }

@@ -22,8 +22,8 @@
 
 namespace {
 
-    struct ValueConverter : boost::static_visitor<carto::Variant> {
-        carto::Variant operator() (boost::blank) const { return carto::Variant(); }
+    struct ValueConverter {
+        carto::Variant operator() (std::monostate) const { return carto::Variant(); }
         template <typename T> carto::Variant operator() (T val) const { return carto::Variant(val); }
     };
 
@@ -104,7 +104,7 @@ namespace carto {
             properties["_id"] = Variant(static_cast<long long>(feature.getId()));
         }
         for (auto it = feature.getProperties().begin(); it != feature.getProperties().end(); it++) {
-            properties[it->first] = boost::apply_visitor(ValueConverter(), it->second);
+            properties[it->first] = std::visit(ValueConverter(), it->second);
         }
         std::shared_ptr<Geometry> geom = TranslateGeometry(proj, feature.getGeometry());
         return std::make_shared<Feature>(geom, Variant(properties));

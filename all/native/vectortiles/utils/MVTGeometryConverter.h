@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_GEOMETRYCONVERTER_H_
-#define _CARTO_GEOMETRYCONVERTER_H_
+#ifndef _CARTO_MVTGEOMETRYCONVERTER_H_
+#define _CARTO_MVTGEOMETRYCONVERTER_H_
 
 #include "core/MapPos.h"
 
@@ -44,7 +44,7 @@ namespace carto {
         return pointsLists;
     }
 
-    inline std::shared_ptr<Geometry> convertGeometry(const PointConversionFunc& convertFn, const std::shared_ptr<const mvt::Geometry>& mvtGeometry) {
+    inline std::shared_ptr<Geometry> convertMVTGeometry(const PointConversionFunc& convertFn, const std::shared_ptr<const mvt::Geometry>& mvtGeometry) {
         if (auto mvtPoint = std::dynamic_pointer_cast<const mvt::PointGeometry>(mvtGeometry)) {
             std::vector<MapPos> poses = convertPoints(convertFn, mvtPoint->getVertices());
             std::vector<std::shared_ptr<PointGeometry> > points;
