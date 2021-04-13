@@ -368,14 +368,14 @@ namespace carto {
             }
 
             for (const std::string& mvtLayerName : decoder->getLayerNames()) {
-                for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName); mvtIt->valid(); mvtIt->advance()) {
+                for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName, nullptr); mvtIt->valid(); mvtIt->advance()) {
                     std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtIt->getGeometry();
                     if (!mvtGeometry) {
                         continue;
                     }
 
                     std::map<std::string, Variant> featureData;
-                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData()) {
+                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData(nullptr)) {
                         for (const std::string& varName : mvtFeatureData->getVariableNames()) {
                             mvt::Value mvtValue;
                             if (mvtFeatureData->getVariable(varName, mvtValue)) {
@@ -512,7 +512,7 @@ namespace carto {
             auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
             auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
 
-            std::shared_ptr<vt::Font> fallbackFont;
+            std::shared_ptr<const vt::Font> fallbackFont;
             for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
                 std::shared_ptr<BinaryData> fontData = *it;
                 std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
