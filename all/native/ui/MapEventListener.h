@@ -11,6 +11,7 @@
 
 namespace carto {
     class MapClickInfo;
+    class MapInteractionInfo;
     
     /**
      * Listener for events like map clicks etc.
@@ -30,10 +31,11 @@ namespace carto {
 
         /**
          * Listener method that gets called when the map is panned, rotated, tilted or zoomed.
+         * The callback is used for both UI events and map changes resulting from API calls.
          * The thread this method is called from may vary.
          */
         virtual void onMapMoved() { }
-        
+
         /**
          * Listener method that gets called when map is in 'stable' state - map animations have finished,
          * user has lifted fingers from the screen. This method is similar to onMapIdle, but is called less
@@ -42,6 +44,13 @@ namespace carto {
          */
         virtual void onMapStable() { }
     
+        /**
+         * Listener method that gets called when user has interacted with the map. The callback
+         * includes info about interaction type (panning, zooming, etc).
+         * @param mapInteractionInfo A container that provides information about the interaction.
+         */
+        virtual void onMapInteraction(const std::shared_ptr<MapInteractionInfo>& mapInteractionInfo) { }
+        
         /**
          * Listener method that gets called when a click is performed on an empty area of the map.
          * This method will NOT be called from the main thread.
