@@ -20,7 +20,7 @@ namespace {
             return std::string();
         }
 
-        byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+        CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
 
         CryptoPP::Weak::MD5 hash;
         hash.CalculateDigest(digest, data->data(), data->size());
