@@ -68,7 +68,7 @@ def buildIOSLib(args, arch):
     '-DSHARED_LIBRARY:BOOL=%s' % ('ON' if args.sharedlib else 'OFF'),
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
-    '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('9.0' if args.metalangle else '7.0'),
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=9.0',
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
@@ -78,6 +78,7 @@ def buildIOSLib(args, arch):
     return False
   return cmake(args, buildDir, [
     '--build', '.',
+    '--parallel', '4',
     '--config', args.configuration
   ])
 
@@ -173,7 +174,7 @@ def buildIOSCocoapod(args, buildpackage):
   distDir = getDistDir('ios')
   version = args.buildversion
   distName = 'sdk4-ios-%s.zip' % version
-  iosversion = '9.0' if args.metalangle else '7.0'
+  iosversion = '9.0'
   frameworks = (["IOSurface"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation", "CartoMobileSDK"]
 
   with open('%s/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:

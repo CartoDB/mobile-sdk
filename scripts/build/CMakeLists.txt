@@ -94,7 +94,7 @@ if(IOS)
 endif(IOS)
 
 if(WIN32)
-  include_directories("${SDK_EXTERNAL_LIBS_DIR}/angle-uwp/include" "${SDK_EXTERNAL_LIBS_DIR}/zlib/zlib")
+  include_directories("${SDK_EXTERNAL_LIBS_DIR}/angle-uwp/include" "${SDK_EXTERNAL_LIBS_DIR}/zlib/config" "${SDK_EXTERNAL_LIBS_DIR}/zlib/zlib")
 endif(WIN32)
 
 # Subprojects
@@ -217,6 +217,8 @@ if(ANDROID)
 elseif(IOS)
   include_directories("${SDK_BASE_DIR}/ios/native")
   if(INCLUDE_OBJC)
+    include_directories("${SDK_BASE_DIR}/generated/ios-objc/proxies")
+    include_directories("${SDK_BASE_DIR}/generated/ios-objc/wrappers")
     include_directories("${SDK_BASE_DIR}/ios/objc")
   endif(INCLUDE_OBJC)
 elseif(WIN32)
