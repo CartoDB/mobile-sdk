@@ -550,7 +550,7 @@ namespace carto {
             bool valid = nutiParam.getDefaultValue().index() == it->second.index();
             if (!nutiParam.getEnumMap().empty()) {
                 valid = false;
-                for (const std::pair<std::string, mvt::Value>& enumValue : nutiParam.getEnumMap()) {
+                for (std::pair<std::string, mvt::Value> enumValue : nutiParam.getEnumMap()) {
                     if (enumValue.second == it->second) {
                         valid = true;
                         break;

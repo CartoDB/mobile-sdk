@@ -29,9 +29,7 @@
 #include <utility>
 
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
 
 #include <picojson/picojson.h>
 
@@ -522,7 +520,7 @@ namespace carto {
                         action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
                     }
 
-                    std::size_t pointIndex = points.size();
+                    int pointIndex = static_cast<int>(points.size());
                     for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
                         const valhalla::midgard::PointLL& point = shape.at(j);
                         epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));

@@ -252,7 +252,7 @@ namespace carto {
                 if (data) {
                     sqlite3pp::command insCmd(*styleDb, "INSERT INTO files (filename, contents) VALUES(:fileName, :contents)");
                     insCmd.bind(":fileName", fileName.c_str());
-                    insCmd.bind(":contents", data->data(), data->size());
+                    insCmd.bind(":contents", data->data(), static_cast<int>(data->size()));
                     insCmd.execute();
                 }
             }

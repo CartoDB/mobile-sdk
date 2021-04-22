@@ -11,11 +11,11 @@
 #include <sqlite3pp.h>
 #include <sqlite3ppext.h>
 
-#include <rc5.h>
-#include <sha.h>
-#include <modes.h>
-#include <filters.h>
-#include <hex.h>
+#include <cryptopp/rc5.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/hex.h>
 
 namespace carto {
 

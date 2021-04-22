@@ -165,7 +165,7 @@ namespace {
 
     class SearchQueryContext : public carto::QueryContext {
     public:
-        explicit SearchQueryContext(const std::shared_ptr<carto::Geometry>& geometry, const std::shared_ptr<carto::Projection>& proj, const std::string* layerName, const carto::Variant& var) : _geometry(geometry), _projection(proj), _layerName(layerName), _variant(var) { }
+        explicit SearchQueryContext(const std::shared_ptr<carto::Geometry>& geometry, const std::string* layerName, const carto::Variant& var) : _geometry(geometry), _layerName(layerName), _variant(var) { }
         virtual ~SearchQueryContext() { }
 
         virtual bool getVariable(const std::string& name, carto::Variant& value) const {
@@ -242,7 +242,6 @@ namespace {
         }
 
         const std::shared_ptr<carto::Geometry>& _geometry;
-        const std::shared_ptr<carto::Projection>& _projection;
         const std::string* _layerName;
         const carto::Variant& _variant;
     };
@@ -333,7 +332,7 @@ namespace carto {
         }
 
         if (_expr) {
-            SearchQueryContext context(geometry, _projection, layerName, var);
+            SearchQueryContext context(geometry, layerName, var);
             if (!_expr->evaluate(context)) {
                 return false;
             }
