@@ -100,6 +100,7 @@ namespace carto {
 
         virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const;
 
+        std::shared_ptr<Bitmap> getTileDataBitmap(std::shared_ptr<TileData> tileData) const;
         std::shared_ptr<Bitmap> getMapTileBitmap(const MapTile& mapTile) const;
 
         const DirectorPtr<ElevationDecoder> _elevationDecoder;

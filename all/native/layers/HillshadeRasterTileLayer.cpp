@@ -247,14 +247,7 @@ namespace carto
         return std::make_shared<vt::Tile>(vtTileId, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer>>{tileLayer});
     }
 
-
-    std::shared_ptr<Bitmap> HillshadeRasterTileLayer::getMapTileBitmap(const MapTile& mapTile) const {
-        std::shared_ptr<TileData> tileData = _dataSource->loadTile(mapTile);
-        if (!tileData) {
-            Log::Error("HillshadeRasterTileLayer::getMapTileBitmap: Null tile data");
-            return NULL;
-        }
-
+    std::shared_ptr<Bitmap> HillshadeRasterTileLayer::getTileDataBitmap(std::shared_ptr<TileData> tileData) const {
         std::shared_ptr<BinaryData> binaryData = tileData->getData();
         if (!binaryData) {
             Log::Error("HillshadeRasterTileLayer::getTileDataBitmap: Null tile binary data");
@@ -263,6 +256,15 @@ namespace carto
         int size = binaryData->size();
         std::shared_ptr<Bitmap> tileBitmap = Bitmap::CreateFromCompressed(binaryData);
         return tileBitmap;
+    }
+
+    std::shared_ptr<Bitmap> HillshadeRasterTileLayer::getMapTileBitmap(const MapTile& mapTile) const {
+        std::shared_ptr<TileData> tileData = _dataSource->loadTile(mapTile);
+        if (!tileData) {
+            Log::Error("HillshadeRasterTileLayer::getMapTileBitmap: Null tile data");
+            return NULL;
+        }
+        return getTileDataBitmap(tileData);
     }
 
     double HillshadeRasterTileLayer::getElevation(const MapPos &pos) const
@@ -277,7 +279,16 @@ namespace carto
         MapTile mapTile = TileUtils::CalculateMapTile(dataSourcePos, dataSource->getMaxZoom(), projection);
         MapTile flippedMapTile = mapTile.getFlipped();
 
-        std::shared_ptr<Bitmap> tileBitmap = getMapTileBitmap(flippedMapTile);
+        std::shared_ptr<TileData> tileData = _dataSource->loadTile(flippedMapTile);
+        while(tileData && tileData->isReplaceWithParent()) {
+            mapTile = mapTile.getParent();
+            flippedMapTile = mapTile.getFlipped();
+        }
+        if (!tileData) {
+            Log::Error("ElevationDecoder::getElevation: no tile found to get elevation");
+            return -1000000;
+        }
+        std::shared_ptr<Bitmap> tileBitmap = getTileDataBitmap(tileData);
         if (!tileBitmap) {
             Log::Error("ElevationDecoder::getElevation: Null tile bitmap");
             return -1000000;
