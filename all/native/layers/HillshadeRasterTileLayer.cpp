@@ -274,6 +274,7 @@ namespace carto
         while(tileData && tileData->isReplaceWithParent()) {
             mapTile = mapTile.getParent();
             flippedMapTile = mapTile.getFlipped();
+            tileData = _dataSource->loadTile(flippedMapTile);
         }
         if (!tileData) {
             Log::Error("ElevationDecoder::getElevation: no tile found to get elevation");
@@ -297,32 +298,55 @@ namespace carto
         for (auto it = poses.begin(); it != poses.end(); it++) {
             // TODO: how to check if pos is in Wgs84?
             MapPos dataSourcePos = projection->fromWgs84(*it);
-            // The tile is flipped so to get the bitmap we need to flip it
             MapTile mapTile = TileUtils::CalculateMapTile(dataSourcePos, dataSource->getMaxZoom(), projection);
-            MapTile flippedMapTile = mapTile.getFlipped();
-            std::shared_ptr<TileData> tileData = _dataSource->loadTile(flippedMapTile);
-            while(tileData && tileData->isReplaceWithParent()) {
-                mapTile = mapTile.getParent();
-                flippedMapTile = mapTile.getFlipped();
-            }
-            if (tileData) {
-                long long tileId = mapTile.getTileId();
-                std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>::iterator iter(indexedTiles.find(tileId));
-                if (iter == indexedTiles.end()) {
-                    std::shared_ptr<Bitmap> tileBitmap = getTileDataBitmap(tileData);
-                    MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, projection);
-                    std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = std::make_pair(tileBounds, tileBitmap);
-                    indexedTiles.insert(std::pair<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>(tileId, pair));
-                    double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
-                    results.push_back(altitude);
-                } else {
-                    std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = iter->second;
-                    const std::shared_ptr<Bitmap>& tileBitmap = pair.second;
-                    const MapBounds& tileBounds = pair.first;
-                    double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
-                    results.push_back(altitude);
+
+            long long tileId = mapTile.getTileId();
+            std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>::iterator iter(indexedTiles.find(tileId));
+            std::shared_ptr<TileData> tileData;
+            if (iter == indexedTiles.end()) {
+                // no cached bitmap found lets get it from TileData
+                // The tile is flipped so to get the bitmap we need to flip it
+                MapTile flippedMapTile = mapTile.getFlipped();
+                tileData = _dataSource->loadTile(flippedMapTile);
+                // get the parent tile if necessary
+                while(tileData && tileData->isReplaceWithParent()) {
+                    mapTile = mapTile.getParent();
+                    tileId = mapTile.getTileId();
+                    iter = (indexedTiles.find(tileId));
+                    // if the parent tile is cached let's stop
+                    if (iter != indexedTiles.end()) {
+                        break;
+                    }
+                    flippedMapTile = mapTile.getFlipped();
+                    tileData = _dataSource->loadTile(flippedMapTile);
                 }
             }
+
+            if (iter != indexedTiles.end()) {
+                // we found a cached bitmap
+                std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = iter->second;
+                const std::shared_ptr<Bitmap>& tileBitmap = pair.second;
+                const MapBounds& tileBounds = pair.first;
+                double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
+                results.push_back(altitude);
+                continue;
+            }
+            if (tileData) {
+                // read from the tile data
+                // then put the bitmap in the cache for next points
+                long long tileId = mapTile.getTileId();
+                std::shared_ptr<Bitmap> tileBitmap = getTileDataBitmap(tileData);
+                MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, projection);
+                std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = std::make_pair(tileBounds, tileBitmap);
+                indexedTiles.insert(std::pair<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>(tileId, pair));
+                double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
+                results.push_back(altitude);
+            } else {
+                // in case we did not find an elevation still return something
+                // so that the user can now for which point each elevation was
+                results.push_back(-1000000);
+            }
+
         }
         return results;
     }
