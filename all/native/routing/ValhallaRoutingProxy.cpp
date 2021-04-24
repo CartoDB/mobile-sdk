@@ -526,9 +526,10 @@ namespace carto {
                         action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
                     }
 
-                    std::size_t pointIndexEpsg3857 = epsg3857Points.size();
-                    std::size_t pointIndex = maneuver.get("begin_shape_index").get<std::int64_t>();
-                    for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
+                    int pointIndexEpsg3857 = static_cast<int>(epsg3857Points.size());
+                    std::size_t shapeBeginIndex = maneuver.get("begin_shape_index").get<std::int64_t>();
+                    int pointIndex = points.size() + shapeBeginIndex;
+                    for (std::size_t j = shapeBeginIndex; j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
                         const valhalla::midgard::PointLL& point = shape.at(j);
                         epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
                     }
