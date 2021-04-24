@@ -258,15 +258,6 @@ namespace carto
         return tileBitmap;
     }
 
-    std::shared_ptr<Bitmap> HillshadeRasterTileLayer::getMapTileBitmap(const MapTile& mapTile) const {
-        std::shared_ptr<TileData> tileData = _dataSource->loadTile(mapTile);
-        if (!tileData) {
-            Log::Error("HillshadeRasterTileLayer::getMapTileBitmap: Null tile data");
-            return NULL;
-        }
-        return getTileDataBitmap(tileData);
-    }
-
     double HillshadeRasterTileLayer::getElevation(const MapPos &pos) const
     {
         std::shared_ptr<TileDataSource> dataSource = getDataSource();
