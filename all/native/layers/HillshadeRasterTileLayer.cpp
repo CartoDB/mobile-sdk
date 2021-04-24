@@ -257,7 +257,7 @@ namespace carto
 
         std::shared_ptr<BinaryData> binaryData = tileData->getData();
         if (!binaryData) {
-            Log::Error("HillshadeRasterTileLayer::getMapTileBitmap: Null tile binary data");
+            Log::Error("HillshadeRasterTileLayer::getTileDataBitmap: Null tile binary data");
             return NULL;
         }
         int size = binaryData->size();
@@ -298,21 +298,28 @@ namespace carto
             // The tile is flipped so to get the bitmap we need to flip it
             MapTile mapTile = TileUtils::CalculateMapTile(dataSourcePos, dataSource->getMaxZoom(), projection);
             MapTile flippedMapTile = mapTile.getFlipped();
-            long long tileId = mapTile.getTileId();
-            std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>::iterator iter(indexedTiles.find(tileId));
-            if (iter == indexedTiles.end()) {
-                std::shared_ptr<Bitmap> tileBitmap = getMapTileBitmap(flippedMapTile);
-                MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, projection);
-                std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = std::make_pair(tileBounds, tileBitmap);
-                indexedTiles.insert(std::pair<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>(tileId, pair));
-                double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
-                results.push_back(altitude);
-            } else {
-                std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = iter->second;
-                const std::shared_ptr<Bitmap>& tileBitmap = pair.second;
-                const MapBounds& tileBounds = pair.first;
-                double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
-                results.push_back(altitude);
+            std::shared_ptr<TileData> tileData = _dataSource->loadTile(flippedMapTile);
+            while(tileData && tileData->isReplaceWithParent()) {
+                mapTile = mapTile.getParent();
+                flippedMapTile = mapTile.getFlipped();
+            }
+            if (tileData) {
+                long long tileId = mapTile.getTileId();
+                std::map<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>::iterator iter(indexedTiles.find(tileId));
+                if (iter == indexedTiles.end()) {
+                    std::shared_ptr<Bitmap> tileBitmap = getTileDataBitmap(tileData);
+                    MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, projection);
+                    std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = std::make_pair(tileBounds, tileBitmap);
+                    indexedTiles.insert(std::pair<long long, std::pair<MapBounds, std::shared_ptr<Bitmap>>>(tileId, pair));
+                    double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
+                    results.push_back(altitude);
+                } else {
+                    std::pair<MapBounds, std::shared_ptr<Bitmap>> pair = iter->second;
+                    const std::shared_ptr<Bitmap>& tileBitmap = pair.second;
+                    const MapBounds& tileBounds = pair.first;
+                    double altitude = readPixelAltitude(tileBitmap, tileBounds, dataSourcePos, components);
+                    results.push_back(altitude);
+                }
             }
         }
         return results;
