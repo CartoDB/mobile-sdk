@@ -298,7 +298,7 @@ namespace carto {
 
         if (!request.contentType.empty()) {
             Microsoft::WRL::ComPtr<HTTPPostStream> postStream;
-            hr = Microsoft::WRL::MakeAndInitialize<HTTPPostStream>(&postStream, request.body.data(), request.body.size());
+            hr = Microsoft::WRL::MakeAndInitialize<HTTPPostStream>(&postStream, request.body.data(), static_cast<ULONG>(request.body.size()));
             if (FAILED(hr)) {
                 throw NetworkException("Failed to initialize HTTP POST stream", request.url);
             }

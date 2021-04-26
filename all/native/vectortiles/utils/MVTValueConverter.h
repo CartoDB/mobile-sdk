@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_VALUECONVERTER_H_
-#define _CARTO_VALUECONVERTER_H_
+#ifndef _CARTO_MVTVALUECONVERTER_H_
+#define _CARTO_MVTVALUECONVERTER_H_
 
 #include "core/Variant.h"
 
@@ -13,8 +13,8 @@
 
 namespace carto {
 
-    struct ValueConverter : boost::static_visitor<Variant> {
-        Variant operator() (boost::blank) const { return Variant(); }
+    struct MVTValueConverter {
+        Variant operator() (std::monostate) const { return Variant(); }
         template <typename T> Variant operator() (T val) const { return Variant(val); }
     };
 

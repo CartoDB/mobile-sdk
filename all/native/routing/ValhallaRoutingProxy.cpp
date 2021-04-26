@@ -29,14 +29,11 @@
 #include <utility>
 
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
 
 #include <picojson/picojson.h>
 
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
-#include <valhalla/config.h>
 #include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/thor/worker.h>
@@ -522,7 +519,7 @@ namespace carto {
                         action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
                     }
 
-                    std::size_t pointIndex = points.size();
+                    int pointIndex = static_cast<int>(points.size());
                     for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
                         const valhalla::midgard::PointLL& point = shape.at(j);
                         epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
@@ -537,11 +534,13 @@ namespace carto {
                         const picojson::array& streetNames = maneuver.get("street_names").get<picojson::array>();
                         streetName = !streetNames.empty() ? streetNames[0].get<std::string>() : std::string("");
                     }
+                    std::string instruction = maneuver.get("instruction").get<std::string>();
 
                     instructions.emplace_back(
                         action,
                         pointIndex,
                         streetName,
+                        instruction,
                         turnAngle,
                         azimuth,
                         maneuver.get("length").get<double>() * 1000.0,

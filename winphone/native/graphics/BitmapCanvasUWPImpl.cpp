@@ -298,7 +298,7 @@ namespace carto {
             
             hr = _dwriteFactory->CreateTextLayout(
                 wtext.c_str(),
-                wtext.size(),
+                static_cast<UINT32>(wtext.size()),
                 _dwriteTextFormat.Get(),
                 static_cast<FLOAT>(maxWidth < 0 ? 65536 : maxWidth),
                 static_cast<FLOAT>(maxHeight),

@@ -222,7 +222,7 @@ namespace carto {
                 glVertexAttribPointer(a_attrib, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, attribBuf.data());
                 glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
                 glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
-                glDrawArrays(GL_TRIANGLES, 0, coordIndex);
+                glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(coordIndex));
                 // Start filling buffers from the beginning
                 coordIndex = 0;
             }
@@ -270,7 +270,7 @@ namespace carto {
             glVertexAttribPointer(a_attrib, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, attribBuf.data());
             glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
             glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
-            glDrawArrays(GL_TRIANGLES, 0, coordIndex);
+            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(coordIndex));
         }
     }
         

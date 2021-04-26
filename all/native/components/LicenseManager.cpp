@@ -7,14 +7,10 @@
 #include "utils/NetworkUtils.h"
 #include "utils/Log.h"
 
-#include <base64.h>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
-#include <dsa.h>
-#include <filters.h>
 #include <iomanip>
-#include <randpool.h>
 #include <regex>
 #include <sstream>
 #include <tuple>
@@ -24,6 +20,11 @@
 #include <boost/algorithm/string.hpp>
 
 #include <picojson/picojson.h>
+
+#include <cryptopp/base64.h>
+#include <cryptopp/dsa.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/randpool.h>
 
 namespace carto {
 
@@ -228,12 +229,12 @@ namespace carto {
         // Check signature, first convert signature from DER to P1364 format
         CryptoPP::DSA::Verifier verifier(publicKey);
         char signature[1024]; // DSA_P1364 signatures are actually 40 bytes
-        CryptoPP::DSAConvertSignatureFormat((byte*)signature, verifier.SignatureLength(), CryptoPP::DSA_P1363, (const byte*)decodedSignature.c_str(), decodedSignature.size(), CryptoPP::DSA_DER);
+        CryptoPP::DSAConvertSignatureFormat((CryptoPP::byte*)signature, verifier.SignatureLength(), CryptoPP::DSA_P1363, (const CryptoPP::byte*)decodedSignature.c_str(), decodedSignature.size(), CryptoPP::DSA_DER);
 
         bool result = false;
         CryptoPP::SignatureVerificationFilter* verificationFilter = new CryptoPP::SignatureVerificationFilter(
             verifier,
-            new CryptoPP::ArraySink((byte*)&result, sizeof(result)),
+            new CryptoPP::ArraySink((CryptoPP::byte*)&result, sizeof(result)),
             CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END | CryptoPP::SignatureVerificationFilter::PUT_RESULT);
         CryptoPP::StringSource(message + std::string(signature, signature + verifier.SignatureLength()), true, verificationFilter);
         if (!result) {

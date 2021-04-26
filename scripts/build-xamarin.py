@@ -54,7 +54,9 @@ def buildAndroidSO(args, abi):
   ]):
     return False
   return cmake(args, buildDir, [
-    '--build', '.', '--', '-j4'
+    '--build', '.',
+    '--parallel', '4',
+    '--config', args.configuration
   ])
 
 def buildIOSLib(args, arch):
@@ -84,6 +86,7 @@ def buildIOSLib(args, arch):
     return False
   return cmake(args, buildDir, [
     '--build', '.',
+    '--parallel', '4',
     '--config', args.configuration
   ])
 
