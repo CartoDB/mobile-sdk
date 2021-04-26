@@ -34,7 +34,6 @@
 #include <picojson/picojson.h>
 
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
-#include <valhalla/config.h>
 #include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/thor/worker.h>

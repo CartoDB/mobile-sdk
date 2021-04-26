@@ -99,7 +99,7 @@ endif(WIN32)
 
 # Subprojects
 set(SDK_CARTO_SUBPROJECTS vt mapnikvt mbvtbuilder cartocss nml osrm sgre geocoding)
-set(SDK_EXTERNAL_SUBPROJECTS cryptopp pugixml sqlite sqlite3pp bidi freetype harfbuzz msdfgen brotli miniz libjpeg libpng libwebp tess2 pvrt rg_etc1)
+set(SDK_EXTERNAL_SUBPROJECTS cryptopp pugixml sqlite sqlite3pp bidi freetype harfbuzz brotli miniz libjpeg libpng libwebp tess2 pvrt rg_etc1)
 
 if(ANDROID)
   set(SDK_EXTERNAL_SUBPROJECTS "${SDK_EXTERNAL_SUBPROJECTS}" "androidcpufeatures")
