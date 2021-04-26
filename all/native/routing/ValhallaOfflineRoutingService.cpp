@@ -84,7 +84,6 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         return ValhallaRoutingProxy::CalculateRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, _profile, _configuration, request);
     }
-
 }
 
 #endif

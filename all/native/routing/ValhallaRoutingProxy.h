@@ -27,6 +27,8 @@ namespace carto {
     class RoutingResult;
     class RouteMatchingRequest;
     class RouteMatchingResult;
+    class TileDataSource;
+    class ElevationDecoder;
     
     class ValhallaRoutingProxy {
     public:
