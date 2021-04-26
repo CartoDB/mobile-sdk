@@ -15,6 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <map>
 
 #include <picojson/picojson.h>
 
@@ -50,6 +51,19 @@ namespace carto {
         SGREOfflineRoutingService(const std::shared_ptr<Projection>& projection, const std::shared_ptr<FeatureCollection>& featureCollection, const Variant& config);
         virtual ~SGREOfflineRoutingService();
 
+        /**
+         * Returns the value of specified routing parameter.
+         * @param param The name of the parameter. For example "$speed".
+         * @return The value of the parameter. If the parameter does not exist, NaN is returned.
+         */
+        float getRoutingParameter(const std::string& param) const;
+        /**
+         * Sets the value of specified routing parameter.
+         * @param param The name of the parameter. For example "$speed".
+         * @param value The new value of the parameter.
+         */
+        void setRoutingParameter(const std::string& param, float value);
+
         virtual std::string getProfile() const;
         virtual void setProfile(const std::string& profile);
 
@@ -67,6 +81,7 @@ namespace carto {
         picojson::value _featureData;
         picojson::value _config;
         std::string _profile;
+        std::map<std::string, float> _routingParameters;
 
         mutable std::shared_ptr<sgre::RouteFinder> _cachedRouteFinder;
 

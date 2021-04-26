@@ -81,7 +81,9 @@ namespace carto {
     
         if (tileData) {
             if (tileData->getMaxAge() != 0 && !tileData->isReplaceWithParent() && tileData->getData()) {
-                _cache.put(mapTile.getTileId(), createTileId(mapTile.getTileId()), tileData->getData()->size());
+                long long tileId = mapTile.getTileId();
+                std::size_t tileSize = tileData->getData()->size();
+                _cache.put(mapTile.getTileId(), createTileId(tileId), tileSize + EXTRA_TILE_FOOTPRINT);
                 if (_cache.exists(mapTile.getTileId())) { // make sure the tile was added
                     store(mapTile.getTileId(), tileData);
                 }
@@ -138,10 +140,6 @@ namespace carto {
             command1.execute();
             command1.finish();
             
-            sqlite3pp::command command2(*_database, "PRAGMA cache_size=1"); // use minimal amount of cache
-            command2.execute();
-            command2.finish();
-
             try {
                 sqlite3pp::query query1(*_database, "SELECT name FROM sqlite_master WHERE type='table' AND name='persistent_cache'");
                 for (auto it1 = query1.begin(); it1 != query1.end(); ++it1) {
@@ -189,19 +187,39 @@ namespace carto {
     }
     
     void PersistentCacheTileDataSource::loadTileInfo() {
+        struct TileInfo {
+            std::uint64_t tileId;
+            std::size_t tileSize;
+            std::uint64_t time;
+        };
+
         if (!_database) {
             return;
         }
 
-        // Get tile ids and sizes ordered by the timestamp from the database
         try {
-            sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed) FROM persistent_cache ORDER BY time ASC");
+            // Get tile ids and sizes ordered by the timestamp from the database
+            std::vector<TileInfo> tileInfos;
+            tileInfos.reserve(_cache.capacity() / (EXTRA_TILE_FOOTPRINT + 1));
+            sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed), time FROM persistent_cache");
             for (auto it = query.begin(); it != query.end(); ++it) {
-                long long tileId = (*it).get<std::uint64_t>(0);
-                std::size_t tileSize = static_cast<std::size_t>((*it).get<std::uint64_t>(1));
-                _cache.put(tileId, createTileId(tileId), tileSize);
+                TileInfo tileInfo;
+                tileInfo.tileId = (*it).get<std::uint64_t>(0);
+                tileInfo.tileSize = static_cast<std::size_t>((*it).get<std::uint64_t>(1));
+                tileInfo.time = (*it).get<std::uint64_t>(2);
+                tileInfos.push_back(tileInfo);
             }
             query.finish();
+
+            // Sort the tiles
+            std::sort(tileInfos.begin(), tileInfos.end(), [](const TileInfo& tileInfo1, const TileInfo& tileInfo2) {
+                return tileInfo1.time < tileInfo2.time;
+            });
+
+            // Now store the queried items in cache. This may result in eviction of some of the items.
+            for (const TileInfo& tileInfo : tileInfos) {
+                _cache.put(tileInfo.tileId, createTileId(tileInfo.tileId), tileInfo.tileSize + EXTRA_TILE_FOOTPRINT);
+            }
         }
         catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::loadTileInfo: Failed to query tile set from the database: %s", ex.what());
@@ -381,5 +399,6 @@ namespace carto {
     }
 
     const unsigned int PersistentCacheTileDataSource::DEFAULT_CAPACITY = 50 * 1024 * 1024;
+    const unsigned int PersistentCacheTileDataSource::EXTRA_TILE_FOOTPRINT = 1024;
 
 }

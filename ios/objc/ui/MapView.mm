@@ -69,8 +69,8 @@ static const int NATIVE_NO_COORDINATE = -1;
     _active = YES;
 
     _scale = 1;
-    if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
-        _scale = [[UIScreen mainScreen] scale];
+    if ([[UIScreen mainScreen] respondsToSelector:@selector(nativeScale)]) {
+        _scale = [[UIScreen mainScreen] nativeScale];
     }
 
     _baseMapView = [[NTBaseMapView alloc] init];
@@ -91,6 +91,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     }
 
     self.context = _viewContext;
+    self.contentScaleFactor = _scale;
 #ifdef _CARTO_USE_METALANGLE
     self.drawableColorFormat = MGLDrawableColorFormatRGBA8888;
     self.drawableDepthFormat = MGLDrawableDepthFormat24;
@@ -104,18 +105,17 @@ static const int NATIVE_NO_COORDINATE = -1;
 #endif
     self.multipleTouchEnabled = YES;
 
-    @synchronized(self) {
-        if (_viewContext) {
-            [NTGLContext setCurrentContext:_viewContext];
+    if (_viewContext) {
+        [NTGLContext setCurrentContext:_viewContext];
 
-            [_baseMapView onSurfaceCreated];
+        [_baseMapView onSurfaceCreated];
 
-            CGFloat drawableWidth = self.bounds.size.width * _scale;
-            CGFloat drawableHeight = self.bounds.size.height * _scale;
-            self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
-            [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
-        }
+        CGFloat drawableWidth = self.bounds.size.width * _scale;
+        CGFloat drawableHeight = self.bounds.size.height * _scale;
+        self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
+        [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
     }
+
     [self setNeedsDisplay];
 }
 

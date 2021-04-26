@@ -23,6 +23,7 @@
 #include <vt/Tile.h>
 #include <vt/Bitmap.h>
 #include <vt/Styles.h>
+#include <vt/GLTileRenderer.h>
 
 namespace carto {
     class Options;
@@ -33,7 +34,6 @@ namespace carto {
     namespace vt {
         class LabelCuller;
         class TileTransformer;
-        class GLTileRenderer;
     }
     
     class TileRenderer {
@@ -65,9 +65,9 @@ namespace carto {
 
         bool refreshTiles(const std::vector<std::shared_ptr<TileDrawData> >& drawDatas);
 
-        void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const;
-        void calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const;
-        void calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const;
+        void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<vt::GLTileRenderer::GeometryIntersectionInfo>& results) const;
+        void calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<vt::GLTileRenderer::GeometryIntersectionInfo>& results) const;
+        void calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<vt::GLTileRenderer::BitmapIntersectionInfo>& results) const;
     
     private:
         bool initializeRenderer();

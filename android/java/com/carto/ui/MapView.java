@@ -252,6 +252,8 @@ public class MapView extends GLSurfaceView implements Renderer {
                 baseMapView.onInputEvent(NATIVE_ACTION_CANCEL, 
                         NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE, 
                         NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                pointer1Index = INVALID_POINTER_ID;
+                pointer2Index = INVALID_POINTER_ID;
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:

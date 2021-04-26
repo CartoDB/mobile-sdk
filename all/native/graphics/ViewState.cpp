@@ -7,6 +7,7 @@
 #include "utils/Log.h"
 
 #include <cmath>
+#include <limits>
 #include <cglib/mat.h>
 
 namespace carto {

@@ -14,7 +14,6 @@
 #include <vt/Label.h>
 #include <vt/LabelCuller.h>
 #include <vt/TileTransformer.h>
-#include <vt/GLTileRenderer.h>
 #include <vt/GLExtensions.h>
 
 #include <cglib/mat.h>
@@ -242,7 +241,7 @@ namespace carto {
         return true;
     }
 
-    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
+    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<vt::GLTileRenderer::GeometryIntersectionInfo>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_vtRenderer) {
@@ -253,19 +252,20 @@ namespace carto {
             return;
         }
 
-        tileRenderer->findGeometryIntersections(ray, results, radius, true, false);
+        std::vector<cglib::ray3<double> > rays = { ray };
+        tileRenderer->findGeometryIntersections(rays, radius, radius, true, false, results);
         if (_labelOrder == 0) {
-            tileRenderer->findLabelIntersections(ray, results, radius, true, false);
+            tileRenderer->findLabelIntersections(rays, radius, true, false, results);
         }
         if (_buildingOrder == 0) {
-            tileRenderer->findGeometryIntersections(ray, results, radius, false, true);
+            tileRenderer->findGeometryIntersections(rays, radius, radius, false, true, results);
         }
         if (_labelOrder == 0) {
-            tileRenderer->findLabelIntersections(ray, results, radius, false, true);
+            tileRenderer->findLabelIntersections(rays, radius, false, true, results);
         }
     }
         
-    void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
+    void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<vt::GLTileRenderer::GeometryIntersectionInfo>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_vtRenderer) {
@@ -276,18 +276,19 @@ namespace carto {
             return;
         }
 
+        std::vector<cglib::ray3<double> > rays = { ray };
         if (_labelOrder == 1) {
-            tileRenderer->findLabelIntersections(ray, results, radius, true, false);
+            tileRenderer->findLabelIntersections(rays, radius, true, false, results);
         }
         if (_buildingOrder == 1) {
-            tileRenderer->findGeometryIntersections(ray, results, radius, false, true);
+            tileRenderer->findGeometryIntersections(rays, radius, radius, false, true, results);
         }
         if (_labelOrder == 1) {
-            tileRenderer->findLabelIntersections(ray, results, radius, false, true);
+            tileRenderer->findLabelIntersections(rays, radius, false, true, results);
         }
     }
 
-    void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const {
+    void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<vt::GLTileRenderer::BitmapIntersectionInfo>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_vtRenderer) {
@@ -298,7 +299,8 @@ namespace carto {
             return;
         }
 
-        tileRenderer->findBitmapIntersections(ray, results);
+        std::vector<cglib::ray3<double> > rays = { ray };
+        tileRenderer->findBitmapIntersections(rays, results);
     }
 
     bool TileRenderer::initializeRenderer() {
@@ -342,10 +344,11 @@ namespace carto {
                     azimuthal -= _mapRotation * Const::DEG_TO_RAD;
                 }
                 MapVec viewDir = MapVec(std::cos(azimuthal), std::sin(azimuthal));
-                cglib::vec3<float> cViewDir(viewDir.getX(), viewDir.getY(), 1);
-                glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), _normalMapShadowColor.getR() / 255.0f, _normalMapShadowColor.getG() / 255.0f, _normalMapShadowColor.getB() / 255.0f, _normalMapShadowColor.getA() / 255.0f);
-                glUniform4f(glGetUniformLocation(shaderProgram, "u_highlightColor"), _normalMapHighlightColor.getR() / 255.0f, _normalMapHighlightColor.getG() / 255.0f, _normalMapHighlightColor.getB() / 255.0f, _normalMapHighlightColor.getA() / 255.0f);
-                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1,cViewDir.data() );
+                float shadowAlpha = _normalMapShadowColor.getA() / 255.0f;
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_shadowColor"), _normalMapShadowColor.getR() * shadowAlpha / 255.0f, _normalMapShadowColor.getG() * shadowAlpha / 255.0f, _normalMapShadowColor.getB() * shadowAlpha / 255.0f, shadowAlpha);
+                float highlightAlpha = _normalMapHighlightColor.getA() / 255.0f;
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_highlightColor"), _normalMapHighlightColor.getR() * highlightAlpha / 255.0f, _normalMapHighlightColor.getG() * highlightAlpha / 255.0f, _normalMapHighlightColor.getB() * highlightAlpha / 255.0f, highlightAlpha);
+                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, cViewDir.data());
             });
             tileRenderer->setLightingShaderNormalMap(lightingShaderNormalMap);
         }

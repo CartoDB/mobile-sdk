@@ -59,8 +59,6 @@ namespace carto {
         cglib::mat4x4<float> projectionMat = cglib::ortho4_matrix(-aspectRatio, aspectRatio, -1.0f, 1.0f, -2.0f, 2.0f);
         
         _modelviewProjectionMat = projectionMat * modelviewMat;
-        
-        _surfaceChanged = true;
     }
     
     void WatermarkRenderer::onDrawFrame(const ViewState& viewState) {
@@ -80,21 +78,16 @@ namespace carto {
             }
         }
     
-        bool watermarkChanged = false;
         if (_watermarkBitmap != watermarkBitmap) {
-            if (watermarkBitmap) {
-                _watermarkTex = _glResourceManager->create<Texture>(watermarkBitmap, true, false);
-            } else {
-                _watermarkTex.reset();
-            }
-
-            watermarkChanged = true;
+            _watermarkTex.reset();
             _watermarkBitmap = watermarkBitmap;
         }
-        
-        if ((_surfaceChanged || watermarkChanged) && _watermarkBitmap) {
-            _surfaceChanged = false;
-            
+
+        if (_watermarkBitmap) {
+            if (!_watermarkTex || !_watermarkTex->isValid()) {
+                _watermarkTex = _glResourceManager->create<Texture>(_watermarkBitmap, true, false);
+            }
+
             // If the license is limited, draw the watermark in a random corner with a fixed padding
             float watermarkAlignmentX = _options.getWatermarkAlignmentX();
             float watermarkAlignmentY = _options.getWatermarkAlignmentY();
@@ -140,9 +133,8 @@ namespace carto {
             _watermarkTexCoords[5] = texCoordScale(1);
             _watermarkTexCoords[6] = texCoordScale(0);
             _watermarkTexCoords[7] = 0.0f;
-        }
-    
-        if (_watermarkTex) {
+
+            // Do actual rendering
             glDisable(GL_DEPTH_TEST);
 
             drawWatermark(viewState);

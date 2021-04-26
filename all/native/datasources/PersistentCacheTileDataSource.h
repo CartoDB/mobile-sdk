@@ -108,6 +108,7 @@ namespace carto {
         };
 
         static const unsigned int DEFAULT_CAPACITY;
+        static const unsigned int EXTRA_TILE_FOOTPRINT;
 
         void openDatabase(const std::string& databasePath);
         void closeDatabase();

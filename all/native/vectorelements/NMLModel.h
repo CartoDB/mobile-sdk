@@ -66,6 +66,7 @@ namespace carto {
          * @param geometry The new geometry object that defines the location of this model.
          */
         void setGeometry(const std::shared_ptr<Geometry>& geometry);
+
         /**
          * Sets the location for this model.
          * @param pos The new map position that defines the location of this model.
@@ -77,13 +78,11 @@ namespace carto {
          * @return The rotation axis vector.
          */
         MapVec getRotationAxis() const;
-
         /**
          * Returns the rotation angle of this model.
          * @return The rotation angle of this model in degrees.
          */
         float getRotationAngle() const;
-
         /**
          * Sets the rotation of this model using an axis and an angle.
          * @param axis The axis of rotation.
@@ -96,7 +95,6 @@ namespace carto {
          * @return model The relative scale.
          */
         float getScale() const;
-
         /**
          * Sets the scale of this model. The default is 1.
          * @param scale The relative scale of this model.

@@ -9,7 +9,8 @@ the ['Usage' section](#usage).
 
 # Building
 **We strongly suggest to use the precompiled SDK versions that can be found in
-the samples below (in ['Usage' section](#usage)).** 
+the [Releases](https://github.com/CartoDB/mobile-sdk/releases) section** 
+
 Getting all the SDK dependencies resolved and waiting for the build to complete can be very time-consuming.
 
 ## Dependencies
@@ -87,6 +88,6 @@ python build-winphone.py --profile standard
 * Scripts for preparing offline packages: https://github.com/nutiteq/mobile-sdk-scripts
 
 # Support, Questions?
-* Post an issue to this project, submit a Pull Request
+* Post an [issue](https://github.com/CartoDB/mobile-sdk/issues) to this project, submit a [Pull Request](https://github.com/CartoDB/mobile-sdk/pulls)
 * Post to CARTO developer group for generic CARTO related questions: https://groups.google.com/forum/#!forum/cartodb
 * Commercial support options: sales@carto.com

@@ -352,32 +352,28 @@ namespace carto {
             float clickRadius = getClickRadius();
 
             for (int pass = 0; pass < 2; pass++) {
-                std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
+                std::vector<vt::GLTileRenderer::GeometryIntersectionInfo> hitResults;
                 if (pass == 0) {
                     _tileRenderer->calculateRayIntersectedElements(ray, viewState, clickRadius, hitResults);
                 } else {
                     _tileRenderer->calculateRayIntersectedElements3D(ray, viewState, clickRadius, hitResults);
                 }
 
-                for (const std::tuple<vt::TileId, double, long long>& hitResult : hitResults) {
-                    vt::TileId vtTileId = std::get<0>(hitResult);
-                    double t = std::get<1>(hitResult);
-                    long long id = std::get<2>(hitResult);
-
+                for (const vt::GLTileRenderer::GeometryIntersectionInfo& hitResult : hitResults) {
                     std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-                    long long tileId = getTileId(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr));
+                    long long tileId = getTileId(MapTile(hitResult.tileId.x, hitResult.tileId.y, hitResult.tileId.zoom, _frameNr));
                     TileInfo tileInfo;
                     _visibleCache.peek(tileId, tileInfo);
                     if (!tileInfo.getTileMap()) {
                         _preloadingCache.peek(tileId, tileInfo);
                     }
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                        if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds())) {
+                        if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(hitResult.featureId, hitResult.tileId, tileData, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, ray(t), ray(t), pass > 0));
+                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, ray(hitResult.rayT), ray(hitResult.rayT), pass > 0));
                         } else {
-                            Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
+                            Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", hitResult.featureId);
                         }
                     } else {
                         Log::Warn("VectorTileLayer::calculateRayIntersectedElements: Failed to find tile data");
