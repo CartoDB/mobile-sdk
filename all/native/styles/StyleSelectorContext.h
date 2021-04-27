@@ -15,8 +15,6 @@
 #include <string>
 #include <map>
 
-#include <boost/variant.hpp>
-
 namespace carto {
     class ViewState;
     class Geometry;

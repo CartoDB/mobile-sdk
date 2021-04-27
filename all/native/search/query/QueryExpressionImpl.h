@@ -13,7 +13,6 @@
 #include <limits>
 #include <regex>
 
-#include <boost/variant.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <stdext/unistring.h>

@@ -86,7 +86,7 @@ namespace carto {
         
     std::shared_ptr<CompiledStyleSet> MBVectorTileDecoder::getCompiledStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&_styleSet)) {
+        if (auto compiledStyleSet = std::get_if<std::shared_ptr<CompiledStyleSet> >(&_styleSet)) {
             return *compiledStyleSet;
         }
         return std::shared_ptr<CompiledStyleSet>();
@@ -107,7 +107,7 @@ namespace carto {
     std::shared_ptr<CartoCSSStyleSet> MBVectorTileDecoder::getCartoCSSStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (auto cartoCSSStyleSet = boost::get<std::shared_ptr<CartoCSSStyleSet> >(&_styleSet)) {
+        if (auto cartoCSSStyleSet = std::get_if<std::shared_ptr<CartoCSSStyleSet> >(&_styleSet)) {
             return *cartoCSSStyleSet;
         }
         return std::shared_ptr<CartoCSSStyleSet>();
@@ -438,12 +438,12 @@ namespace carto {
         return std::shared_ptr<TileMap>();
     }
 
-    void MBVectorTileDecoder::updateCurrentStyleSet(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
+    void MBVectorTileDecoder::updateCurrentStyleSet(const std::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
         std::string styleAssetName;
         std::shared_ptr<AssetPackage> assetPackage;
         std::shared_ptr<mvt::Map> map;
 
-        if (auto cartoCSSStyleSet = boost::get<std::shared_ptr<CartoCSSStyleSet> >(&styleSet)) {
+        if (auto cartoCSSStyleSet = std::get_if<std::shared_ptr<CartoCSSStyleSet> >(&styleSet)) {
             styleAssetName = "";
             assetPackage = (*cartoCSSStyleSet)->getAssetPackage();
 
@@ -456,7 +456,7 @@ namespace carto {
             catch (const std::exception& ex) {
                 throw ParseException(std::string("CartoCSS style parsing failed: ") + ex.what(), (*cartoCSSStyleSet)->getCartoCSS());
             }
-        } else if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
+        } else if (auto compiledStyleSet = std::get_if<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
             styleAssetName = (*compiledStyleSet)->getStyleAssetName();
             if (styleAssetName.empty()) {
                 throw InvalidArgumentException("Could not find any styles in the style set");
