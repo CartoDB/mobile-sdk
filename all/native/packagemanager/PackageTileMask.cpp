@@ -166,7 +166,7 @@ namespace carto {
         _mutex()
     {
         std::unordered_set<MapTile> tileSet(tiles.begin(), tiles.end());
-        _cachedRootNode = std::unique_ptr<TileNode>(new TileNode);
+        _cachedRootNode = std::make_unique<TileNode>();
         BuildTileNode(*_cachedRootNode, tileSet, MapTile(0, 0, 0, 0), clipZoom);
         for (const MapTile& tile : tiles) {
             _maxZoomLevel = std::max(_maxZoomLevel, tile.getZoom());
@@ -220,7 +220,7 @@ namespace carto {
     const PackageTileMask::TileNode* PackageTileMask::getRootNode() const {
         std::lock_guard<std::mutex> lock(_mutex);
         if (!_cachedRootNode) {
-            _cachedRootNode = std::unique_ptr<TileNode>(new TileNode);
+            _cachedRootNode = std::make_unique<TileNode>();
             std::size_t offset = 0;
             DecodeTileNode(*_cachedRootNode, decodeBase64(_stringValue), offset, MapTile(0, 0, 0, 0));
         }
@@ -260,7 +260,7 @@ namespace carto {
             return; // Note: we assume here that tile does not exist implies subtiles do not exist
         }
 
-        node.subNodes = std::unique_ptr<std::array<TileNode, 4> >(new std::array<TileNode, 4>);
+        node.subNodes = std::make_unique<std::array<TileNode, 4> >();
         for (int idx = 0; idx < 4; idx++) {
             int dx = idx % 2;
             int dy = idx / 2;
@@ -283,7 +283,7 @@ namespace carto {
         bool subNodes = data.at(offset++);
         bool inside = data.at(offset++);
         if (subNodes) {
-            node.subNodes = std::unique_ptr<std::array<TileNode, 4> >(new std::array<TileNode, 4>);
+            node.subNodes = std::make_unique<std::array<TileNode, 4> >();
             for (int idx = 0; idx < 4; idx++) {
                 int dx = idx % 2;
                 int dy = idx / 2;
