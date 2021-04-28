@@ -17,6 +17,7 @@
 #include "layers/components/FetchingTileTasks.h"
 
 #include <atomic>
+#include <unordered_set>
 #include <unordered_map>
 
 namespace carto {
@@ -235,9 +236,13 @@ namespace carto {
         public:
             FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile);
             
-            bool isPreloading() const;
+            MapTile getMapTile() const;
+            bool isPreloadingTile() const;
+
             bool isInvalidated() const;
             void invalidate();
+
+            virtual bool isCanceled() const;
             virtual void cancel();
             virtual void run();
             
@@ -252,7 +257,6 @@ namespace carto {
             bool loadUTFGridTile(const std::shared_ptr<TileLayer>& layer);
 
             bool _preloadingTile;
-            bool _started;
             bool _invalidated;
         };
         
@@ -325,10 +329,11 @@ namespace carto {
         void calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& mapTile, const MapBounds& dataExtent);
 
         void sortTiles(std::vector<MapTile>& tiles, const ViewState& viewState, bool preloadingTiles);
-        void findTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles);
+        void findAndFetchTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles, std::unordered_set<MapTile>& fetchedTiles);
+
         bool findParentTile(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
         int findChildTiles(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
-    
+
         static const int MAX_PARENT_SEARCH_DEPTH;
         static const int MAX_CHILD_SEARCH_DEPTH;
         

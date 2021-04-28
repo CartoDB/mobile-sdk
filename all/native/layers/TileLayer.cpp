@@ -258,11 +258,6 @@ namespace carto {
             }
         }
     
-        // Cancel old tasks
-        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
-            task->cancel();
-        }
-        
         // Check if layer should be drawn
         if (!isVisible() || !getVisibleZoomRange().inRange(cullState->getViewState().getZoom()) || getOpacity() <= 0) {
             _calculatingTiles = false;
@@ -277,11 +272,12 @@ namespace carto {
         }
     
         // Find replacements for visible tiles
-        findTiles(_visibleTiles, false);
+        std::unordered_set<MapTile> fetchedTiles;
+        findAndFetchTiles(_visibleTiles, false, fetchedTiles);
     
         if (_preloading) {
             // Find replacements for preloading tiles
-            findTiles(_preloadingTiles, true);
+            findAndFetchTiles(_preloadingTiles, true, fetchedTiles);
             
             // Pre-fetch up to 2 levels of parent tiles
             std::vector<MapTile> allTiles = _visibleTiles;
@@ -291,10 +287,19 @@ namespace carto {
                     int tileMask = (1 << visTile.getZoom()) - 1;
                     MapTile tile(visTile.getX() & tileMask, visTile.getY() & tileMask, visTile.getZoom(), visTile.getFrameNr());
                     fetchTile(tile.getParent(), true, false);
+                    fetchedTiles.insert(tile.getParent());
                 }
             }
         }
+
+        // Cancel old tasks
+        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
+            if (fetchedTiles.find(task->getMapTile()) == fetchedTiles.end()) {
+                task->cancel();
+            }
+        }
     
+        // Done. Refresh.
         _calculatingTiles = false;
         _refreshedTiles = true;
         
@@ -511,7 +516,7 @@ namespace carto {
         });
     }
     
-    void TileLayer::findTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles) {
+    void TileLayer::findAndFetchTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles, std::unordered_set<MapTile>& fetchedTiles) {
         for (const MapTile& visTile : visTiles) {
             int tileMask = (1 << visTile.getZoom()) - 1;
             MapTile tile(visTile.getX() & tileMask, visTile.getY() & tileMask, visTile.getZoom(), visTile.getFrameNr());
@@ -523,6 +528,7 @@ namespace carto {
                 // Re-fetch invalid tile
                 if (!tileValid(tile, preloadingTiles) && !tileValid(tile, !preloadingTiles)) {
                     fetchTile(tile, preloadingTiles, true);
+                    fetchedTiles.insert(tile);
                 }
                 continue;
             }
@@ -567,6 +573,7 @@ namespace carto {
     
             // Finally fetch the tile from source
             fetchTile(tile, preloadingTiles, false);
+            fetchedTiles.insert(tile);
         }
     }
     
@@ -634,7 +641,6 @@ namespace carto {
         _tile(tile),
         _dataSourceTiles(),
         _preloadingTile(preloadingTile),
-        _started(false),
         _invalidated(false)
     {
         for (MapTile dataSourceTile = tile; true; ) {
@@ -648,8 +654,12 @@ namespace carto {
             dataSourceTile = dataSourceTile.getParent();
         }
     }
+
+    MapTile TileLayer::FetchTaskBase::getMapTile() const {
+        return _tile;
+    }
     
-    bool TileLayer::FetchTaskBase::isPreloading() const {
+    bool TileLayer::FetchTaskBase::isPreloadingTile() const {
         return _preloadingTile;
     }
     
@@ -662,16 +672,15 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _invalidated = true;
     }
+
+    bool TileLayer::FetchTaskBase::isCanceled() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _canceled;
+    }
         
     void TileLayer::FetchTaskBase::cancel() {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (!_started) {
-            _canceled = true;
-                
-            if (std::shared_ptr<TileLayer> layer = _layer.lock()) {
-                layer->_fetchingTiles.remove(_tile.getTileId());
-            }
-        }
+        _canceled = true;
     }
         
     void TileLayer::FetchTaskBase::run() {
@@ -680,14 +689,6 @@ namespace carto {
             return;
         }
             
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_canceled) {
-                return;
-            }
-            _started = true;
-        }
-        
         bool refresh = false;
         try {
             refresh = loadTile(layer) && !_preloadingTile;

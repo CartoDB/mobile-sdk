@@ -521,6 +521,10 @@ namespace carto {
         
         bool refresh = false;
         for (const MapTile& dataSourceTile : _dataSourceTiles) {
+            if (isCanceled()) {
+                break;
+            }
+
             std::shared_ptr<TileData> tileData = layer->_dataSource->loadTile(dataSourceTile);
             if (!tileData) {
                 break;
@@ -531,7 +535,11 @@ namespace carto {
             if (!tileData->getData()) {
                 break;
             }
-    
+
+            if (isCanceled()) {
+                break;
+            }
+
             vt::TileId vtTile(_tile.getZoom(), _tile.getX(), _tile.getY());
             vt::TileId vtDataSourceTile(dataSourceTile.getZoom(), dataSourceTile.getX(), dataSourceTile.getY());
             std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
@@ -545,7 +553,7 @@ namespace carto {
                     long long tileId = layer->getTileId(_tile);
                     std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
                     if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
-                        if (isPreloading()) {
+                        if (isPreloadingTile()) {
                             layer->_preloadingCache.put(tileId, tileInfo, tileInfo.getSize());
                             if (tileData->getMaxAge() >= 0) {
                                 layer->_preloadingCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));

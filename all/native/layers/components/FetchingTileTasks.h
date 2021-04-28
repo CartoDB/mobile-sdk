@@ -44,7 +44,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             int count = 0;
             for (const auto& pair : _fetchingTiles) {
-                if (pair.second->isPreloading()) {
+                if (pair.second->isPreloadingTile()) {
                     count++;
                 }
             }
@@ -55,7 +55,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             int count = 0;
             for (const auto& pair : _fetchingTiles) {
-                if (!pair.second->isPreloading()) {
+                if (!pair.second->isPreloadingTile()) {
                     count++;
                 }
             }
