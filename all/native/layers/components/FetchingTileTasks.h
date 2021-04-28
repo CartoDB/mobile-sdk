@@ -16,14 +16,15 @@ namespace carto {
     public:
         FetchingTileTasks() : _fetchingTiles(), _mutex() { }
         
+        std::shared_ptr<Task> get(long long tileId) const {
+            std::lock_guard<std::mutex> lock(_mutex);
+            auto it = _fetchingTiles.find(tileId);
+            return it != _fetchingTiles.end() ? it->second : std::shared_ptr<Task>();
+        }
+        
         void add(long long tileId, const std::shared_ptr<Task>& task) {
             std::lock_guard<std::mutex> lock(_mutex);
             _fetchingTiles[tileId] = task;
-        }
-        
-        bool exists(long long tileId) {
-            std::lock_guard<std::mutex> lock(_mutex);
-            return _fetchingTiles.find(tileId) != _fetchingTiles.end();
         }
         
         void remove(long long tileId) {

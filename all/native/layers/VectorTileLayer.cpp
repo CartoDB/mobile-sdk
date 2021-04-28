@@ -139,8 +139,13 @@ namespace carto {
     
     void VectorTileLayer::fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) {
         long long tileId = getTileId(tile);
-        if (_fetchingTiles.exists(tileId)) {
-            return;
+        if (auto task = _fetchingTiles.get(tileId)) {
+            if (!task->isCanceled()) {
+                if (task->isPreloadingTile() == preloadingTile) {
+                    return;
+                }
+                task->cancel();
+            }
         }
 
         if (!invalidated) {

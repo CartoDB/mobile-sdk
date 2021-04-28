@@ -145,8 +145,13 @@ namespace carto {
     
     void RasterTileLayer::fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) {
         long long tileId = tile.getTileId();
-        if (_fetchingTiles.exists(tile.getTileId())) {
-            return;
+        if (auto task = _fetchingTiles.get(tileId)) {
+            if (!task->isCanceled()) {
+                if (task->isPreloadingTile() == preloadingTile) {
+                    return;
+                }
+                task->cancel();
+            }
         }
 
         if (!invalidated) {
