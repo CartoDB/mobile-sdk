@@ -288,7 +288,10 @@ namespace carto {
         }
         for (std::pair<MapTile, int> childTileCount : childTileCountMap) {
             if (childTileCount.second >= 2) {
-                fetchTileList.push_back({ childTileCount.first, false, PARENT_PRIORITY_OFFSET + childTileCount.second - 2 });
+                long long tileId = getTileId(childTileCount.first);
+                if (!tileExists(tileId, false) && !tileExists(tileId, true)) {
+                    fetchTileList.push_back({ childTileCount.first, false, PARENT_PRIORITY_OFFSET });
+                }
             }
         }
 
