@@ -134,13 +134,14 @@ namespace carto {
     protected:
         friend class VTLabelPlacementWorker;
 
-        virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
-        virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
-        virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
+        virtual long long getTileId(const MapTile& tile) const;
+        virtual bool tileExists(long long tileId, bool preloadingCache) const;
+        virtual bool tileValid(long long tileId, bool preloadingCache) const;
+        virtual bool prefetchTile(long long tileId, bool preloadingTile);
+        virtual void fetchTile(long long tileId, const MapTile& mapTile, bool preloadingTile, int priorityDelta);
         virtual void clearTiles(bool preloadingTiles);
         virtual void tilesChanged(bool removeTiles);
 
-        virtual long long getTileId(const MapTile& mapTile) const;
         virtual std::shared_ptr<VectorTileDecoder::TileMap> getTileMap(long long tileId) const;
         virtual std::shared_ptr<vt::Tile> getPoleTile(int y) const;
 
@@ -181,7 +182,7 @@ namespace carto {
     
         class FetchTask : public TileLayer::FetchTaskBase {
         public:
-            FetchTask(const std::shared_ptr<VectorTileLayer>& layer, const MapTile& tile, bool preloadingTile);
+            FetchTask(const std::shared_ptr<VectorTileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile);
             
         protected:
             virtual bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
@@ -208,7 +209,6 @@ namespace carto {
         static const int BACKGROUND_BLOCK_COUNT;
 
         static const int DEFAULT_CULL_DELAY;
-        static const int PRELOADING_PRIORITY_OFFSET;
 
         static const unsigned int EXTRA_TILE_FOOTPRINT;
         static const unsigned int DEFAULT_VISIBLE_CACHE_SIZE;

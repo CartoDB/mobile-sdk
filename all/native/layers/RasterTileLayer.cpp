@@ -122,10 +122,13 @@ namespace carto {
             tilesChanged(false); // we must reload the tiles, we do not keep full element information if this is not required
         }
     }
+
+    long long RasterTileLayer::getTileId(const MapTile& tile) const {
+        return tile.getTileId();
+    }
     
-    bool RasterTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
+    bool RasterTileLayer::tileExists(long long tileId, bool preloadingCache) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        long long tileId = tile.getTileId();
         if (preloadingCache) {
             return _preloadingCache.exists(tileId);
         } else {
@@ -133,54 +136,42 @@ namespace carto {
         }
     }
     
-    bool RasterTileLayer::tileValid(const MapTile& tile, bool preloadingCache) const {
+    bool RasterTileLayer::tileValid(long long tileId, bool preloadingCache) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        long long tileId = tile.getTileId();
         if (preloadingCache) {
             return _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId);
         } else {
             return _visibleCache.exists(tileId) && _visibleCache.valid(tileId);
         }
     }
-    
-    void RasterTileLayer::fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) {
-        long long tileId = tile.getTileId();
-        if (auto task = _fetchingTiles.get(tileId)) {
-            if (!task->isCanceled()) {
-                if (task->isPreloadingTile() == preloadingTile) {
-                    return;
-                }
-                task->cancel();
-            }
-        }
 
-        if (!invalidated) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
-                if (!preloadingTile) {
-                    _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
-                } else {
-                    _preloadingCache.get(tileId);
-                }
-                return;
+    bool RasterTileLayer::prefetchTile(long long tileId, bool preloadingTile) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
+            if (!preloadingTile) {
+                _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
+            } else {
+                _preloadingCache.get(tileId);
             }
-    
-            if (_visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
-                _visibleCache.get(tileId); // just mark usage, do not move to preloading, it will be moved at later stage
-                return;
-            }
+            return true;
         }
+        if (_visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
+            _visibleCache.get(tileId); // just mark usage, do not move to preloading, it will be moved at later stage
+            return true;
+        }
+        return false;
+    }
     
-        auto task = std::make_shared<FetchTask>(std::static_pointer_cast<RasterTileLayer>(shared_from_this()), tile, preloadingTile);
-        _fetchingTiles.add(tile.getTileId(), task);
-        
+    void RasterTileLayer::fetchTile(long long tileId, const MapTile& tile, bool preloadingTile, int priorityDelta) {
         std::shared_ptr<CancelableThreadPool> tileThreadPool;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             tileThreadPool = _tileThreadPool;
         }
         if (tileThreadPool) {
-            tileThreadPool->execute(task, preloadingTile ? getUpdatePriority() + PRELOADING_PRIORITY_OFFSET : getUpdatePriority());
+            auto task = std::make_shared<FetchTask>(std::static_pointer_cast<RasterTileLayer>(shared_from_this()), tileId, tile, preloadingTile);
+            _fetchingTileTasks.insert(tileId, task);
+            tileThreadPool->execute(task, getUpdatePriority() + priorityDelta);
         }
     }
     
@@ -195,7 +186,7 @@ namespace carto {
 
     void RasterTileLayer::tilesChanged(bool removeTiles) {
         // Invalidate current tasks
-        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
+        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
             task->invalidate();
         }
 
@@ -256,7 +247,7 @@ namespace carto {
     void RasterTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        long long closestTileId = closestTile.getTileId();
+        long long closestTileId = getTileId(closestTile);
         std::shared_ptr<const vt::Tile> vtTile;
         _visibleCache.read(closestTileId, vtTile);
         if (!vtTile) {
@@ -269,7 +260,7 @@ namespace carto {
                 int dy = visTile.getY() >> visTile.getZoom();
                 vtTileId = vt::TileId(closestTile.getZoom(), closestTile.getX() + (dx << closestTile.getZoom()), closestTile.getY() + (dy << closestTile.getZoom()));
             }
-            _tempDrawDatas.push_back(std::make_shared<TileDrawData>(vtTileId, vtTile, closestTile.getTileId(), preloadingTile));
+            _tempDrawDatas.push_back(std::make_shared<TileDrawData>(vtTileId, vtTile, getTileId(closestTile), preloadingTile));
         }
     }
     
@@ -301,7 +292,7 @@ namespace carto {
         
         // Update renderer if needed, run culler
         bool refresh = false;
-        if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
+        if (!(_synchronizedRefresh && _fetchingTileTasks.getVisibleCount() > 0)) {
             if (_tileRenderer->refreshTiles(_tempDrawDatas)) {
                 refresh = true;
             }
@@ -432,8 +423,8 @@ namespace carto {
         _dataSourceListener.reset();
     }
     
-    RasterTileLayer::FetchTask::FetchTask(const std::shared_ptr<RasterTileLayer>& layer, const MapTile& tile, bool preloadingTile) :
-        FetchTaskBase(layer, tile, preloadingTile)
+    RasterTileLayer::FetchTask::FetchTask(const std::shared_ptr<RasterTileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile) :
+        FetchTaskBase(layer, tileId, tile, preloadingTile)
     {
     }
     
@@ -479,14 +470,14 @@ namespace carto {
                     std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
                     if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
                         if (isPreloadingTile()) {
-                            layer->_preloadingCache.put(_tile.getTileId(), vtTile, vtTileSize);
+                            layer->_preloadingCache.put(_tileId, vtTile, vtTileSize);
                             if (tileData->getMaxAge() >= 0) {
-                                layer->_preloadingCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                                layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                             }
                         } else {
-                            layer->_visibleCache.put(_tile.getTileId(), vtTile, vtTileSize);
+                            layer->_visibleCache.put(_tileId, vtTile, vtTileSize);
                             if (tileData->getMaxAge() >= 0) {
-                                layer->_visibleCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                                layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                             }
                         }
                     }
@@ -512,7 +503,6 @@ namespace carto {
     }
 
     const int RasterTileLayer::DEFAULT_CULL_DELAY = 200;
-    const int RasterTileLayer::PRELOADING_PRIORITY_OFFSET = -2;
 
     const unsigned int RasterTileLayer::EXTRA_TILE_FOOTPRINT = 4096;
     const unsigned int RasterTileLayer::DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;

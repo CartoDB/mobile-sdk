@@ -117,9 +117,16 @@ namespace carto {
         }
     }
     
-    bool VectorTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
+    long long VectorTileLayer::getTileId(const MapTile& mapTile) const {
+        if (_useTileMapMode) {
+            return MapTile(mapTile.getX(), mapTile.getY(), mapTile.getZoom(), 0).getTileId();
+        } else {
+            return mapTile.getTileId();
+        }
+    }
+
+    bool VectorTileLayer::tileExists(long long tileId, bool preloadingCache) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        long long tileId = getTileId(tile);
         if (preloadingCache) {
             return _preloadingCache.exists(tileId);
         } else {
@@ -127,54 +134,42 @@ namespace carto {
         }
     }
     
-    bool VectorTileLayer::tileValid(const MapTile& tile, bool preloadingCache) const {
+    bool VectorTileLayer::tileValid(long long tileId, bool preloadingCache) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        long long tileId = getTileId(tile);
         if (preloadingCache) {
             return _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId);
         } else {
             return _visibleCache.exists(tileId) && _visibleCache.valid(tileId);
         }
     }
+
+    bool VectorTileLayer::prefetchTile(long long tileId, bool preloadingTile) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
+            if (!preloadingTile) {
+                _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
+            } else {
+                _preloadingCache.get(tileId);
+            }
+            return true;
+        }
+        if (_visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
+            _visibleCache.get(tileId); // do not move to preloading, it will be moved at later stage
+            return true;
+        }
+        return false;
+    }
     
-    void VectorTileLayer::fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) {
-        long long tileId = getTileId(tile);
-        if (auto task = _fetchingTiles.get(tileId)) {
-            if (!task->isCanceled()) {
-                if (task->isPreloadingTile() == preloadingTile) {
-                    return;
-                }
-                task->cancel();
-            }
-        }
-
-        if (!invalidated) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
-                if (!preloadingTile) {
-                    _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
-                } else {
-                    _preloadingCache.get(tileId);
-                }
-                return;
-            }
-
-            if (_visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
-                _visibleCache.get(tileId); // do not move to preloading, it will be moved at later stage
-                return;
-            }
-        }
-        
-        auto task = std::make_shared<FetchTask>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()), MapTile(tile.getX(), tile.getY(), tile.getZoom(), 0), preloadingTile);
-        _fetchingTiles.add(tileId, task);
-        
+    void VectorTileLayer::fetchTile(long long tileId, const MapTile& tile, bool preloadingTile, int priorityDelta) {
         std::shared_ptr<CancelableThreadPool> tileThreadPool;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             tileThreadPool = _tileThreadPool;
         }
         if (tileThreadPool) {
-            tileThreadPool->execute(task, preloadingTile ? getUpdatePriority() + PRELOADING_PRIORITY_OFFSET : getUpdatePriority());
+            auto task = std::make_shared<FetchTask>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()), tileId, MapTile(tile.getX(), tile.getY(), tile.getZoom(), 0), preloadingTile);
+            _fetchingTileTasks.insert(tileId, task);
+            tileThreadPool->execute(task, getUpdatePriority() + priorityDelta);
         }
     }
 
@@ -189,7 +184,7 @@ namespace carto {
 
     void VectorTileLayer::tilesChanged(bool removeTiles) {
         // Invalidate current tasks
-        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
+        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
             task->invalidate();
         }
 
@@ -204,14 +199,6 @@ namespace carto {
             _preloadingCache.clear();
         }
         refresh();
-    }
-
-    long long VectorTileLayer::getTileId(const MapTile& mapTile) const {
-        if (_useTileMapMode) {
-            return MapTile(mapTile.getX(), mapTile.getY(), mapTile.getZoom(), 0).getTileId();
-        } else {
-            return mapTile.getTileId();
-        }
     }
 
     std::shared_ptr<VectorTileDecoder::TileMap> VectorTileLayer::getTileMap(long long tileId) const {
@@ -291,7 +278,7 @@ namespace carto {
         
         // Update renderer if needed, run culler
         bool tilesChanged = false;
-        if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
+        if (!(_synchronizedRefresh && _fetchingTileTasks.getVisibleCount() > 0)) {
             std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
 
             // Add poles
@@ -516,8 +503,8 @@ namespace carto {
         }
     }
     
-    VectorTileLayer::FetchTask::FetchTask(const std::shared_ptr<VectorTileLayer>& layer, const MapTile& tile, bool preloadingTile) :
-        FetchTaskBase(layer, tile, preloadingTile)
+    VectorTileLayer::FetchTask::FetchTask(const std::shared_ptr<VectorTileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile) :
+        FetchTaskBase(layer, tileId, tile, preloadingTile)
     {
     }
     
@@ -555,18 +542,17 @@ namespace carto {
 
                 // Store tile to cache, unless invalidated
                 if (!isInvalidated()) {
-                    long long tileId = layer->getTileId(_tile);
                     std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
                     if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
                         if (isPreloadingTile()) {
-                            layer->_preloadingCache.put(tileId, tileInfo, tileInfo.getSize());
+                            layer->_preloadingCache.put(_tileId, tileInfo, tileInfo.getSize());
                             if (tileData->getMaxAge() >= 0) {
-                                layer->_preloadingCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                                layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                             }
                         } else {
-                            layer->_visibleCache.put(tileId, tileInfo, tileInfo.getSize());
+                            layer->_visibleCache.put(_tileId, tileInfo, tileInfo.getSize());
                             if (tileData->getMaxAge() >= 0) {
-                                layer->_visibleCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                                layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                             }
                         }
                     }
@@ -612,7 +598,6 @@ namespace carto {
     const int VectorTileLayer::BACKGROUND_BLOCK_COUNT = 16;
 
     const int VectorTileLayer::DEFAULT_CULL_DELAY = 200;
-    const int VectorTileLayer::PRELOADING_PRIORITY_OFFSET = -2;
 
     const unsigned int VectorTileLayer::EXTRA_TILE_FOOTPRINT = 4096;
     const unsigned int VectorTileLayer::DEFAULT_VISIBLE_CACHE_SIZE = 512 * 1024 * 1024; // NOTE: the limit should never be reached in normal cases
