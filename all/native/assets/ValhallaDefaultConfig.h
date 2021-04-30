@@ -44,7 +44,7 @@ static const char valhalla_default_config[] = R"({
       "street_side_max_distance": 1000,
       "street_side_tolerance": 5
     },
-    "use_connectivity": true
+    "use_connectivity": false
   },
   "meili": {
     "auto": {
