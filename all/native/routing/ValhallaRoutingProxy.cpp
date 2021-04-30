@@ -244,6 +244,10 @@ namespace carto {
     }
 
     float ValhallaRoutingProxy::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
+        if (pointIndex >= static_cast<int>(epsg3857Points.size())) {
+            return 0;
+        }
+
         int pointIndex0 = pointIndex;
         while (--pointIndex0 >= 0) {
             if (epsg3857Points.at(pointIndex0) != epsg3857Points.at(pointIndex)) {
@@ -520,10 +524,17 @@ namespace carto {
                     }
 
                     int pointIndex = static_cast<int>(points.size());
-                    for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
+                    std::size_t maneuverIndex0 = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>());
+                    std::size_t maneuverIndex1 = static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>());
+                    for (std::size_t j = maneuverIndex0; j <= maneuverIndex1; j++) {
                         const valhalla::midgard::PointLL& point = shape.at(j);
-                        epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
-                        points.push_back(proj->fromLatLong(point.second, point.first));
+                        MapPos mapPos = proj->fromLatLong(point.second, point.first);
+                        if (points.empty() || points.back() != mapPos) {
+                            points.push_back(mapPos);
+                            epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
+                        } else if (j == maneuverIndex0) {
+                            pointIndex--;
+                        }
                     }
 
                     float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndex);
