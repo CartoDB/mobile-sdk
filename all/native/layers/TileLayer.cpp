@@ -287,7 +287,7 @@ namespace carto {
             }
         }
         for (std::pair<MapTile, int> childTileCount : childTileCountMap) {
-            if (childTileCount.second >= 2) {
+            if (childTileCount.second > 1) {
                 long long tileId = getTileId(childTileCount.first);
                 if (!prefetchTile(tileId, false)) {
                     fetchTileList.push_back({ childTileCount.first, false, PARENT_PRIORITY_OFFSET });
@@ -295,12 +295,16 @@ namespace carto {
             }
         }
 
-        // Sort the fetch tile list
-        std::stable_sort(fetchTileList.begin(), fetchTileList.end(), [](const FetchTileInfo& fetchTile1, const FetchTileInfo& fetchTile2) {
+        // Sort the fetch tile list.
+        // The sorting order is based on priority delta, preloading flag and finally on whether the tile has parents in the fetch list.
+        std::stable_sort(fetchTileList.begin(), fetchTileList.end(), [&childTileCountMap](const FetchTileInfo& fetchTile1, const FetchTileInfo& fetchTile2) {
             if (fetchTile1.priorityDelta != fetchTile2.priorityDelta) {
                 return fetchTile1.priorityDelta > fetchTile2.priorityDelta;
             }
-            return fetchTile1.preloading < fetchTile2.preloading;
+            if (fetchTile1.preloading != fetchTile2.preloading) {
+                return fetchTile1.preloading < fetchTile2.preloading;
+            }
+            return (childTileCountMap[fetchTile1.tile.getParent()] > 1) < (childTileCountMap[fetchTile2.tile.getParent()] > 1);
         });
 
         // Fetch the tiles
