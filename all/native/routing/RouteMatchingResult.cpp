@@ -7,10 +7,10 @@
 
 namespace carto {
 
-    RouteMatchingResult::RouteMatchingResult(const std::shared_ptr<Projection>& projection, const std::vector<RouteMatchingPoint>& matchingPoints, const std::vector<RouteMatchingEdge>& matchingEdges) :
+    RouteMatchingResult::RouteMatchingResult(const std::shared_ptr<Projection>& projection, std::vector<RouteMatchingPoint> matchingPoints, std::vector<RouteMatchingEdge> matchingEdges) :
         _projection(projection),
-        _matchingPoints(matchingPoints),
-        _matchingEdges(matchingEdges)
+        _matchingPoints(std::move(matchingPoints)),
+        _matchingEdges(std::move(matchingEdges))
     {
         if (!projection) {
             throw NullArgumentException("Null projection");

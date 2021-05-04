@@ -11,10 +11,10 @@
 
 namespace carto {
 
-    RoutingResult::RoutingResult(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points, const std::vector<RoutingInstruction>& instructions) :
+    RoutingResult::RoutingResult(const std::shared_ptr<Projection>& projection, std::vector<MapPos> points, std::vector<RoutingInstruction> instructions) :
         _projection(projection),
-        _points(points),
-        _instructions(instructions)
+        _points(std::move(points)),
+        _instructions(std::move(instructions))
     {
         if (!projection) {
             throw NullArgumentException("Null projection");
