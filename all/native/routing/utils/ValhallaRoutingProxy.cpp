@@ -480,8 +480,9 @@ namespace carto {
 
                     std::string streetName;
                     if (maneuver.get("street_names").is<picojson::array>()) {
-                        const picojson::array& streetNames = maneuver.get("street_names").get<picojson::array>();
-                        streetName = !streetNames.empty() ? streetNames[0].get<std::string>() : std::string("");
+                        for (const picojson::value& name : maneuver.get("street_names").get<picojson::array>()) {
+                            streetName += (streetName.empty() ? "" : "/") + name.get<std::string>();
+                        }
                     }
 
                     std::string instruction = maneuver.get("instruction").get<std::string>();
