@@ -19,7 +19,7 @@ namespace carto {
     {
     }
 
-    RoutingInstruction::RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, const std::string& instruction, float turnAngle, float azimuth, double distance, double time) :
+    RoutingInstruction::RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, const std::string& instruction, float turnAngle, float azimuth, double distance, double time, const Variant& geometryTag) :
         _action(action),
         _pointIndex(pointIndex),
         _streetName(streetName),
@@ -28,7 +28,7 @@ namespace carto {
         _azimuth(azimuth),
         _distance(distance),
         _time(time),
-        _geometryTag()
+        _geometryTag(geometryTag)
     {
     }
 
@@ -63,24 +63,12 @@ namespace carto {
         return _distance;
     }
     
-    void RoutingInstruction::setDistance(double distance) {
-        _distance = distance;
-    }
-
     double RoutingInstruction::getTime() const {
         return _time;
     }
     
-    void RoutingInstruction::setTime(double time) {
-        _time = time;
-    }
-
     const Variant& RoutingInstruction::getGeometryTag() const {
         return _geometryTag;
-    }
-
-    void RoutingInstruction::setGeometryTag(const Variant& geometryTag) {
-        _geometryTag = geometryTag;
     }
 
     std::string RoutingInstruction::toString() const {

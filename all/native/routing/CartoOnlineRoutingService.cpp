@@ -4,7 +4,7 @@
 #include "components/Exceptions.h"
 #include "components/LicenseManager.h"
 #include "projections/Projection.h"
-#include "routing/OSRMRoutingProxy.h"
+#include "routing/utils/OSRMRoutingProxy.h"
 #include "network/HTTPClient.h"
 #include "utils/Log.h"
 #include "utils/PlatformUtils.h"

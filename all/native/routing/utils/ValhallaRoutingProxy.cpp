@@ -6,13 +6,13 @@
 #include "core/Variant.h"
 #include "components/Exceptions.h"
 #include "projections/Projection.h"
-#include "projections/EPSG3857.h"
 #include "routing/RoutingRequest.h"
 #include "routing/RoutingResult.h"
 #include "routing/RouteMatchingRequest.h"
 #include "routing/RouteMatchingResult.h"
 #include "routing/RouteMatchingPoint.h"
 #include "routing/RouteMatchingEdge.h"
+#include "routing/utils/RoutingResultBuilder.h"
 #include "network/HTTPClient.h"
 #include "utils/NetworkUtils.h"
 #include "utils/Const.h"
@@ -243,56 +243,6 @@ namespace carto {
         return Variant::FromString(valhalla_default_config);
     }
 
-    float ValhallaRoutingProxy::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
-        if (pointIndex >= static_cast<int>(epsg3857Points.size())) {
-            return 0;
-        }
-
-        int pointIndex0 = pointIndex;
-        while (--pointIndex0 >= 0) {
-            if (epsg3857Points.at(pointIndex0) != epsg3857Points.at(pointIndex)) {
-                break;
-            }
-        }
-        int pointIndex1 = pointIndex;
-        while (++pointIndex1 < static_cast<int>(epsg3857Points.size())) {
-            if (epsg3857Points.at(pointIndex1) != epsg3857Points.at(pointIndex)) {
-                break;
-            }
-        }
-
-        float turnAngle = 0;
-        if (pointIndex0 >= 0 && pointIndex1 < static_cast<int>(epsg3857Points.size())) {
-            const MapPos& p0 = epsg3857Points.at(pointIndex0);
-            const MapPos& p1 = epsg3857Points.at(pointIndex);
-            const MapPos& p2 = epsg3857Points.at(pointIndex1);
-            MapVec v1 = p1 - p0;
-            MapVec v2 = p2 - p1;
-            double dot = v1.dotProduct(v2) / v1.length() / v2.length();
-            turnAngle = static_cast<float>(std::acos(std::max(-1.0, std::min(1.0, dot))) * Const::RAD_TO_DEG);
-        }
-        return turnAngle;
-    }
-
-    float ValhallaRoutingProxy::CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
-        int step = 1;
-        for (int i = pointIndex; i >= 0; i += step) {
-            if (i + 1 >= static_cast<int>(epsg3857Points.size())) {
-                step = -1;
-                continue;
-            }
-            const MapPos& p0 = epsg3857Points.at(i);
-            const MapPos& p1 = epsg3857Points.at(i + 1);
-            MapVec v = p1 - p0;
-            if (v.length() > 0) {
-                float angle = static_cast<float>(std::atan2(v.getY(), v.getX()) * Const::RAD_TO_DEG);
-                float azimuth = 90 - angle;
-                return (azimuth < 0 ? azimuth + 360 : azimuth);
-            }
-        }
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
     bool ValhallaRoutingProxy::TranslateManeuverType(int maneuverType, RoutingAction::RoutingAction& action) {
         enum {
             TripDirections_Maneuver_Type_kNone = 0,
@@ -490,7 +440,7 @@ namespace carto {
         catch (const std::exception& ex) {
             throw GenericException("Exception while translating route", ex.what());
         }
-        return std::make_shared<RouteMatchingResult>(proj, matchingPoints, matchingEdges);
+        return std::make_shared<RouteMatchingResult>(proj, std::move(matchingPoints), std::move(matchingEdges));
     }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::ParseRoutingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString) {
@@ -503,19 +453,24 @@ namespace carto {
             throw GenericException("No trip info in the result");
         }
 
-        EPSG3857 epsg3857;
-        std::vector<MapPos> points;
-        std::vector<MapPos> epsg3857Points;
-        std::vector<RoutingInstruction> instructions;
+        RoutingResultBuilder resultBuilder(proj);
         try {
             for (const picojson::value& legInfo : result.get("trip").get("legs").get<picojson::array>()) {
                 std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(legInfo.get("shape").get<std::string>());
-                points.reserve(points.size() + shape.size());
-                epsg3857Points.reserve(epsg3857Points.size() + shape.size());
 
                 const picojson::array& maneuvers = legInfo.get("maneuvers").get<picojson::array>();
                 for (std::size_t i = 0; i < maneuvers.size(); i++) {
                     const picojson::value& maneuver = maneuvers[i];
+
+                    std::size_t maneuverIndex0 = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>());
+                    std::size_t maneuverIndex1 = static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>());
+                    std::vector<MapPos> points;
+                    points.reserve(maneuverIndex1 >= maneuverIndex0 ? maneuverIndex1 - maneuverIndex0 + 1 : 0);
+                    for (std::size_t j = maneuverIndex0; j <= maneuverIndex1; j++) {
+                        const valhalla::midgard::PointLL& point = shape.at(j);
+                        points.push_back(proj->fromLatLong(point.second, point.first));
+                    }
+                    int pointIndex = resultBuilder.addPoints(points);
 
                     RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
                     TranslateManeuverType(static_cast<int>(maneuver.get("type").get<std::int64_t>()), action);
@@ -523,47 +478,28 @@ namespace carto {
                         action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
                     }
 
-                    int pointIndex = static_cast<int>(points.size());
-                    std::size_t maneuverIndex0 = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>());
-                    std::size_t maneuverIndex1 = static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>());
-                    for (std::size_t j = maneuverIndex0; j <= maneuverIndex1; j++) {
-                        const valhalla::midgard::PointLL& point = shape.at(j);
-                        MapPos mapPos = proj->fromLatLong(point.second, point.first);
-                        if (points.empty() || points.back() != mapPos) {
-                            points.push_back(mapPos);
-                            epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
-                        } else if (j == maneuverIndex0) {
-                            pointIndex--;
-                        }
-                    }
-
-                    float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndex);
-                    float azimuth = CalculateAzimuth(epsg3857Points, pointIndex);
-
                     std::string streetName;
                     if (maneuver.get("street_names").is<picojson::array>()) {
                         const picojson::array& streetNames = maneuver.get("street_names").get<picojson::array>();
                         streetName = !streetNames.empty() ? streetNames[0].get<std::string>() : std::string("");
                     }
-                    std::string instruction = maneuver.get("instruction").get<std::string>();
 
-                    instructions.emplace_back(
-                        action,
-                        pointIndex,
-                        streetName,
-                        instruction,
-                        turnAngle,
-                        azimuth,
-                        maneuver.get("length").get<double>() * 1000.0,
-                        maneuver.get("time").get<double>()
-                    );
+                    std::string instruction = maneuver.get("instruction").get<std::string>();
+                    double time = maneuver.get("time").get<double>();
+                    double distance = maneuver.get("length").get<double>() * 1000.0;
+
+                    RoutingInstructionBuilder& instrBuilder = resultBuilder.addInstruction(action, pointIndex);
+                    instrBuilder.setStreetName(streetName);
+                    instrBuilder.setTime(time);
+                    instrBuilder.setDistance(distance);
+                    instrBuilder.setInstruction(instruction);
                 }
             }
         }
         catch (const std::exception& ex) {
             throw GenericException("Exception while translating route", ex.what());
         }
-        return std::make_shared<RoutingResult>(proj, points, instructions);
+        return resultBuilder.buildRoutingResult();
     }
 
     std::string ValhallaRoutingProxy::MakeHTTPRequest(HTTPClient& httpClient, const std::string& url) {
