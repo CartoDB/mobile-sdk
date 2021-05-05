@@ -94,7 +94,7 @@ namespace carto {
         std::transform(addr.features.begin(), addr.features.end(), std::back_inserter(features), std::bind(&GeocodingProxy::TranslateFeature, proj, std::placeholders::_1));
         auto featureCollection = std::make_shared<FeatureCollection>(features);
         std::vector<std::string> categories(addr.categories.begin(), addr.categories.end());
-        Address address(addr.country, addr.region, addr.county, addr.locality, addr.neighbourhood, addr.street, addr.postcode, addr.houseNumber, addr.name, categories);
+        GeocodingAddress address(addr.country, addr.region, addr.county, addr.locality, addr.neighbourhood, addr.street, addr.postcode, addr.houseNumber, addr.name, categories);
         return std::make_shared<GeocodingResult>(proj, address, rank, featureCollection);
     }
 

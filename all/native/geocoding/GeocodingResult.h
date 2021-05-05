@@ -9,7 +9,7 @@
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-#include "core/Address.h"
+#include "geocoding/GeocodingAddress.h"
 
 #include <memory>
 
@@ -29,14 +29,14 @@ namespace carto {
          * @param rank The relative ranking of the result (in range 0..1).
          * @param featureCollection The geometry (features) associated with the result.
          */
-        GeocodingResult(const std::shared_ptr<Projection>& projection, const Address& address, float rank, const std::shared_ptr<FeatureCollection>& featureCollection);
+        GeocodingResult(const std::shared_ptr<Projection>& projection, const GeocodingAddress& address, float rank, const std::shared_ptr<FeatureCollection>& featureCollection);
         virtual ~GeocodingResult();
 
         /**
          * Returns the address of the result.
          * @return The address of the result.
          */
-        const Address& getAddress() const;
+        const GeocodingAddress& getAddress() const;
 
         /**
          * Returns the rank of the result.
@@ -64,7 +64,7 @@ namespace carto {
         std::string toString() const;
         
     private:
-        Address _address;
+        GeocodingAddress _address;
         float _rank;
         std::shared_ptr<FeatureCollection> _featureCollection;
         std::shared_ptr<Projection> _projection;

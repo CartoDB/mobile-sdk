@@ -1,9 +1,9 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 
 #include "PeliasGeocodingProxy.h"
-#include "core/Address.h"
 #include "core/Variant.h"
 #include "components/Exceptions.h"
+#include "geocoding/GeocodingAddress.h"
 #include "geometry/Feature.h"
 #include "geometry/FeatureCollection.h"
 #include "geometry/Geometry.h"
@@ -53,7 +53,7 @@ namespace carto {
                 name.clear();
             }
 
-            Address address(country, region, county, locality, neighbourhood, street, postcode, houseNumber, name, std::vector<std::string>());
+            GeocodingAddress address(country, region, county, locality, neighbourhood, street, postcode, houseNumber, name, std::vector<std::string>());
             float rank = static_cast<float>(properties.contains("confidence") ? properties.get("confidence").get<double>() : 0.5);
 
             std::shared_ptr<Geometry> geometry = reader.readGeometry(featureInfo.get("geometry").serialize());
@@ -62,7 +62,7 @@ namespace carto {
             auto featureCollection = std::make_shared<FeatureCollection>(std::vector<std::shared_ptr<Feature> > { feature });
 
             auto result = std::make_shared<GeocodingResult>(proj, address, rank, featureCollection);
-            results.push_back(result);
+            results.push_back(std::move(result));
         }
         return results;
     }

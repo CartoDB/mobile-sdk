@@ -1,8 +1,8 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 
 #include "MapBoxGeocodingProxy.h"
-#include "core/Address.h"
 #include "core/Variant.h"
+#include "geocoding/GeocodingAddress.h"
 #include "components/Exceptions.h"
 #include "geometry/Feature.h"
 #include "geometry/FeatureCollection.h"
@@ -78,7 +78,7 @@ namespace carto {
                 }
             }
 
-            Address address(country, region, county, locality, neighbourhood, street, postcode, houseNumber, name, categories);
+            GeocodingAddress address(country, region, county, locality, neighbourhood, street, postcode, houseNumber, name, categories);
             float rank = static_cast<float>(featureInfo.contains("relevance") ? featureInfo.get("relevance").get<double>() : 0.5);
 
             std::shared_ptr<Geometry> geometry = reader.readGeometry(featureInfo.get("geometry").serialize());
@@ -87,7 +87,7 @@ namespace carto {
             auto featureCollection = std::make_shared<FeatureCollection>(std::vector<std::shared_ptr<Feature> > { feature });
 
             auto result = std::make_shared<GeocodingResult>(proj, address, rank, featureCollection);
-            results.push_back(result);
+            results.push_back(std::move(result));
         }
         return results;
     }
