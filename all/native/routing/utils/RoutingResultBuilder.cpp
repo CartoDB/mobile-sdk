@@ -144,17 +144,23 @@ namespace carto {
     std::string RoutingResultBuilder::calculateDistance(double distance) const {
         std::stringstream ss;
         if (distance < 1000) {
-            ss << std::setprecision(distance >= 10 ? 0 : 1) << distance << "m";
+            ss << std::fixed << std::setprecision(distance >= 10 ? 0 : 1) << distance << "m";
         } else {
-            ss << std::setprecision(distance >= 10000 ? 0 : 1) << distance / 1000.0 << "km";
+            ss << std::fixed << std::setprecision(distance >= 10000 ? 0 : 1) << (distance / 1000.0) << "km";
         }
         return ss.str();
     }
 
     std::string RoutingResultBuilder::calculateInstruction(const RoutingInstructionBuilder& instr) const {
         std::string instruction;
-        std::string streetName = instr.getStreetName();
         std::string direction = calculateDirection(instr.getAzimuth());
+        std::string streetName = instr.getStreetName();
+        if (!streetName.empty()) {
+            if (streetName.front() == '{' && streetName.back() == '}') {
+                streetName.clear();
+            }
+        }
+
         switch (instr.getAction()) {
         case RoutingAction::ROUTING_ACTION_HEAD_ON:
             instruction = "Head on " + direction + (streetName.empty() ? std::string() : " on " + streetName);
@@ -167,13 +173,13 @@ namespace carto {
             instruction = "Go straight " + direction + (streetName.empty() ? std::string() : " on " + streetName);
             break;
         case RoutingAction::ROUTING_ACTION_TURN_RIGHT:
-            instruction = "Turn right" + (streetName.empty() ? std::string() : " onto " + streetName);
+            instruction = (instr.getTurnAngle() < 30.0f ? "Bear right" : "Turn right") + (streetName.empty() ? std::string() : " onto " + streetName);
             break;
         case RoutingAction::ROUTING_ACTION_UTURN:
             instruction = "Make U turn" + (streetName.empty() ? std::string() : " onto " + streetName);
             break;
         case RoutingAction::ROUTING_ACTION_TURN_LEFT:
-            instruction = "Turn left" + (streetName.empty() ? std::string() : " onto " + streetName);
+            instruction = (instr.getTurnAngle() < 30.0f ? "Bear left" : "Turn left") + (streetName.empty() ? std::string() : " onto " + streetName);
             break;
         case RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION:
             instruction = "You have reached your non-final destination";
