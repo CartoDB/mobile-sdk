@@ -29,7 +29,6 @@
 
 %attributestring(carto::RoutingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributeval(carto::RoutingRequest, std::vector<carto::MapPos>, Points, getPoints)
-%attributeval(carto::RoutingRequest, std::vector<carto::Variant>, GeometryTagFilters, getGeometryTagFilters, setGeometryTagFilters)
 %ignore carto::RoutingRequest::getPointParameters;
 %ignore carto::RoutingRequest::getCustomParameters;
 %std_exceptions(carto::RoutingRequest::RoutingRequest)
