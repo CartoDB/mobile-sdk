@@ -45,20 +45,6 @@ namespace carto {
          * @param style The style to used for this model.
          */
         NMLModel(const MapPos& pos, const std::shared_ptr<NMLModelStyle>& style);
-        /**
-         * Constructs a NMLModel object from a geometry object and serialized model data.
-         * @param geometry The geometry object that defines the location of this model.
-         * @param sourceModelData Serialized data for 3D model.
-         * @deprecated
-         */
-        NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<BinaryData>& sourceModelData);
-        /**
-         * Constructs a NMLModel object from a map position and serialized model data.
-         * @param pos The map position that defines the location of this model.
-         * @param sourceModelData Serialized data for 3D model.
-         * @deprecated
-         */
-        NMLModel(const MapPos& pos, const std::shared_ptr<BinaryData>& sourceModelData);
         virtual ~NMLModel();
 
         /**

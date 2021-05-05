@@ -38,41 +38,6 @@ namespace carto {
         }
     }
     
-    NMLModel::NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<BinaryData>& sourceModelData) :
-        VectorElement(geometry),
-        _rotationAxis(0, 0, 1),
-        _rotationAngle(0),
-        _scale(1),
-        _style()
-    {
-        if (!geometry) {
-            throw NullArgumentException("Null geometry");
-        }
-        if (!sourceModelData) {
-            throw NullArgumentException("Null sourceModelData");
-        }
-
-        NMLModelStyleBuilder styleBuilder;
-        styleBuilder.setModelAsset(sourceModelData);
-        _style = styleBuilder.buildStyle();
-    }
-    
-    NMLModel::NMLModel(const MapPos& mapPos, const std::shared_ptr<BinaryData>& sourceModelData) :
-        VectorElement(std::make_shared<PointGeometry>(mapPos)),
-        _rotationAxis(0, 0, 1),
-        _rotationAngle(0),
-        _scale(1),
-        _style()
-    {
-        if (!sourceModelData) {
-            throw NullArgumentException("Null sourceModelData");
-        }
-
-        NMLModelStyleBuilder styleBuilder;
-        styleBuilder.setModelAsset(sourceModelData);
-        _style = styleBuilder.buildStyle();
-    }
-    
     NMLModel::~NMLModel() {
     }
         
