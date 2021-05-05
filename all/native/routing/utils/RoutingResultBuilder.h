@@ -36,6 +36,12 @@ namespace carto {
 
         float calculateAzimuth(int pointIndex) const;
 
+        std::string calculateDirection(float azimuth) const;
+
+        std::string calculateDistance(double distance) const;
+
+        std::string calculateInstruction(const RoutingInstructionBuilder& instr) const;
+
         const std::shared_ptr<Projection> _projection;
         std::vector<MapPos> _points;
         std::list<RoutingInstructionBuilder> _instructions;
