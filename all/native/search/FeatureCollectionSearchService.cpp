@@ -5,7 +5,7 @@
 #include "geometry/Geometry.h"
 #include "geometry/Feature.h"
 #include "geometry/FeatureCollection.h"
-#include "search/SearchProxy.h"
+#include "search/utils/SearchProxy.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
 #include "utils/Log.h"

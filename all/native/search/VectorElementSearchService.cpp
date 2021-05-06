@@ -7,7 +7,7 @@
 #include "graphics/ViewState.h"
 #include "renderers/components/CullState.h"
 #include "geometry/Geometry.h"
-#include "search/SearchProxy.h"
+#include "search/utils/SearchProxy.h"
 #include "projections/Projection.h"
 #include "vectorelements/VectorElement.h"
 #include "utils/Log.h"
