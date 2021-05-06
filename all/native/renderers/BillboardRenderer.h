@@ -34,9 +34,6 @@ namespace carto {
     
     class BillboardRenderer : public std::enable_shared_from_this<BillboardRenderer> {
     public:
-        static void CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis);
-        static bool CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState, std::vector<float>& coordBuf, std::size_t drawDataIndex, float sizeScale = 1.0f);
-        
         BillboardRenderer();
         virtual ~BillboardRenderer();
     
@@ -55,6 +52,9 @@ namespace carto {
 
         void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
+        static void CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis);
+        static bool CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState, std::vector<float>& coordBuf, std::size_t drawDataIndex, float sizeScale = 1.0f);
+        
     private:
         static void BuildAndDrawBuffers(GLuint a_color,
                                         GLuint a_coord,
