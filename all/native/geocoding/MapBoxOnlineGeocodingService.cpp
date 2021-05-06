@@ -3,7 +3,7 @@
 #include "MapBoxOnlineGeocodingService.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
-#include "geocoding/MapBoxGeocodingProxy.h"
+#include "geocoding/utils/MapBoxGeocodingProxy.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
 #include "utils/Const.h"

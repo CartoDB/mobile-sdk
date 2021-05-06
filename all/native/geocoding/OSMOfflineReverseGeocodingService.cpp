@@ -2,7 +2,7 @@
 
 #include "OSMOfflineReverseGeocodingService.h"
 #include "components/Exceptions.h"
-#include "geocoding/GeocodingProxy.h"
+#include "geocoding/utils/CartoGeocodingProxy.h"
 
 #include <geocoding/RevGeocoder.h>
 
@@ -39,7 +39,7 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        return GeocodingProxy::CalculateAddresses(_revGeocoder, request);
+        return CartoGeocodingProxy::CalculateAddresses(_revGeocoder, request);
     }
     
 }

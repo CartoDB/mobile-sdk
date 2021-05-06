@@ -2,7 +2,7 @@
 
 #include "OSMOfflineGeocodingService.h"
 #include "components/Exceptions.h"
-#include "geocoding/GeocodingProxy.h"
+#include "geocoding/utils/CartoGeocodingProxy.h"
 
 #include <geocoding/Geocoder.h>
 
@@ -55,7 +55,7 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        return GeocodingProxy::CalculateAddresses(_geocoder, request);
+        return CartoGeocodingProxy::CalculateAddresses(_geocoder, request);
     }
     
 }

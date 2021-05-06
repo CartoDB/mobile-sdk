@@ -2,7 +2,7 @@
 
 #include "PackageManagerGeocodingService.h"
 #include "components/Exceptions.h"
-#include "geocoding/GeocodingProxy.h"
+#include "geocoding/utils/CartoGeocodingProxy.h"
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/GeocodingPackageHandler.h"
 
@@ -110,7 +110,7 @@ namespace carto {
                 _cachedGeocoder = geocoder;
             }
 
-            results = GeocodingProxy::CalculateAddresses(_cachedGeocoder, request);
+            results = CartoGeocodingProxy::CalculateAddresses(_cachedGeocoder, request);
         });
         return results;
     }
