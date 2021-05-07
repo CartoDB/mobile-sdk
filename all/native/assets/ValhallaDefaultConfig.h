@@ -4,9 +4,11 @@ static const char valhalla_default_config[] = R"({
   },
   "httpd": {
     "service": {
+      "drain_seconds": 28,
       "interrupt": "ipc:///tmp/interrupt",
       "listen": "tcp://*:8002",
-      "loopback": "ipc:///tmp/loopback"
+      "loopback": "ipc:///tmp/loopback",
+      "shutdown_seconds": 1
     }
   },
   "loki": {
@@ -19,7 +21,10 @@ static const char valhalla_default_config[] = R"({
       "isochrone",
       "trace_route",
       "trace_attributes",
-      "transit_available"
+      "transit_available",
+      "expansion",
+      "centroid",
+      "status"
     ],
     "logging": {
       "color": true,
@@ -36,6 +41,7 @@ static const char valhalla_default_config[] = R"({
       "node_snap_tolerance": 5,
       "radius": 0,
       "search_cutoff": 35000,
+      "street_side_max_distance": 1000,
       "street_side_tolerance": 5
     },
     "use_connectivity": false
@@ -97,8 +103,19 @@ static const char valhalla_default_config[] = R"({
   },
   "mjolnir": {
     "admin": "",
-    "global_synchronized_cache": true,
+    "data_processing": {
+      "allow_alt_name": false,
+      "apply_country_overrides": true,
+      "infer_internal_intersections": true,
+      "infer_turn_channels": true,
+      "use_admin_db": true,
+      "use_direction_on_ways": false,
+      "use_rest_area": false,
+      "use_urban_tag": false
+    },
+    "global_synchronized_cache": false,
     "hierarchy": true,
+    "id_table_size": 1300000000,
     "import_bike_share_stations": false,
     "include_bicycle": true,
     "include_driveways": true,
@@ -112,12 +129,15 @@ static const char valhalla_default_config[] = R"({
     "lru_mem_cache_hard_control": false,
     "max_cache_size": 10000000,
     "max_concurrent_reader_users": 1,
+    "reclassify_links": true,
     "shortcuts": true,
     "tile_dir": "",
     "tile_extract": "",
     "timezone": "",
+    "traffic_extract": "",
     "transit_dir": "",
-    "use_lru_mem_cache": false
+    "use_lru_mem_cache": false,
+    "use_simple_mem_cache": false
   },
   "odin": {
     "logging": {
@@ -148,11 +168,21 @@ static const char valhalla_default_config[] = R"({
       "max_matrix_distance": 200000.0,
       "max_matrix_locations": 50
     },
+    "bikeshare": {
+      "max_distance": 500000.0,
+      "max_locations": 50,
+      "max_matrix_distance": 200000.0,
+      "max_matrix_locations": 50
+    },
     "bus": {
       "max_distance": 5000000.0,
       "max_locations": 50,
       "max_matrix_distance": 400000.0,
       "max_matrix_locations": 50
+    },
+    "centroid": {
+      "max_distance": 200000.0,
+      "max_locations": 5
     },
     "hov": {
       "max_distance": 5000000.0,
@@ -163,11 +193,13 @@ static const char valhalla_default_config[] = R"({
     "isochrone": {
       "max_contours": 4,
       "max_distance": 25000.0,
+      "max_distance_contour": 200,
       "max_locations": 1,
-      "max_time": 120
+      "max_time_contour": 120
     },
     "max_alternates": 2,
     "max_avoid_locations": 50,
+    "max_avoid_polygons_length": 10000,
     "max_radius": 200,
     "max_reachability": 100,
     "max_timedep_distance": 500000,
@@ -229,12 +261,14 @@ static const char valhalla_default_config[] = R"({
     }
   },
   "thor": {
+    "extended_search": false,
     "logging": {
       "color": true,
       "file_name": "",
       "long_request": 110.0,
       "type": ""
     },
+    "max_reserved_labels_count": 1000000,
     "service": {
       "proxy": "ipc:///tmp/thor"
     },

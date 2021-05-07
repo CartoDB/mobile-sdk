@@ -168,7 +168,7 @@ namespace carto {
                     // If it doesn't fit, stop and draw the buffers
                     glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
                     glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
-                    glDrawElements(GL_TRIANGLES, indexIndex, GL_UNSIGNED_SHORT, indexBuf.data());
+                    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexIndex), GL_UNSIGNED_SHORT, indexBuf.data());
 
                     // Start filling buffers from the beginning
                     colorIndex = 0;
@@ -204,7 +204,7 @@ namespace carto {
         if (indexIndex > 0) {
             glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
             glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
-            glDrawElements(GL_TRIANGLES, indexIndex, GL_UNSIGNED_SHORT, indexBuf.data());
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexIndex), GL_UNSIGNED_SHORT, indexBuf.data());
         }
     }
     

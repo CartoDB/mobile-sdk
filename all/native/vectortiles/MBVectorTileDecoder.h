@@ -14,8 +14,7 @@
 #include <map>
 #include <vector>
 #include <string>
-
-#include <boost/variant.hpp>
+#include <variant>
 
 #include <mapnikvt/Value.h>
 
@@ -148,7 +147,7 @@ namespace carto {
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const;
     
     protected:
-        void updateCurrentStyleSet(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet);
+        void updateCurrentStyleSet(const std::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet);
 
         static const int DEFAULT_TILE_SIZE;
         static const int STROKEMAP_SIZE;
@@ -161,7 +160,7 @@ namespace carto {
         std::string _layerNameOverride;
         std::map<std::string, mvt::Value> _parameterValueMap;
         std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
-        boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
+        std::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
         std::shared_ptr<mvt::Map> _map;
         std::shared_ptr<mvt::Map::Settings> _mapSettings;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;

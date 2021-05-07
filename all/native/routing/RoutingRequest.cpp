@@ -111,20 +111,6 @@ namespace carto {
         _customParams = Variant::FromPicoJSON(rootValue);
     }
 
-    std::vector<Variant> RoutingRequest::getGeometryTagFilters() const {
-        std::vector<Variant> filters(_points.size());
-        for (std::size_t i = 0; i < filters.size(); i++) {
-            filters[i] = getPointParameter(static_cast<int>(i), "geometry_tag_filter");
-        }
-        return filters;
-    }
-
-    void RoutingRequest::setGeometryTagFilters(const std::vector<Variant>& filters) {
-        for (std::size_t i = 0; i < filters.size(); i++) {
-            setPointParameter(static_cast<int>(i), "geometry_tag_filter", filters[i]);
-        }
-    }
-
     std::string RoutingRequest::toString() const {
         std::lock_guard<std::mutex> lock(_mutex);
         std::stringstream ss;

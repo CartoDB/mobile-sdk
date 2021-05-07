@@ -65,6 +65,7 @@ def buildWinPhoneNativeDLL(args, arch):
   patchVcxprojFile(baseDir, '%s/carto_mobile_sdk.vcxproj' % buildDir)
   return cmake(args, buildDir, [
     '--build', '.',
+    '--parallel', '4',
     '--config', args.nativeconfiguration
   ])
 

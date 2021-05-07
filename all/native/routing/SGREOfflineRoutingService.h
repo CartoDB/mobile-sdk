@@ -72,10 +72,6 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:
-        static float CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex);
-        
-        static float CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex);
-        
         static bool TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action);
 
         picojson::value _featureData;

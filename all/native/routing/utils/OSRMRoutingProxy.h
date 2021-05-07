@@ -36,10 +36,6 @@ namespace carto {
     private:
         OSRMRoutingProxy();
         
-        static float CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex);
-        
-        static float CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex);
-        
         static bool TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action);
         
         static std::vector<MapPos> DecodeGeometry(const std::string& encodedGeometry);

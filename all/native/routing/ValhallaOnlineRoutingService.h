@@ -25,6 +25,7 @@ namespace carto {
      * An online routing service that uses MapBox Valhalla routing service.
      * As the class connects to an external (non-CARTO) service, this class is provided "as-is",   
      * future changes from the service provider may not be compatible with the implementation.
+     * Routing and route matching perform network requests and must be executed in non-UI background thread.
      * Be sure to read the Terms and Conditions of your Valhalla service provider to see if the
      * service is available for your application.
      * Note: this class is experimental and may change or even be removed in future SDK versions.

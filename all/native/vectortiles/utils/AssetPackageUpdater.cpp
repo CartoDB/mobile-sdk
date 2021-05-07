@@ -9,9 +9,9 @@
 #include <picojson/picojson.h>
 
 #define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
-#include <md5.h>
-#include <filters.h>
-#include <hex.h>
+#include <cryptopp/md5.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/hex.h>
 
 namespace {
 

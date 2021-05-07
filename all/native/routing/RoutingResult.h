@@ -29,7 +29,7 @@ namespace carto {
          * @param points The point list defining the routing path. Instructions refer to this list.
          * @param instructions The turn-by-turn instruction list.
          */
-        RoutingResult(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points, const std::vector<RoutingInstruction>& instructions);
+        RoutingResult(const std::shared_ptr<Projection>& projection, std::vector<MapPos> points, std::vector<RoutingInstruction> instructions);
         virtual ~RoutingResult();
 
         /**

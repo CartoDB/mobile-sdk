@@ -2,40 +2,48 @@ import os
 import sys
 import re
 import shutil
+import itertools
 import argparse
 import string
 from build.sdk_build_utils import *
 
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64']
 
-def updateUmbrellaHeader(filename, args):
+def updateUmbrellaHeader(filename, defines):
   with open(filename, 'r') as f:
     lines = f.readlines()
     for i in range(0, len(lines)):
       match = re.search('^\s*#import\s+"(.*)".*', lines[i].rstrip('\n'))
       if match:
-        lines[i] = '#import <CartoMobileSDK/%s>\n' % match.group(1)
+        headerFilename = match.group(1).split('/')[-1]
+        if not headerFilename.startswith('NT'):
+          headerFilename = 'NT%s' % headerFilename
+        lines[i] = '#import <CartoMobileSDK/%s>\n' % headerFilename
     for i in range(0, len(lines)):
       if re.search('^\s*#define\s+.*$', lines[i].rstrip('\n')):
         break
-    lines = lines[:i+1] + ['\n'] + ['#define %s\n' % define for define in args.defines.split(';') if define] + lines[i+1:]
+    lines = lines[:i+1] + ['\n'] + ['#define %s\n' % define for define in defines.split(';') if define] + lines[i+1:]
   with open(filename, 'w') as f:
     f.writelines(lines)
 
-def updatePrivateHeader(filename, args):
+def updatePublicHeader(filename):
   with open(filename, 'r') as f:
     lines = f.readlines()
+    externCMode = False
     for i in range(0, len(lines)):
-      match = re.search('^\s*#include\s+"(.*)".*', lines[i].rstrip('\n'))
-      if match:
-        lines[i] = '#include <CartoMobileSDK/%s>\n' % match.group(1)
+      if lines[i].find('extern "C"') != -1:
+        externCMode = True
       match = re.search('^\s*#import\s+"(.*)".*', lines[i].rstrip('\n'))
       if match:
-        lines[i] = '#import <CartoMobileSDK/%s>\n' % match.group(1)
+        headerFilename = match.group(1)
+        if externCMode:
+          lines[i] = '#ifdef __cplusplus\n}\n#endif\n#import "%s"\n#ifdef __cplusplus\nextern "C" {\n#endif\n' % headerFilename
+        else:
+          lines[i] = '#import "%s"\n' % headerFilename
   with open(filename, 'w') as f:
     f.writelines(lines)
 
-def buildModuleMap(filename, publicHeaders, privateHeaders):
+def buildModuleMap(filename, publicHeaders):
   with open(filename, 'w') as f:
     f.write('framework module CartoMobileSDK {\n')
     f.write('    umbrella header "CartoMobileSDK.h"\n')
@@ -43,18 +51,50 @@ def buildModuleMap(filename, publicHeaders, privateHeaders):
       f.write('    header "%s"\n' % header)
     f.write('    export *\n')
     f.write('    module * { export * }\n')
-    f.write('    explicit module Private {\n')
-    f.write('        requires cplusplus\n')
-    for header in privateHeaders:
-      f.write('        header "%s"\n' % header)
-    f.write('    }\n')
     f.write('}\n')
 
-def buildIOSLib(args, arch):
+def copyHeaders(args, baseDir, outputDir):
+  proxyHeaderDir = '%s/generated/ios-objc/proxies' % baseDir
+  destDir = '%s/Headers' % outputDir
+  publicHeaders = []
+  makedirs(destDir) 
+
+  currentDir = os.getcwd()
+  os.chdir(proxyHeaderDir)
+  for dirpath, dirnames, filenames in os.walk('.'):
+    for filename in filenames:
+      if filename.endswith('.h'):
+        publicHeaders.append(filename)
+        if not copyfile(os.path.join(dirpath, filename), '%s/%s' % (destDir, filename)):
+          os.chdir(currentDir)
+          return False
+        updatePublicHeader('%s/%s' % (destDir, filename))
+  os.chdir(currentDir)
+
+  extraHeaders = ['%s/ios/objc/utils/ExceptionWrapper.h', '%s/ios/objc/ui/MapView.h']
+  if args.metalangle:
+    for extraHeader in ['MGLKit.h', 'MGLKitPlatform.h', 'MGLContext.h', 'MGLKView.h', 'MGLLayer.h', 'MGLKViewController.h']:
+      extraHeaders += ['%s/libs-external/angle-metal/include/' + extraHeader]
+  for extraHeader in extraHeaders:
+    dirpath, filename = (extraHeader % baseDir).rsplit('/', 1)
+    destFilename = filename if filename.startswith('MGL') else 'NT%s' % filename
+    publicHeaders.append(destFilename)
+    if not copyfile(os.path.join(dirpath, filename), '%s/%s' % (destDir, destFilename)):
+      return False  
+
+  if not copyfile('%s/ios/objc/CartoMobileSDK.h' % baseDir, '%s/CartoMobileSDK.h' % destDir):
+    return False
+  updateUmbrellaHeader('%s/CartoMobileSDK.h' % destDir, args.defines)
+
+  makedirs('%s/Modules' % outputDir)
+  buildModuleMap('%s/Modules/module.modulemap' % outputDir, publicHeaders)
+  return True
+
+def buildIOSLib(args, arch, outputDir=None):
   platform = 'OS' if arch.startswith('arm') else 'SIMULATOR'
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   baseDir = getBaseDir()
-  buildDir = getBuildDir('ios', '%s-%s' % (platform, arch))
+  buildDir = outputDir or getBuildDir('ios', '%s-%s' % (platform, arch))
   defines = ["-D%s" % define for define in args.defines.split(';') if define]
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
 
@@ -68,7 +108,7 @@ def buildIOSLib(args, arch):
     '-DSHARED_LIBRARY:BOOL=%s' % ('ON' if args.sharedlib else 'OFF'),
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
-    '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('9.0' if args.metalangle else '7.0'),
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=9.0',
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
@@ -78,20 +118,20 @@ def buildIOSLib(args, arch):
     return False
   return cmake(args, buildDir, [
     '--build', '.',
+    '--parallel', '4',
     '--config', args.configuration
   ])
 
-def buildIOSFramework(args, archs):
-  shutil.rmtree(getDistDir('ios'), True)
-
+def buildIOSFramework(args, archs, outputDir=None):
   platformArchs = [('OS' if arch.startswith('arm') else 'SIMULATOR', arch) for arch in archs]
   baseDir = getBaseDir()
-  distDir = getDistDir('ios')
+  distDir = outputDir or getDistDir('ios')
   if args.sharedlib:
-    outputDir = '%s/CartoMobileSDK.framework' % distDir
+    frameworkDir = '%s/CartoMobileSDK.framework' % distDir
   else:
-    outputDir = '%s/CartoMobileSDK.framework/Versions/A' % distDir
-  makedirs(outputDir)
+    frameworkDir = '%s/CartoMobileSDK.framework/Versions/A' % distDir
+  shutil.rmtree(distDir, True)
+  makedirs(frameworkDir)
 
   libFilePaths = []
   for platform, arch in platformArchs:
@@ -107,21 +147,21 @@ def buildIOSFramework(args, archs):
     libFilePaths.append(libFilePath)
 
   if not execute('lipo', baseDir,
-    '-output', '%s/CartoMobileSDK' % outputDir,
+    '-output', '%s/CartoMobileSDK' % frameworkDir,
     '-create', *libFilePaths
   ):
     return False
 
   if args.sharedlib:
-    if not execute('install_name_tool', outputDir,
+    if not execute('install_name_tool', frameworkDir,
       '-id', '@rpath/CartoMobileSDK.framework/CartoMobileSDK',
       'CartoMobileSDK'
     ):
       return False
-    if not copyfile('%s/scripts/ios/Info.plist' % baseDir, '%s/Info.plist' % outputDir):
+    if not copyfile('%s/scripts/ios/Info.plist' % baseDir, '%s/Info.plist' % frameworkDir):
       return False
 
-  makedirs('%s/Headers' % outputDir)
+  makedirs('%s/Headers' % frameworkDir)
   if not args.sharedlib:
     if not makesymlink('%s/CartoMobileSDK.framework/Versions' % distDir, 'A', 'Current'):
       return False
@@ -129,43 +169,40 @@ def buildIOSFramework(args, archs):
       return False
     if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/Headers', 'Headers'):
       return False
-    if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/PrivateHeaders', 'PrivateHeaders'):
-      return False
     if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/CartoMobileSDK', 'CartoMobileSDK'):
       return False
+  if not copyHeaders(args, baseDir, frameworkDir):
+    return False
 
-  publicHeaders = []
-  privateHeaders = []
-  headerDirTemplates = ['%s/all/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']
-  if args.metalangle:
-    headerDirTemplates.append('%s/libs-external/angle-metal/include')
-  for headerDirTemplate in headerDirTemplates:
-    headerDir = headerDirTemplate % baseDir
-    if not os.path.exists(headerDir):
-      continue
-    currentDir = os.getcwd()
-    os.chdir(headerDir)
-    for dirpath, dirnames, filenames in os.walk('.'):
-      for filename in filenames:
-        if filename.endswith('.h'):
-          destDir = '%s/Headers/%s' % (outputDir, dirpath)
-          if headerDirTemplate.find('objc') == -1:
-            destDir = '%s/PrivateHeaders/%s' % (outputDir, dirpath)
-            privateHeaders.append(os.path.normpath(os.path.join(dirpath, filename)))
-          elif filename != 'CartoMobileSDK.h':
-            publicHeaders.append(os.path.normpath(os.path.join(dirpath, filename)))
-          if not (makedirs(destDir) and copyfile(os.path.join(dirpath, filename), '%s/%s' % (destDir, filename))):
-            os.chdir(currentDir)
-            return False
-          if filename == 'CartoMobileSDK.h':
-            updateUmbrellaHeader('%s/%s' % (destDir, filename), args)
-          else:
-            updatePrivateHeader('%s/%s' % (destDir, filename), args)
-    os.chdir(currentDir)
-  makedirs('%s/Modules' % outputDir)
-  buildModuleMap('%s/Modules/module.modulemap' % outputDir, publicHeaders, privateHeaders)
+  if outputDir is None:
+    print("Output available in:\n%s" % distDir)
+  return True
 
-  print("Output available in:\n%s" % distDir)
+def buildIOSXCFramework(args, archs, outputDir=None):
+  platformArchs = [('OS' if arch.startswith('arm') else 'SIMULATOR', arch) for arch in archs]
+  groupedPlatformArchs = {}
+  for platform, arch in platformArchs:
+    groupedPlatformArchs[platform] = groupedPlatformArchs.get(platform, []) + [arch]
+  baseDir = getBaseDir()
+  distDir = outputDir or getDistDir('ios')
+  shutil.rmtree(distDir, True)
+  makedirs(distDir)
+
+  frameworkBuildDirs = []
+  for platform, archs in groupedPlatformArchs.items():
+    frameworkBuildDir = getBuildDir('ios-framework', '%s-%s' % (platform, '-'.join(archs)))
+    if not buildIOSFramework(args, archs, frameworkBuildDir):
+      return False
+    frameworkBuildDirs.append(frameworkBuildDir)
+
+  if not execute('xcodebuild', baseDir,
+    '-create-xcframework', '-output', '%s/CartoMobileSDK.xcframework' % distDir,
+    *list(itertools.chain(*[['-framework', '%s/CartoMobileSDK.framework' % frameworkBuildDir] for frameworkBuildDir in frameworkBuildDirs]))
+  ):
+    return False
+
+  if outputDir is None:
+    print("Output available in:\n%s" % distDir)
   return True
 
 def buildIOSCocoapod(args, buildpackage):
@@ -173,7 +210,7 @@ def buildIOSCocoapod(args, buildpackage):
   distDir = getDistDir('ios')
   version = args.buildversion
   distName = 'sdk4-ios-%s.zip' % version
-  iosversion = '9.0' if args.metalangle else '7.0'
+  iosversion = '9.0'
   frameworks = (["IOSurface"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation", "CartoMobileSDK"]
 
   with open('%s/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
@@ -200,6 +237,7 @@ parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CM
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'RelWithDebInfo', 'Debug'], help='Configuration')
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
+parser.add_argument('--build-xcframework', dest='buildxcframework', default=False, action='store_true', help='Build XCFramework')
 parser.add_argument('--build-cocoapod', dest='buildcocoapod', default=False, action='store_true', help='Build CocoaPod')
 parser.add_argument('--build-cocoapod-package', dest='buildcocoapodpackage', default=False, action='store_true', help='Build CocoaPod')
 parser.add_argument('--metalangle', dest='metalangle', default=False, action='store_true', help='Use MetalANGLE instead of Apple GL')
@@ -222,8 +260,12 @@ for arch in args.iosarch:
   if not buildIOSLib(args, arch):
     sys.exit(-1)
 
-if not buildIOSFramework(args, args.iosarch):
-  sys.exit(-1)
+if args.buildxcframework:
+  if not buildIOSXCFramework(args, args.iosarch):
+    sys.exit(-1)
+else:
+  if not buildIOSFramework(args, args.iosarch):
+    sys.exit(-1)
 
 if args.buildcocoapod or args.buildcocoapodpackage:
   if not buildIOSCocoapod(args, args.buildcocoapodpackage):

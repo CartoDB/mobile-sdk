@@ -223,7 +223,7 @@ namespace carto {
             glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), _backgroundVertices.data() + 0);
             glVertexAttribPointer(_a_normal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), _backgroundVertices.data() + 3);
             glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), _backgroundVertices.data() + 6);
-            glDrawElements(GL_TRIANGLES, _backgroundIndices.size(), GL_UNSIGNED_SHORT, _backgroundIndices.data());
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(_backgroundIndices.size()), GL_UNSIGNED_SHORT, _backgroundIndices.data());
             glDisableVertexAttribArray(_a_normal);
         } else if (_options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
             // Calculate coordinate transformation parameters
@@ -251,7 +251,7 @@ namespace carto {
             // Draw
             glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _backgroundVertices.data() + 0);
             glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _backgroundVertices.data() + 3);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(vertexCount));
         }
     }
     
@@ -295,7 +295,7 @@ namespace carto {
         // Draw
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 0);
         glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 3);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(vertexCount));
     }
 
     void BackgroundRenderer::drawContour(const ViewState& viewState) {
@@ -308,7 +308,7 @@ namespace carto {
         // Draw
         std::size_t vertexCount = _contourCoords.size();
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _contourCoords.data());
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(vertexCount));
     }
 
     void BackgroundRenderer::BuildPlanarSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& focusPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale) {

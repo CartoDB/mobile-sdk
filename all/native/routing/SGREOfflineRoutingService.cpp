@@ -5,8 +5,7 @@
 #include "geometry/FeatureCollection.h"
 #include "geometry/GeoJSONGeometryWriter.h"
 #include "projections/Projection.h"
-#include "projections/EPSG3857.h"
-#include "utils/Const.h"
+#include "routing/utils/RoutingResultBuilder.h"
 #include "utils/Log.h"
 
 #include <limits>
@@ -114,10 +113,7 @@ namespace carto {
         routeFinder->setParameters(_routingParameters);
 
         std::shared_ptr<Projection> proj = request->getProjection();
-        EPSG3857 epsg3857;
 
-        std::size_t totalPoints = 0;
-        std::size_t totalInstructions = 0;
         std::vector<sgre::Result> results;
         for (std::size_t i = 1; i < request->getPoints().size(); i++) {
             MapPos p0 = proj->toWgs84(request->getPoints()[i - 1]);
@@ -140,31 +136,27 @@ namespace carto {
                 throw GenericException("Routing failed");
             }
 
-            totalPoints += result.getGeometry().size();
-            totalInstructions += result.getInstructions().size();
             results.push_back(std::move(result));
         }
 
-        std::vector<MapPos> points;
-        points.reserve(totalPoints);
-        std::vector<MapPos> epsg3857Points;
-        epsg3857Points.reserve(totalPoints);
-        std::vector<RoutingInstruction> instructions;
-        instructions.reserve(totalInstructions);
+        RoutingResultBuilder resultBuilder(proj);
         for (std::size_t i = 0; i < results.size(); i++) {
             const sgre::Result& result = results[i];
             if (result.getInstructions().empty()) {
                 continue;
             }
 
-            std::size_t pointIndex = points.size();
+            std::vector<MapPos> points;
+            points.reserve(result.getGeometry().size());
             for (const sgre::Point& pos : result.getGeometry()) {
                 MapPos mapPos = proj->fromWgs84(MapPos(pos(0), pos(1)));
                 points.emplace_back(mapPos.getX(), mapPos.getY(), pos(2));
-                epsg3857Points.push_back(epsg3857.fromWgs84(MapPos(pos(0), pos(1))));
             }
+            int basePointIndex = resultBuilder.addPoints(points);
 
+            RoutingInstructionBuilder* prevInstrBuilder = nullptr;
             for (const sgre::Instruction& instr : result.getInstructions()) {
+                int pointIndex = static_cast<int>(basePointIndex + instr.getGeometryIndex());
                 double distance = instr.getDistance();
                 double time = instr.getTime();
                 std::string streetName = instr.getTag().serialize();
@@ -173,74 +165,28 @@ namespace carto {
                 RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
                 TranslateInstructionCode(static_cast<int>(instr.getType()), action);
                 if (action == RoutingAction::ROUTING_ACTION_NO_TURN) {
-                    if (!instructions.empty() && instructions.back().getStreetName() == streetName && instructions.back().getGeometryTag() == geometryTag) {
-                        instructions.back().setTime(instructions.back().getTime() + time);
-                        instructions.back().setDistance(instructions.back().getDistance() + distance);
+                    if (prevInstrBuilder && prevInstrBuilder->getStreetName() == streetName && prevInstrBuilder->getGeometryTag() == geometryTag) {
+                        prevInstrBuilder->setTime(prevInstrBuilder->getTime() + time);
+                        prevInstrBuilder->setDistance(prevInstrBuilder->getDistance() + distance);
                     }
                     continue;
                 }
-                if (action == RoutingAction::ROUTING_ACTION_FINISH && i + 1 < results.size()) {
+                else if (action == RoutingAction::ROUTING_ACTION_FINISH && i + 1 < results.size()) {
                     action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
                 }
 
-                int posIndex = static_cast<int>(pointIndex + instr.getGeometryIndex());
-                float turnAngle = CalculateTurnAngle(epsg3857Points, posIndex);
-                float azimuth = CalculateAzimuth(epsg3857Points, posIndex);
-                std::string instruction = "";
-                instructions.emplace_back(action, posIndex, streetName, instruction, turnAngle, azimuth, distance, time);
-                instructions.back().setGeometryTag(geometryTag);
+                RoutingInstructionBuilder& instrBuilder = resultBuilder.addInstruction(action, pointIndex);
+                instrBuilder.setStreetName(streetName);
+                instrBuilder.setTime(time);
+                instrBuilder.setDistance(distance);
+                instrBuilder.setGeometryTag(geometryTag);
+                prevInstrBuilder = &instrBuilder;
             }
         }
 
-        return std::make_shared<RoutingResult>(proj, points, instructions);
+        return resultBuilder.buildRoutingResult();
     }
 
-    float SGREOfflineRoutingService::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
-        int pointIndex0 = pointIndex;
-        while (--pointIndex0 >= 0) {
-            if (epsg3857Points.at(pointIndex0) != epsg3857Points.at(pointIndex)) {
-                break;
-            }
-        }
-        int pointIndex1 = pointIndex;
-        while (++pointIndex1 < static_cast<int>(epsg3857Points.size())) {
-            if (epsg3857Points.at(pointIndex1) != epsg3857Points.at(pointIndex)) {
-                break;
-            }
-        }
-
-        float turnAngle = 0;
-        if (pointIndex0 >= 0 && pointIndex1 < static_cast<int>(epsg3857Points.size())) {
-            const MapPos& p0 = epsg3857Points.at(pointIndex0);
-            const MapPos& p1 = epsg3857Points.at(pointIndex);
-            const MapPos& p2 = epsg3857Points.at(pointIndex1);
-            MapVec v1 = p1 - p0;
-            MapVec v2 = p2 - p1;
-            double dot = v1.dotProduct(v2) / v1.length() / v2.length();
-            turnAngle = static_cast<float>(std::acos(std::max(-1.0, std::min(1.0, dot))) * Const::RAD_TO_DEG);
-        }
-        return turnAngle;
-    }
-    
-    float SGREOfflineRoutingService::CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
-        int step = 1;
-        for (int i = pointIndex; i >= 0; i += step) {
-            if (i + 1 >= static_cast<int>(epsg3857Points.size())) {
-                step = -1;
-                continue;
-            }
-            const MapPos& p0 = epsg3857Points.at(i);
-            const MapPos& p1 = epsg3857Points.at(i + 1);
-            MapVec v = p1 - p0;
-            if (v.length() > 0) {
-                float angle = static_cast<float>(std::atan2(v.getY(), v.getX()) * Const::RAD_TO_DEG);
-                float azimuth = 90 - angle;
-                return (azimuth < 0 ? azimuth + 360 : azimuth);
-            }
-        }
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-    
     bool SGREOfflineRoutingService::TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action) {
         switch (static_cast<sgre::Instruction::Type>(instructionCode)) {
         case sgre::Instruction::Type::HEAD_ON:

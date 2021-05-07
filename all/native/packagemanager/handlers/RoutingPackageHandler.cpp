@@ -26,7 +26,7 @@ namespace carto {
                 _graphFile->open(_fileName, std::ios::binary);
             }
             catch (const std::exception& ex) {
-                Log::Errorf("RoutingPackageHandler::getGraphFile: Failed to open graph file %s", _fileName.c_str());
+                Log::Errorf("RoutingPackageHandler::getGraphFile: Failed to open graph file %s (%s)", _fileName.c_str(), ex.what());
                 _graphFile.reset();
             }
         }

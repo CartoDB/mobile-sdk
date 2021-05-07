@@ -104,7 +104,7 @@ namespace carto {
     protected:
         class FetchTask : public TileLayer::FetchTaskBase {
         public:
-            FetchTask(const std::shared_ptr<RasterTileLayer>& layer, const MapTile& tile, bool preloadingTile);
+            FetchTask(const std::shared_ptr<RasterTileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile);
     
         protected:
             bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
@@ -113,9 +113,11 @@ namespace carto {
             static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
         };
     
-        virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
-        virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
-        virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
+        virtual long long getTileId(const MapTile& tile) const;
+        virtual bool tileExists(long long tileId, bool preloadingCache) const;
+        virtual bool tileValid(long long tileId, bool preloadingCache) const;
+        virtual bool prefetchTile(long long tileId, bool preloadingTile);
+        virtual void fetchTile(long long tileId, const MapTile& mapTile, bool preloadingTile, int priorityDelta);
         virtual void clearTiles(bool preloadingTiles);
         virtual void tilesChanged(bool removeTiles);
 
@@ -145,7 +147,6 @@ namespace carto {
 
     private:    
         static const int DEFAULT_CULL_DELAY;
-        static const int PRELOADING_PRIORITY_OFFSET;
 
         static const unsigned int EXTRA_TILE_FOOTPRINT;
         static const unsigned int DEFAULT_PRELOADING_CACHE_SIZE;

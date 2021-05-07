@@ -7,14 +7,10 @@
 #include "utils/NetworkUtils.h"
 #include "utils/Log.h"
 
-#include <base64.h>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
-#include <dsa.h>
-#include <filters.h>
 #include <iomanip>
-#include <randpool.h>
 #include <regex>
 #include <sstream>
 #include <tuple>
@@ -24,6 +20,11 @@
 #include <boost/algorithm/string.hpp>
 
 #include <picojson/picojson.h>
+
+#include <cryptopp/base64.h>
+#include <cryptopp/dsa.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/randpool.h>
 
 namespace carto {
 

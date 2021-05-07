@@ -137,10 +137,6 @@ namespace carto {
         return std::make_shared<BinaryData>(_pixelData);
     }
 
-    std::shared_ptr<BinaryData> Bitmap::compressToPng() const {
-        return compressToPNG();
-    }
-    
     std::shared_ptr<BinaryData> Bitmap::compressToPNG() const {
         png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, reportPNGErrorCallback, reportPNGWarningCallback);
         if (!pngPtr) {

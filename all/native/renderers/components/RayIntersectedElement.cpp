@@ -18,8 +18,8 @@ namespace carto {
         return _elementPos;
     }
 
-    bool RayIntersectedElement::is3D() const {
-        return _is3D;
+    bool RayIntersectedElement::is3DElement() const {
+        return _is3DElement;
     }
 
     double RayIntersectedElement::getDistance(const cglib::vec3<double>& origin) const {

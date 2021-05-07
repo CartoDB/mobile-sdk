@@ -2,7 +2,7 @@
 
 #include "ValhallaOfflineRoutingService.h"
 #include "components/Exceptions.h"
-#include "routing/ValhallaRoutingProxy.h"
+#include "routing/utils/ValhallaRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 

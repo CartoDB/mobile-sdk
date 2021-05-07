@@ -78,7 +78,9 @@ def buildAndroidSO(args, abi):
   ]):
     return False
   if not cmake(args, buildDir, [
-    '--build', '.', '--', '-j4'
+    '--build', '.',
+    '--parallel', '4',
+    '--config', args.configuration
   ]):
     return False
   return makedirs('%s/%s' % (distDir, abi)) and copyfile('%s/libcarto_mobile_sdk.so' % buildDir, '%s/%s/libcarto_mobile_sdk.so' % (distDir, abi))

@@ -30,9 +30,6 @@
 %attribute(carto::RoutingInstruction, double, Distance, getDistance)
 %attribute(carto::RoutingInstruction, double, Time, getTime)
 %attributeval(carto::RoutingInstruction, carto::Variant, GeometryTag, getGeometryTag)
-%ignore carto::RoutingInstruction::setDistance;
-%ignore carto::RoutingInstruction::setTime;
-%ignore carto::RoutingInstruction::setGeometryTag;
 !standard_equals(carto::RoutingInstruction);
 !custom_tostring(carto::RoutingInstruction);
 
