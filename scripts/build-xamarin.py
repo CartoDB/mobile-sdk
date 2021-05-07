@@ -95,10 +95,25 @@ def buildIOSFatLib(args, archs):
   baseDir = getBaseDir()
   buildDir = getBuildDir('xamarin_ios_unified')
 
-  return execute('lipo', baseDir,
+  libFilePaths = []
+  for platform, arch in platformArchs:
+    libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('xamarin_ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else 'iphonesimulator', 'a')
+    if args.metalangle:
+      mergedLibFilePath = '%s_merged.%s' % tuple(libFilePath.rsplit('.', 1))
+      angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, arch)
+      if not execute('libtool', baseDir,
+        '-o', mergedLibFilePath, libFilePath, angleLibFilePath
+      ):
+        return False
+      libFilePath = mergedLibFilePath
+    libFilePaths.append(libFilePath)
+
+  if not execute('lipo', baseDir,
     '-output', '%s/libcarto_mobile_sdk.a' % buildDir,
-    '-create', *["%s/%s-%s/libcarto_mobile_sdk.a" % (getBuildDir('xamarin_ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else "iphonesimulator") for platform, arch in platformArchs]
-  )
+    '-create', *libFilePaths
+  ):
+    return False
+  return True
 
 def buildXamarinDLL(args, target):
   baseDir = getBaseDir()
@@ -164,6 +179,7 @@ parser.add_argument('--configuration', dest='configuration', default='Release', 
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='store_true', help='Build Nuget package')
+parser.add_argument('--metalangle', dest='metalangle', default=False, action='store_true', help='Use MetalANGLE instead of Apple GL')
 parser.add_argument(dest='target', choices=['android', 'ios'], help='Target platform')
 
 args = parser.parse_args()
@@ -183,7 +199,9 @@ if args.androidndkpath == 'auto' and args.target == 'android':
   if args.androidndkpath is None:
     args.androidndkpath = os.path.join(args.androidsdkpath, 'ndk-bundle')
 args.defines += ';' + getProfile(args.profile).get('defines', '')
-args.defines += ';TARGET_XAMARIN'
+args.defines += ';' + 'TARGET_XAMARIN'
+if args.metalangle and args.target == 'ios':
+  args.defines += ';' + '_CARTO_USE_METALANGLE'
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = args.configuration
 
