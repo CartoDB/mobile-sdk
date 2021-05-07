@@ -1,3 +1,14 @@
+CARTO Mobile SDK 4.3.5RC1
+-------------------
+
+### Changes/fixes:
+
+* Fixed handling of 'CANCEL' touch actions in Android. This caused mishandling of following touch events.
+* Fixed thread race issue when connecting Java directors, causing issues with classes instantiaton
+* Changed iOS framework packaging. Fixed several issues with header files, added support for xcframeworks.
+* Fixed performance issue when calculating scaling of 3D polygons
+
+
 CARTO Mobile SDK 4.3.4
 -------------------
 
