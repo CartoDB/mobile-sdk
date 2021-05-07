@@ -8,23 +8,32 @@
 #include "renderers/utils/Texture.h"
 #include "projections/ProjectionSurface.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
+#include "renderers/drawdatas/NMLModelDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/BillboardSorter.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/NMLResources.h"
 #include "styles/AnimationStyle.h"
-#include "styles/BillboardStyle.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "vectorelements/Billboard.h"
+#include "vectorelements/NMLModel.h"
 
-#include <cglib/mat.h>
+#include <nml/GLModel.h>
+#include <nml/GLTexture.h>
+#include <nml/GLResourceManager.h>
+#include <nml/Package.h>
 
 namespace carto {
 
     BillboardRenderer::BillboardRenderer() :
         _mapRenderer(),
         _layer(),
+        _options(),
         _elements(),
         _tempElements(),
+        _drawDataBuffer(),
+        _nmlDrawDataBuffer(),
         _colorBuf(),
         _coordBuf(),
         _indexBuf(),
@@ -36,6 +45,8 @@ namespace carto {
         _a_texCoord(0),
         _u_mvpMat(0),
         _u_tex(0),
+        _nmlResources(),
+        _nmlModelMap(),
         _mutex()
     {
     }
@@ -48,6 +59,7 @@ namespace carto {
 
         _layer = layer;
         _mapRenderer = mapRenderer;
+        _options = options;
         _textureCache.reset();
         _shader.reset();
     }
@@ -80,21 +92,8 @@ namespace carto {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
 
             // Update animation state
-            bool phaseOut = drawData->getRenderer().lock() != shared_from_this() || (drawData->isHideIfOverlapped() && drawData->isOverlapping());
-            if (auto animStyle = drawData->getAnimationStyle()) {
-                float transition = drawData->getTransition();
-                float step = (phaseOut ? -1.0f : 1.0f);
-                float duration = (phaseOut ? animStyle->getPhaseOutDuration() : animStyle->getPhaseInDuration()) / animStyle->getRelativeSpeed();
-                if ((transition < 1.0f && step > 0.0f) || (transition > 0.0f && step < 0.0f)) {
-                    if (duration > 0.0f) {
-                        drawData->setTransition(transition + step * (transition == 0.0f || transition == 1.0f ? 0.01f : deltaSeconds) / duration);
-                        refresh = true;
-                    } else {
-                        drawData->setTransition(phaseOut ? 0.0f : 1.0f);
-                    }
-                }
-            } else {
-                drawData->setTransition(phaseOut ? 0.0f : 1.0f);
+            if (UpdateBillboardAnimationState(*drawData, deltaSeconds)) {
+                refresh = true;
             }
 
             // If the element has been removed and has become invisible, remove it from the list
@@ -104,7 +103,7 @@ namespace carto {
             }
 
             // Add the draw data to the sorter
-            if (calculateBaseBillboardDrawData(drawData, viewState)) {
+            if (CalculateBaseBillboardDrawData(*drawData, viewState)) {
                 billboardSorter.add(drawData);
             }
         }
@@ -147,8 +146,14 @@ namespace carto {
         
         // Draw billboards, batch by bitmap
         _drawDataBuffer.clear();
+        _nmlDrawDataBuffer.clear();
         std::shared_ptr<Bitmap> prevBitmap;
         for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
+            if (auto nmlDrawData = std::dynamic_pointer_cast<NMLModelDrawData>(drawData)) {
+                _nmlDrawDataBuffer.push_back(std::move(nmlDrawData));
+                continue;
+            }
+
             if (std::shared_ptr<Bitmap> bitmap = drawData->getBitmap()) {
                 if (prevBitmap && prevBitmap != bitmap) {
                     drawBatch(opacity, viewState);
@@ -159,14 +164,35 @@ namespace carto {
                 prevBitmap = bitmap;
             }
         }
-    
+   
         if (prevBitmap) {
             drawBatch(opacity, viewState);
         }
-    
+
+        // Cleanup
         glDisableVertexAttribArray(_a_coord);
         glDisableVertexAttribArray(_a_texCoord);
         glDisableVertexAttribArray(_a_color);
+
+        // Finally draw batched NML models
+        if (!_nmlDrawDataBuffer.empty()) {
+
+            if (!initializeNMLRenderer()) {
+                return;
+            }
+
+            // Set expected GL state
+            glDepthMask(GL_TRUE);
+            glEnable(GL_DEPTH_TEST);
+
+            // Draw the collected batch
+            drawNMLBatch(opacity, viewState);
+
+            // Restore expected GL state
+            glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_FALSE);
+            glActiveTexture(GL_TEXTURE0);
+        }
     
         GLContext::CheckGLError("BillboardRenderer::onDrawFrameSorted");
     }
@@ -191,7 +217,6 @@ namespace carto {
     
     void BillboardRenderer::updateElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-
         std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
         if (!drawData) {
             return;
@@ -230,14 +255,19 @@ namespace carto {
             if (drawData->getTransition() == 0) {
                 continue;
             }
+
+            if (auto nmlModel = std::dynamic_pointer_cast<NMLModel>(element)) {
+                calculateNMLRayIntersections(nmlModel, layer, ray, viewState, results);
+                continue;
+            }
     
             if (!CalculateBillboardCoords(*drawData, viewState, coordBuf, 0, drawData->getClickScale())) {
                 continue;
             }
             cglib::vec3<double> originShift = viewState.getCameraPos();
-            cglib::vec3<double> topLeft = cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]) + originShift;
-            cglib::vec3<double> bottomLeft = cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]) + originShift;
-            cglib::vec3<double> topRight = cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]) + originShift;
+            cglib::vec3<double> topLeft     = cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]) + originShift;
+            cglib::vec3<double> bottomLeft  = cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]) + originShift;
+            cglib::vec3<double> topRight    = cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]) + originShift;
             cglib::vec3<double> bottomRight = cglib::vec3<double>(coordBuf[9], coordBuf[10], coordBuf[11]) + originShift;
             
             // Check if either triangle intersects the ray
@@ -263,6 +293,27 @@ namespace carto {
                 }
             }
         }
+    }
+
+    bool BillboardRenderer::UpdateBillboardAnimationState(BillboardDrawData& drawData, float deltaSeconds) {
+        bool refresh = false;
+        bool phaseOut = !drawData.getRenderer().lock() || (drawData.isHideIfOverlapped() && drawData.isOverlapping());
+        if (auto animStyle = drawData.getAnimationStyle()) {
+            float transition = drawData.getTransition();
+            float step = (phaseOut ? -1.0f : 1.0f);
+            float duration = (phaseOut ? animStyle->getPhaseOutDuration() : animStyle->getPhaseInDuration()) / animStyle->getRelativeSpeed();
+            if ((transition < 1.0f && step > 0.0f) || (transition > 0.0f && step < 0.0f)) {
+                if (duration > 0.0f) {
+                    drawData.setTransition(transition + step * (transition == 0.0f || transition == 1.0f ? 0.01f : deltaSeconds) / duration);
+                    refresh = true;
+                } else {
+                    drawData.setTransition(phaseOut ? 0.0f : 1.0f);
+                }
+            }
+        } else {
+            drawData.setTransition(phaseOut ? 0.0f : 1.0f);
+        }
+        return refresh;
     }
         
     void BillboardRenderer::CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) {
@@ -331,6 +382,105 @@ namespace carto {
         return true;
     }
     
+    bool BillboardRenderer::CalculateBaseBillboardDrawData(BillboardDrawData& drawData, const ViewState& viewState) {
+        std::shared_ptr<Billboard> baseBillboard = drawData.getBaseBillboard().lock();
+        if (!baseBillboard) {
+            return true;
+        }
+        
+        const std::shared_ptr<BillboardDrawData>& baseBillboardDrawData = baseBillboard->getDrawData();
+        if (!baseBillboardDrawData) {
+            return false;
+        }
+        
+        if (!CalculateBaseBillboardDrawData(*baseBillboardDrawData, viewState)) {
+            return false;
+        }
+        
+        // Billboard is attached to another billboard, calculate position before sorting
+        cglib::vec3<double> baseBillboardPos = baseBillboardDrawData->getPos();
+        cglib::vec3<float> baseBillboardTranslate = cglib::vec3<float>::convert(baseBillboardPos - viewState.getCameraPos());
+        if (cglib::dot_product(baseBillboardDrawData->getZAxis(), baseBillboardTranslate) > 0) {
+            return false;
+        }
+
+        float halfSize = baseBillboardDrawData->getSize() * 0.5f;
+        cglib::vec2<float> labelAnchorVec(((drawData.getAttachAnchorPointX() - baseBillboardDrawData->getAnchorPointX()) * halfSize),
+                                          ((drawData.getAttachAnchorPointY() - baseBillboardDrawData->getAnchorPointY()) / baseBillboardDrawData->getAspect() * halfSize));
+        
+        if (baseBillboardDrawData->getRotation() != 0) {
+            labelAnchorVec = cglib::transform(labelAnchorVec, cglib::rotate2_matrix(static_cast<float>(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD)));
+        }
+        
+        // Calculate scaling
+        float scale = baseBillboardDrawData->isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
+        switch (baseBillboardDrawData->getScalingMode()) {
+        case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
+            break;
+        case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
+            labelAnchorVec *= scale;
+            break;
+        case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
+        default:
+            {
+                const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
+                double distance = baseBillboardPos(0) * mvpMat(3, 0) + baseBillboardPos(1) * mvpMat(3, 1) + baseBillboardPos(2) * mvpMat(3, 2) + mvpMat(3, 3);
+                float coef = static_cast<float>(distance * viewState.get2PowZoom() / viewState.getZoom0Distance() * scale);
+                labelAnchorVec *= coef;
+            }
+            break;
+        }
+        
+        // Calculate orientation
+        cglib::vec3<float> xAxis, yAxis;
+        CalculateBillboardAxis(*baseBillboardDrawData, viewState, xAxis, yAxis);
+
+        // Calculate delta, update position
+        cglib::vec3<double> delta = cglib::vec3<double>::convert(xAxis * labelAnchorVec(0) + yAxis * labelAnchorVec(1));
+        drawData.setPos(baseBillboardPos + delta);
+        return true;
+    }
+        
+    bool BillboardRenderer::CalculateNMLModelMatrix(const NMLModelDrawData& drawData, const ViewState& viewState, cglib::mat4x4<double>& modelMat, float sizeScale) {
+        cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - viewState.getCameraPos());
+        if (cglib::dot_product(drawData.getZAxis(), translate) > 0) {
+            return false;
+        }
+
+        float scale = drawData.isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
+        scale *= sizeScale;
+
+        // Calculate scaling
+        switch (drawData.getScalingMode()) {
+        case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
+            scale = sizeScale;
+            break;
+        case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
+            break;
+        case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
+        default:
+            scale = static_cast<float>(scale * drawData.getCameraPlaneZoomDistance());
+            break;
+        }
+        
+        // Calculate axis
+        cglib::vec3<float> xAxis, yAxis;
+        BillboardRenderer::CalculateBillboardAxis(drawData, viewState, xAxis, yAxis);
+        cglib::vec3<float> zAxis = cglib::vector_product(xAxis, yAxis) * (1.0f / cglib::length(xAxis));
+
+        // Calculate matrix
+        modelMat = cglib::mat4x4<double>::identity();
+        for (int i = 0; i < 3; i++) {
+            modelMat(i, 0) = scale * xAxis(i);
+            modelMat(i, 1) = scale * yAxis(i);
+            modelMat(i, 2) = scale * zAxis(i);
+        }
+
+        // Multiply with local transformation
+        modelMat = drawData.getLocalFrameMat() * modelMat * drawData.getLocalTransformMat();
+        return true;
+    }
+
     void BillboardRenderer::BuildAndDrawBuffers(GLuint a_color,
                                                 GLuint a_coord,
                                                 GLuint a_texCoord,
@@ -438,66 +588,7 @@ namespace carto {
         glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(drawDataIndex * 6), GL_UNSIGNED_SHORT, indexBuf.data());
     }
-        
-    bool BillboardRenderer::calculateBaseBillboardDrawData(const std::shared_ptr<BillboardDrawData>& drawData, const ViewState& viewState) {
-        std::shared_ptr<Billboard> baseBillboard = drawData->getBaseBillboard().lock();
-        if (!baseBillboard) {
-            return true;
-        }
-        
-        const std::shared_ptr<BillboardDrawData>& baseBillboardDrawData = baseBillboard->getDrawData();
-        if (!baseBillboardDrawData) {
-            return false;
-        }
-        
-        if (!calculateBaseBillboardDrawData(baseBillboardDrawData, viewState)) {
-            return false;
-        }
-        
-        // Billboard is attached to another billboard, calculate position before sorting
-        cglib::vec3<double> baseBillboardPos = baseBillboardDrawData->getPos();
-        cglib::vec3<float> baseBillboardTranslate = cglib::vec3<float>::convert(baseBillboardPos - viewState.getCameraPos());
-        if (cglib::dot_product(baseBillboardDrawData->getZAxis(), baseBillboardTranslate) > 0) {
-            return false;
-        }
 
-        float halfSize = baseBillboardDrawData->getSize() * 0.5f;
-        cglib::vec2<float> labelAnchorVec(((drawData->getAttachAnchorPointX() - baseBillboardDrawData->getAnchorPointX()) * halfSize),
-                                          ((drawData->getAttachAnchorPointY() - baseBillboardDrawData->getAnchorPointY()) / baseBillboardDrawData->getAspect() * halfSize));
-        
-        if (baseBillboardDrawData->getRotation() != 0) {
-            labelAnchorVec = cglib::transform(labelAnchorVec, cglib::rotate2_matrix(static_cast<float>(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD)));
-        }
-        
-        // Calculate scaling
-        float scale = baseBillboardDrawData->isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
-        switch (baseBillboardDrawData->getScalingMode()) {
-        case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
-            break;
-        case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
-            labelAnchorVec *= scale;
-            break;
-        case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
-        default:
-            {
-                const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
-                double distance = baseBillboardPos(0) * mvpMat(3, 0) + baseBillboardPos(1) * mvpMat(3, 1) + baseBillboardPos(2) * mvpMat(3, 2) + mvpMat(3, 3);
-                float coef = static_cast<float>(distance * viewState.get2PowZoom() / viewState.getZoom0Distance() * scale);
-                labelAnchorVec *= coef;
-            }
-            break;
-        }
-        
-        // Calculate orientation
-        cglib::vec3<float> xAxis, yAxis;
-        CalculateBillboardAxis(*baseBillboardDrawData, viewState, xAxis, yAxis);
-
-        // Calculate delta, update position
-        cglib::vec3<double> delta = cglib::vec3<double>::convert(xAxis * labelAnchorVec(0) + yAxis * labelAnchorVec(1));
-        drawData->setPos(baseBillboardPos + delta);
-        return true;
-    }
-        
     bool BillboardRenderer::initializeRenderer() {
         if (_shader && _shader->isValid() && _textureCache && _textureCache->isValid()) {
             return true;
@@ -532,7 +623,111 @@ namespace carto {
         BuildAndDrawBuffers(_a_color, _a_coord, _a_texCoord, _colorBuf, _coordBuf, _indexBuf, _texCoordBuf, _drawDataBuffer,
                             texture->getTexCoordScale(), opacity, viewState);
     }
+
+    bool BillboardRenderer::initializeNMLRenderer() {
+        if (_nmlResources && _nmlResources->isValid()) {
+            return true;
+        }
+
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            _nmlResources = mapRenderer->getGLResourceManager()->create<NMLResources>();
+
+            _nmlModelMap.clear();
+        }
+
+        return _nmlResources && _nmlResources->isValid();
+    }
+
+    void BillboardRenderer::drawNMLBatch(float opacity, const ViewState& viewState) {
+        std::shared_ptr<Options> options = _options.lock();
+        if (!options) {
+            return;
+        }
+
+        std::shared_ptr<nml::GLResourceManager> resourceManager = _nmlResources->getResourceManager();
+        if (!resourceManager) {
+            return;
+        }
+
+        // Calculate lighting state
+        Color optionsAmbientLightColor = options->getAmbientLightColor();
+        cglib::vec4<float> ambientLightColor = cglib::vec4<float>(optionsAmbientLightColor.getR(), optionsAmbientLightColor.getG(), optionsAmbientLightColor.getB(), optionsAmbientLightColor.getA()) * (1.0f / 255.0f);
+        Color optionsMainLightColor = options->getMainLightColor();
+        cglib::vec4<float> mainLightColor = cglib::vec4<float>(optionsMainLightColor.getR(), optionsMainLightColor.getG(), optionsMainLightColor.getB(), optionsMainLightColor.getA()) * (1.0f / 255.0f);
+        MapVec optionsMainLightDirection = options->getMainLightDirection();
+        MapPos internalFocusPos = viewState.getProjectionSurface()->calculateMapPos(viewState.getFocusPos());
+        cglib::vec3<float> mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(internalFocusPos, optionsMainLightDirection)));
+
+        // Draw models
+        cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());
+        for (const std::shared_ptr<NMLModelDrawData>& drawData : _nmlDrawDataBuffer) {
+            // Render the element
+            Color color = drawData->getColor();
+            float alpha = opacity * AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition());
+            cglib::vec4<float> modelColor = cglib::vec4<float>(color.getR(), color.getG(), color.getB(), color.getA()) * (alpha / 255.0f);
+            std::shared_ptr<nml::Model> sourceModel = drawData->getSourceModel();
+            std::shared_ptr<nml::GLModel> glModel = _nmlModelMap[sourceModel];
+            if (!glModel) {
+                glModel = std::make_shared<nml::GLModel>(*sourceModel);
+                glModel->create(*resourceManager);
+                _nmlModelMap[sourceModel] = glModel;
+            }
     
+            float relativeSize = AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getSizeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition());
+            cglib::mat4x4<double> modelMat;
+            if (!CalculateNMLModelMatrix(*drawData, viewState, modelMat, relativeSize)) {
+                continue;
+            }
+            cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * modelMat);
+            nml::RenderState renderState(projMat, mvMat, cglib::pointwise_product(ambientLightColor, modelColor), cglib::pointwise_product(mainLightColor, modelColor), -mainLightDir);
+
+            glModel->draw(*resourceManager, renderState);
+        }
+
+        // Remove stale models
+        for (auto it = _nmlModelMap.begin(); it != _nmlModelMap.end(); ) {
+            if (it->first.expired()) {
+                it = _nmlModelMap.erase(it);
+            } else {
+                it++;
+            }
+        }
+
+        // Dispose unused models
+        resourceManager->deleteUnused();
+    }
+
+    void BillboardRenderer::calculateNMLRayIntersections(const std::shared_ptr<NMLModel>& element, const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+        std::shared_ptr<NMLModelDrawData> drawData = std::static_pointer_cast<NMLModelDrawData>(element->getDrawData());
+
+        std::shared_ptr<nml::Model> sourceModel = drawData->getSourceModel();
+        auto modelIt = _nmlModelMap.find(sourceModel);
+        if (modelIt == _nmlModelMap.end()) {
+            return;
+        }
+        std::shared_ptr<nml::GLModel> glModel = modelIt->second;
+
+        cglib::mat4x4<double> modelMat;
+        if (!CalculateNMLModelMatrix(*drawData, viewState, modelMat)) {
+            return;
+        }
+        cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
+
+        cglib::ray3<double> rayModel = cglib::transform_ray(ray, invModelMat);
+        cglib::bbox3<double> modelBounds = cglib::bbox3<double>::convert(glModel->getBounds());
+        if (!cglib::intersect_bbox(modelBounds, rayModel)) {
+            return;
+        }
+
+        std::vector<nml::RayIntersection> intersections;
+        glModel->calculateRayIntersections(rayModel, intersections);
+        
+        for (std::size_t i = 0; i < intersections.size(); i++) {
+            cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
+            results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, pos, pos, true));
+        }
+    }
+
     const std::string BillboardRenderer::BILLBOARD_VERTEX_SHADER = R"GLSL(
         #version 100
         attribute vec4 a_coord;

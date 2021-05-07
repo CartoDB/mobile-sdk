@@ -10,7 +10,6 @@
 #include "renderers/GeometryCollectionRenderer.h"
 #include "renderers/LineRenderer.h"
 #include "renderers/MapRenderer.h"
-#include "renderers/NMLModelRenderer.h"
 #include "renderers/PointRenderer.h"
 #include "renderers/Polygon3DRenderer.h"
 #include "renderers/PolygonRenderer.h"
@@ -53,7 +52,6 @@ namespace carto {
         _pointRenderer(std::make_shared<PointRenderer>()),
         _polygonRenderer(std::make_shared<PolygonRenderer>()),
         _polygon3DRenderer(std::make_shared<Polygon3DRenderer>()),
-        _nmlModelRenderer(std::make_shared<NMLModelRenderer>()),
         _lastTask()
     {
         if (!dataSource) {
@@ -103,7 +101,6 @@ namespace carto {
         _pointRenderer->setComponents(options, mapRenderer);
         _polygonRenderer->setComponents(options, mapRenderer);
         _polygon3DRenderer->setComponents(options, mapRenderer);
-        _nmlModelRenderer->setComponents(options, mapRenderer);
     }
     
     void VectorLayer::loadData(const std::shared_ptr<CullState>& cullState) {
@@ -157,7 +154,6 @@ namespace carto {
         _pointRenderer->offsetLayerHorizontally(offset);
         _polygonRenderer->offsetLayerHorizontally(offset);
         _polygon3DRenderer->offsetLayerHorizontally(offset);
-        _nmlModelRenderer->offsetLayerHorizontally(offset);
     }
     
     bool VectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
@@ -178,7 +174,6 @@ namespace carto {
             _pointRenderer->onDrawFrame(deltaSeconds, viewState);
             _polygonRenderer->onDrawFrame(deltaSeconds, viewState);
             _polygon3DRenderer->onDrawFrame(deltaSeconds, viewState);
-            _nmlModelRenderer->onDrawFrame(deltaSeconds, viewState);
 
             if (zBuffering) {
                 mapRenderer->setZBuffering(false);
@@ -200,7 +195,6 @@ namespace carto {
         _pointRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
         _polygonRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
         _polygon3DRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
-        _nmlModelRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
     }
 
     bool VectorLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
@@ -319,7 +313,7 @@ namespace carto {
             if (!nmlModel->getDrawData() || nmlModel->getDrawData()->isOffset() || nmlModel->getDrawData()->getProjectionSurface() != projectionSurface) {
                 nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
-            _nmlModelRenderer->addElement(nmlModel);
+            _billboardRenderer->addElement(nmlModel);
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
             if (!popup->getDrawData() || popup->getDrawData()->isOffset() || popup->getDrawData()->getProjectionSurface() != projectionSurface) {
                 if (auto options = getOptions()) {
@@ -340,7 +334,6 @@ namespace carto {
         _pointRenderer->refreshElements();
         _polygonRenderer->refreshElements();
         _polygon3DRenderer->refreshElements();
-        _nmlModelRenderer->refreshElements();
         if (_billboardRenderer->getElementCount() > 0) {
             billboardsChanged = true;
         }
@@ -411,9 +404,9 @@ namespace carto {
         } else if (const std::shared_ptr<NMLModel>& nmlModel = std::dynamic_pointer_cast<NMLModel>(element)) {
             if (visible && !remove) {
                 nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), projectionSurface));
-                _nmlModelRenderer->updateElement(nmlModel);
+                _billboardRenderer->updateElement(nmlModel);
             } else {
-                _nmlModelRenderer->removeElement(nmlModel);
+                _billboardRenderer->removeElement(nmlModel);
             }
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
             if (visible && !remove) {
