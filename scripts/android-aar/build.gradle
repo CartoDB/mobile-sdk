@@ -1,10 +1,13 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:3.6.4'
+        classpath 'io.github.gradle-nexus:publish-plugin:1.1.0'
     }
 }
 
@@ -18,6 +21,9 @@ allprojects {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'io.github.gradle-nexus.publish-plugin'
+
+apply from: "publish.gradle"
 
 android {
     compileSdkVersion 30
@@ -42,4 +48,63 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.source
+    archiveClassifier = "sources"
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+group = 'com.carto'
+version = System.getProperty('build-version')
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId = 'com.carto'
+                artifactId 'carto-mobile-sdk'
+                version = System.getProperty('build-version')
+                from(components.release)
+                artifact sourcesJar
+                pom {
+                    name = "CARTO Mobile SDK"
+                    description = "CARTO Mobile Maps SDK for Android"
+                    url = "https://github.com/CartoDB/mobile-sdk"
+                    licenses {
+                        license {
+                            name = "BSD 3-Clause"
+                            url = "https://opensource.org/licenses/BSD-3-Clause"
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = "CARTO"
+                            name = "CARTO Mobile Team"
+                        }
+                    }
+                    scm {
+                        connection = "scm:git:https://github.com/CartoDB/mobile-sdk.git"
+                        developerConnection = "scm:git:https://github.com/CartoDB/mobile-sdk.git"
+                        url = "https://github.com/CartoDB/mobile-sdk"
+                    }
+                }
+            }
+        }
+    }
+}
+
+ext["signing.keyId"] = rootProject.ext["signing.keyId"]
+ext["signing.password"] = rootProject.ext["signing.password"]
+ext["signing.secretKeyRingFile"] = rootProject.ext["signing.secretKeyRingFile"]
+
+signing {
+    sign publishing.publications
 }
