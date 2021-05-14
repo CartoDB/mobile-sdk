@@ -1,5 +1,4 @@
 #include "graphics/BitmapCanvasUWPImpl.h"
-#include "graphics/Bitmap.h"
 #include "components/Exceptions.h"
 #include "utils/Log.h"
 
