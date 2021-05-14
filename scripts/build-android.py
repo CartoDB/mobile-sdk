@@ -99,12 +99,15 @@ def buildAndroidJAR(args):
   for sourceDir in ["%s/generated/android-java/proxies" % baseDir, "%s/android/java" % baseDir]:
     for dirpath, dirnames, filenames in os.walk(sourceDir):
       for filename in [f for f in filenames if f.endswith(".java")]:
+        if os.name == 'nt':
+          javaFiles.append(os.path.join(dirpath, "*.java"))
+          break
         javaFiles.append(os.path.join(dirpath, filename))
 
   if not javac(args, buildDir,
     '-g:vars',
-    '-source', '1.6',
-    '-target', '1.6',
+    '-source', '1.7',
+    '-target', '1.7',
     '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
     '-classpath', '%s/platforms/android-%d/android.jar' % (args.androidsdkpath, apiJava),
     '-d', buildDir,
@@ -117,6 +120,9 @@ def buildAndroidJAR(args):
   classFiles = []
   for dirpath, dirnames, filenames in os.walk("."):
     for filename in [f for f in filenames if f.endswith(".class")]:
+      if os.name == 'nt':
+        classFiles.append(os.path.join(dirpath[2:], "*.class"))
+        break
       classFiles.append(os.path.join(dirpath[2:], filename))
   os.chdir(currentDir)
 
