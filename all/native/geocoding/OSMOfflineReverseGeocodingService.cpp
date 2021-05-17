@@ -2,7 +2,7 @@
 
 #include "OSMOfflineReverseGeocodingService.h"
 #include "components/Exceptions.h"
-#include "geocoding/GeocodingProxy.h"
+#include "geocoding/utils/GeocodingProxy.h"
 
 #include <geocoding/RevGeocoder.h>
 

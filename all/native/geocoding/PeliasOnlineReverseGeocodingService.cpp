@@ -3,7 +3,7 @@
 #include "PeliasOnlineReverseGeocodingService.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
-#include "geocoding/PeliasGeocodingProxy.h"
+#include "geocoding/utils/PeliasGeocodingProxy.h"
 #include "projections/Projection.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
