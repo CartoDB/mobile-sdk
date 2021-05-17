@@ -156,7 +156,13 @@ namespace carto {
                 command.finish();
             }
 
-            sqlite3pp::command command3(*_database, "CREATE TABLE IF NOT EXISTS persistent_cache(tileId INTEGER NOT NULL PRIMARY KEY, compressed BLOB, time INTEGER, expirationTime INTEGER)");
+            sqlite3pp::command command3(*_database, R"SQL(
+                    CREATE TABLE IF NOT EXISTS persistent_cache(
+                        tileId INTEGER NOT NULL PRIMARY KEY,
+                        compressed BLOB,
+                        time INTEGER,
+                        expirationTime INTEGER
+                    ))SQL");
             command3.execute();
             command3.finish();
         }

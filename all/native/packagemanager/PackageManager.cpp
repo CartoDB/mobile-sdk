@@ -1464,7 +1464,7 @@ namespace carto {
                     tile_mask TEXT NOT NULL,
                     metainfo TEXT NOT NULL,
                     valid INTEGER NOT NULL DEFAULT 0
-                    ))SQL");
+                ))SQL");
         db.execute(R"SQL(
                 CREATE TABLE IF NOT EXISTS metadata(
                     name TEXT,
