@@ -10,6 +10,7 @@ namespace carto {
         _action(RoutingAction::ROUTING_ACTION_NO_TURN),
         _pointIndex(-1),
         _streetName(),
+        _instruction(),
         _turnAngle(0),
         _azimuth(0),
         _distance(0),
@@ -18,15 +19,16 @@ namespace carto {
     {
     }
 
-    RoutingInstruction::RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, float turnAngle, float azimuth, double distance, double time) :
+    RoutingInstruction::RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, const std::string& instruction, float turnAngle, float azimuth, double distance, double time, const Variant& geometryTag) :
         _action(action),
         _pointIndex(pointIndex),
         _streetName(streetName),
+        _instruction(instruction),
         _turnAngle(turnAngle),
         _azimuth(azimuth),
         _distance(distance),
         _time(time),
-        _geometryTag()
+        _geometryTag(geometryTag)
     {
     }
 
@@ -45,6 +47,10 @@ namespace carto {
         return _streetName;
     }
 
+    const std::string& RoutingInstruction::getInstruction() const {
+        return _instruction;
+    }
+
     float RoutingInstruction::getTurnAngle() const {
         return _turnAngle;
     }
@@ -57,24 +63,12 @@ namespace carto {
         return _distance;
     }
     
-    void RoutingInstruction::setDistance(double distance) {
-        _distance = distance;
-    }
-
     double RoutingInstruction::getTime() const {
         return _time;
     }
     
-    void RoutingInstruction::setTime(double time) {
-        _time = time;
-    }
-
     const Variant& RoutingInstruction::getGeometryTag() const {
         return _geometryTag;
-    }
-
-    void RoutingInstruction::setGeometryTag(const Variant& geometryTag) {
-        _geometryTag = geometryTag;
     }
 
     std::string RoutingInstruction::toString() const {
@@ -143,6 +137,9 @@ namespace carto {
         ss << "RoutingInstruction [action=" << actionName;
         if (!_streetName.empty()) {
             ss << ", streetName=" << _streetName;
+        }
+        if (!_instruction.empty()) {
+            ss << ", instruction=" << _instruction;
         }
         ss << ", azimuth=" << _azimuth;
         if (_turnAngle != 0) {

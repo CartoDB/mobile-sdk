@@ -19,6 +19,9 @@ namespace carto {
 
     /**
      * An online routing service that connects to Carto-provided routing server.
+     * Routing and route matching perform network requests and must be executed in non-UI background thread.
+     * Note: this service is not actively maintained and will be removed in future versions.
+     * @deprecated
      */
     class CartoOnlineRoutingService : public RoutingService {
     public:

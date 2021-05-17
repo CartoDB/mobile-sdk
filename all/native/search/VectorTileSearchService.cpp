@@ -6,7 +6,7 @@
 #include "geometry/Geometry.h"
 #include "geometry/VectorTileFeature.h"
 #include "geometry/VectorTileFeatureCollection.h"
-#include "search/SearchProxy.h"
+#include "search/utils/SearchProxy.h"
 #include "vectortiles/VectorTileDecoder.h"
 #include "projections/Projection.h"
 #include "utils/TileUtils.h"

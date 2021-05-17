@@ -230,7 +230,7 @@
         public override void TouchesCancelled(Foundation.NSSet touches, UIEvent evt) {
             // Note: should use ACTION_CANCEL here, but Xamarin.Forms uses this
             // for single clicks, so we need to emulate TouchesEnded here actually
-            if (_pointer2 != null && touches.Contains (_pointer2)) {
+            if (_pointer2 != null && touches.Contains(_pointer2)) {
                 if (_pointer1 != null && !touches.Contains(_pointer1)) {
                     CGPoint screenPos1 = _pointer1.LocationInView(this);
                     _baseMapView.OnInputEvent(NativeActionPointer2Up, (float) screenPos1.X * _scale, (float) screenPos1.Y * _scale, NativeNoCoordinate, NativeNoCoordinate);

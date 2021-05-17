@@ -7,6 +7,8 @@
 #ifndef _CARTO_FETCHINGTILETASKS_H_
 #define _CARTO_FETCHINGTILETASKS_H_
 
+#include <memory>
+#include <vector>
 #include <unordered_map>
 
 namespace carto {
@@ -16,26 +18,39 @@ namespace carto {
     public:
         FetchingTileTasks() : _fetchingTiles(), _mutex() { }
         
-        void add(long long tileId, const std::shared_ptr<Task>& task) {
+        std::vector<std::shared_ptr<Task> > get(long long tileId) const {
             std::lock_guard<std::mutex> lock(_mutex);
-            _fetchingTiles[tileId] = task;
+            auto it = _fetchingTiles.find(tileId);
+            return it != _fetchingTiles.end() ? it->second : std::vector<std::shared_ptr<Task> >();
         }
         
-        bool exists(long long tileId) {
+        void insert(long long tileId, const std::shared_ptr<Task>& task) {
             std::lock_guard<std::mutex> lock(_mutex);
-            return _fetchingTiles.find(tileId) != _fetchingTiles.end();
+            _fetchingTiles[tileId].push_back(task);
         }
         
-        void remove(long long tileId) {
+        void remove(long long tileId, const std::shared_ptr<Task>& task) {
             std::lock_guard<std::mutex> lock(_mutex);
-            _fetchingTiles.erase(tileId);
+            auto it = _fetchingTiles.find(tileId);
+            if (it == _fetchingTiles.end()) {
+                return;
+            }
+            std::vector<std::shared_ptr<Task> >& tasks = it->second;
+            auto it2 = std::find(tasks.begin(), tasks.end(), task);
+            if (it2 == tasks.end()) {
+                return;
+            }
+            tasks.erase(it2);
+            if (tasks.empty()) {
+                _fetchingTiles.erase(it);
+            }
         }
         
-        std::vector<std::shared_ptr<Task> > getTasks() const {
+        std::vector<std::shared_ptr<Task> > getAll() const {
             std::lock_guard<std::mutex> lock(_mutex);
             std::vector<std::shared_ptr<Task> > tasks;
-            for (const auto& pair : _fetchingTiles) {
-                tasks.push_back(pair.second);
+            for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                tasks.insert(tasks.end(), it->second.begin(), it->second.end());
             }
             return tasks;
         }
@@ -43,9 +58,11 @@ namespace carto {
         int getPreloadingCount() const {
             std::lock_guard<std::mutex> lock(_mutex);
             int count = 0;
-            for (const auto& pair : _fetchingTiles) {
-                if (pair.second->isPreloading()) {
-                    count++;
+            for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                for (const std::shared_ptr<Task>& task : it->second) {
+                    if (task->isPreloadingTile()) {
+                        count++;
+                    }
                 }
             }
             return count;
@@ -54,16 +71,18 @@ namespace carto {
         int getVisibleCount() const {
             std::lock_guard<std::mutex> lock(_mutex);
             int count = 0;
-            for (const auto& pair : _fetchingTiles) {
-                if (!pair.second->isPreloading()) {
-                    count++;
+            for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                for (const std::shared_ptr<Task>& task : it->second) {
+                    if (!task->isPreloadingTile()) {
+                        count++;
+                    }
                 }
             }
             return count;
         }
 
     private:
-        std::unordered_map<long long, std::shared_ptr<Task> > _fetchingTiles;
+        std::unordered_map<long long, std::vector<std::shared_ptr<Task> > > _fetchingTiles;
         mutable std::mutex _mutex;
     };
     

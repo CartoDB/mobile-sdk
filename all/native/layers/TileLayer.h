@@ -17,6 +17,7 @@
 #include "layers/components/FetchingTileTasks.h"
 
 #include <atomic>
+#include <unordered_set>
 #include <unordered_map>
 
 namespace carto {
@@ -233,11 +234,16 @@ namespace carto {
         
         class FetchTaskBase : public CancelableTask {
         public:
-            FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile);
+            FetchTaskBase(const std::shared_ptr<TileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile);
             
-            bool isPreloading() const;
+            long long getTileId() const;
+            MapTile getMapTile() const;
+            bool isPreloadingTile() const;
+
             bool isInvalidated() const;
             void invalidate();
+
+            virtual bool isCanceled() const;
             virtual void cancel();
             virtual void run();
             
@@ -245,6 +251,7 @@ namespace carto {
             virtual bool loadTile(const std::shared_ptr<TileLayer>& layer) = 0;
             
             std::weak_ptr<TileLayer> _layer;
+            long long _tileId;
             MapTile _tile; // original tile
             std::vector<MapTile> _dataSourceTiles; // tiles in valid datasource range, ordered to top
 
@@ -252,7 +259,6 @@ namespace carto {
             bool loadUTFGridTile(const std::shared_ptr<TileLayer>& layer);
 
             bool _preloadingTile;
-            bool _started;
             bool _invalidated;
         };
         
@@ -268,9 +274,11 @@ namespace carto {
 
         virtual void updateTileLoadListener();
 
-        virtual bool tileExists(const MapTile& tile, bool preloadingCache) const = 0;
-        virtual bool tileValid(const MapTile& tile, bool preloadingCache) const = 0;
-        virtual void fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) = 0;
+        virtual long long getTileId(const MapTile& tile) const = 0;
+        virtual bool tileExists(long long tileId, bool preloadingCache) const = 0;
+        virtual bool tileValid(long long tileId, bool preloadingCache) const = 0;
+        virtual bool prefetchTile(long long tileId, bool preloadingTile) = 0;
+        virtual void fetchTile(long long tileId, const MapTile& mapTile, bool preloadingTile, int priorityDelta) = 0;
         virtual void clearTiles(bool preloadingTiles) = 0;
         virtual void tilesChanged(bool removeTiles) = 0;
 
@@ -305,7 +313,7 @@ namespace carto {
     
         ThreadSafeDirectorPtr<UTFGridEventListener> _utfGridEventListener;
 
-        FetchingTileTasks<FetchTaskBase> _fetchingTiles;
+        FetchingTileTasks<FetchTaskBase> _fetchingTileTasks;
         
         int _frameNr;
         int _lastFrameNr;
@@ -321,17 +329,26 @@ namespace carto {
         std::shared_ptr<TileRenderer> _tileRenderer;
     
     private:
+        struct FetchTileInfo {
+            MapTile tile;
+            bool preloading;
+            int priorityDelta;
+        };
+
         void calculateVisibleTiles(const std::shared_ptr<CullState>& cullState);
         void calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& mapTile, const MapBounds& dataExtent);
 
         void sortTiles(std::vector<MapTile>& tiles, const ViewState& viewState, bool preloadingTiles);
-        void findTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles);
+        void buildFetchTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles, std::vector<FetchTileInfo>& fetchTileList);
+
         bool findParentTile(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
         int findChildTiles(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
-    
+
         static const int MAX_PARENT_SEARCH_DEPTH;
         static const int MAX_CHILD_SEARCH_DEPTH;
-        
+
+        static const int PARENT_PRIORITY_OFFSET;
+        static const int PRELOADING_PRIORITY_OFFSET;
         static const double PRELOADING_TILE_SCALE;
         static const float SUBDIVISION_THRESHOLD;
         

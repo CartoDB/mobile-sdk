@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_MAPNIKVTLOGGER_H_
-#define _CARTO_MAPNIKVTLOGGER_H_
+#ifndef _CARTO_MVTLOGGER_H_
+#define _CARTO_MVTLOGGER_H_
 
 #include "utils/Log.h"
 
@@ -13,9 +13,9 @@
 
 namespace carto {
     
-    class MapnikVTLogger : public mvt::Logger {
+    class MVTLogger : public mvt::Logger {
     public:
-        explicit MapnikVTLogger(const std::string& tag) : _tag(tag) { }
+        explicit MVTLogger(const std::string& tag) : _tag(tag) { }
     
         virtual void write(Severity severity, const std::string& msg) {
             switch (severity) {

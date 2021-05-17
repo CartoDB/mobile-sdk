@@ -2,7 +2,7 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "styles/CartoCSSStyleSet.h"
-#include "vectortiles/utils/MapnikVTLogger.h"
+#include "vectortiles/utils/MVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
 #include "utils/Const.h"
@@ -20,7 +20,7 @@
 namespace carto {
     
     TorqueTileDecoder::TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet) :
-        _logger(std::make_shared<MapnikVTLogger>("TorqueTileDecoder")),
+        _logger(std::make_shared<MVTLogger>("TorqueTileDecoder")),
         _resolution(256),
         _fallbackFonts(),
         _map(),
@@ -164,7 +164,7 @@ namespace carto {
         auto strokeMap = std::make_shared<vt::StrokeMap>(1, 1);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
 
-        std::shared_ptr<vt::Font> fallbackFont;
+        std::shared_ptr<const vt::Font> fallbackFont;
         for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
             std::shared_ptr<BinaryData> fontData = *it;
             std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());

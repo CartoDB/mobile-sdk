@@ -9,9 +9,9 @@
 #include <picojson/picojson.h>
 
 #define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
-#include <md5.h>
-#include <filters.h>
-#include <hex.h>
+#include <cryptopp/md5.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/hex.h>
 
 namespace {
 
@@ -20,7 +20,7 @@ namespace {
             return std::string();
         }
 
-        byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
+        CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
 
         CryptoPP::Weak::MD5 hash;
         hash.CalculateDigest(digest, data->data(), data->size());

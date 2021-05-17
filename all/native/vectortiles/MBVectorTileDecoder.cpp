@@ -17,9 +17,9 @@
 #include "graphics/Bitmap.h"
 #include "styles/CompiledStyleSet.h"
 #include "styles/CartoCSSStyleSet.h"
-#include "vectortiles/utils/GeometryConverter.h"
-#include "vectortiles/utils/ValueConverter.h"
-#include "vectortiles/utils/MapnikVTLogger.h"
+#include "vectortiles/utils/MVTGeometryConverter.h"
+#include "vectortiles/utils/MVTValueConverter.h"
+#include "vectortiles/utils/MVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
 #include "utils/AssetPackage.h"
@@ -44,7 +44,7 @@
 namespace carto {
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CompiledStyleSet>& compiledStyleSet) :
-        _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
+        _logger(std::make_shared<MVTLogger>("MBVectorTileDecoder")),
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
@@ -64,7 +64,7 @@ namespace carto {
     }
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet) :
-        _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
+        _logger(std::make_shared<MVTLogger>("MBVectorTileDecoder")),
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
@@ -86,7 +86,7 @@ namespace carto {
         
     std::shared_ptr<CompiledStyleSet> MBVectorTileDecoder::getCompiledStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&_styleSet)) {
+        if (auto compiledStyleSet = std::get_if<std::shared_ptr<CompiledStyleSet> >(&_styleSet)) {
             return *compiledStyleSet;
         }
         return std::shared_ptr<CompiledStyleSet>();
@@ -107,7 +107,7 @@ namespace carto {
     std::shared_ptr<CartoCSSStyleSet> MBVectorTileDecoder::getCartoCSSStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (auto cartoCSSStyleSet = boost::get<std::shared_ptr<CartoCSSStyleSet> >(&_styleSet)) {
+        if (auto cartoCSSStyleSet = std::get_if<std::shared_ptr<CartoCSSStyleSet> >(&_styleSet)) {
             return *cartoCSSStyleSet;
         }
         return std::shared_ptr<CartoCSSStyleSet>();
@@ -159,13 +159,13 @@ namespace carto {
                 }
             }
         } else {
-            if (auto val = boost::get<bool>(&value)) {
+            if (auto val = std::get_if<bool>(&value)) {
                 return boost::lexical_cast<std::string>(*val);
-            } else if (auto val = boost::get<long long>(&value)) {
+            } else if (auto val = std::get_if<long long>(&value)) {
                 return boost::lexical_cast<std::string>(*val);
-            } else if (auto val = boost::get<double>(&value)) {
+            } else if (auto val = std::get_if<double>(&value)) {
                 return boost::lexical_cast<std::string>(*val);
-            } else if (auto val = boost::get<std::string>(&value)) {
+            } else if (auto val = std::get_if<std::string>(&value)) {
                 return *val;
             }
         }
@@ -193,7 +193,7 @@ namespace carto {
             } else {
                 try {
                     mvt::Value val = nutiParam.getDefaultValue();
-                    if (boost::get<bool>(&val)) {
+                    if (std::get_if<bool>(&val)) {
                         if (value == "true") {
                             val = mvt::Value(true);
                         } else if (value == "false") {
@@ -201,11 +201,11 @@ namespace carto {
                         } else {
                             val = mvt::Value(boost::lexical_cast<bool>(value));
                         }
-                    } else if (boost::get<long long>(&val)) {
+                    } else if (std::get_if<long long>(&val)) {
                         val = mvt::Value(boost::lexical_cast<long long>(value));
-                    } else if (boost::get<double>(&val)) {
+                    } else if (std::get_if<double>(&val)) {
                         val = mvt::Value(boost::lexical_cast<double>(value));
-                    } else if (boost::get<std::string>(&val)) {
+                    } else if (std::get_if<std::string>(&val)) {
                         val = value;
                     }
                     _parameterValueMap[param] = val;
@@ -329,7 +329,7 @@ namespace carto {
                 for (const std::string& varName : mvtFeatureData->getVariableNames()) {
                     mvt::Value mvtValue;
                     if (mvtFeatureData->getVariable(varName, mvtValue)) {
-                        featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                        featureData[varName] = std::visit(MVTValueConverter(), mvtValue);
                     }
                 }
             }
@@ -338,7 +338,7 @@ namespace carto {
                 return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
             };
 
-            return std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+            return std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertMVTGeometry(convertFn, mvtGeometry), Variant(featureData));
         }
         catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
@@ -368,18 +368,18 @@ namespace carto {
             }
 
             for (const std::string& mvtLayerName : decoder->getLayerNames()) {
-                for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName); mvtIt->valid(); mvtIt->advance()) {
+                for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName, nullptr); mvtIt->valid(); mvtIt->advance()) {
                     std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtIt->getGeometry();
                     if (!mvtGeometry) {
                         continue;
                     }
 
                     std::map<std::string, Variant> featureData;
-                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData()) {
+                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData(nullptr)) {
                         for (const std::string& varName : mvtFeatureData->getVariableNames()) {
                             mvt::Value mvtValue;
                             if (mvtFeatureData->getVariable(varName, mvtValue)) {
-                                featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                                featureData[varName] = std::visit(MVTValueConverter(), mvtValue);
                             }
                         }
                     }
@@ -388,7 +388,7 @@ namespace carto {
                         return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
                     };
 
-                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertMVTGeometry(convertFn, mvtGeometry), Variant(featureData));
                     tileFeatures.push_back(feature);
                 }
             }
@@ -438,12 +438,12 @@ namespace carto {
         return std::shared_ptr<TileMap>();
     }
 
-    void MBVectorTileDecoder::updateCurrentStyleSet(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
+    void MBVectorTileDecoder::updateCurrentStyleSet(const std::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
         std::string styleAssetName;
         std::shared_ptr<AssetPackage> assetPackage;
         std::shared_ptr<mvt::Map> map;
 
-        if (auto cartoCSSStyleSet = boost::get<std::shared_ptr<CartoCSSStyleSet> >(&styleSet)) {
+        if (auto cartoCSSStyleSet = std::get_if<std::shared_ptr<CartoCSSStyleSet> >(&styleSet)) {
             styleAssetName = "";
             assetPackage = (*cartoCSSStyleSet)->getAssetPackage();
 
@@ -456,7 +456,7 @@ namespace carto {
             catch (const std::exception& ex) {
                 throw ParseException(std::string("CartoCSS style parsing failed: ") + ex.what(), (*cartoCSSStyleSet)->getCartoCSS());
             }
-        } else if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
+        } else if (auto compiledStyleSet = std::get_if<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
             styleAssetName = (*compiledStyleSet)->getStyleAssetName();
             if (styleAssetName.empty()) {
                 throw InvalidArgumentException("Could not find any styles in the style set");
@@ -512,7 +512,7 @@ namespace carto {
             auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
             auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
 
-            std::shared_ptr<vt::Font> fallbackFont;
+            std::shared_ptr<const vt::Font> fallbackFont;
             for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
                 std::shared_ptr<BinaryData> fontData = *it;
                 std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
@@ -547,10 +547,10 @@ namespace carto {
             }
             const mvt::NutiParameter& nutiParam = it2->second;
 
-            bool valid = nutiParam.getDefaultValue().which() == it->second.which();
+            bool valid = nutiParam.getDefaultValue().index() == it->second.index();
             if (!nutiParam.getEnumMap().empty()) {
                 valid = false;
-                for (const std::pair<std::string, mvt::Value>& enumValue : nutiParam.getEnumMap()) {
+                for (std::pair<std::string, mvt::Value> enumValue : nutiParam.getEnumMap()) {
                     if (enumValue.second == it->second) {
                         valid = true;
                         break;

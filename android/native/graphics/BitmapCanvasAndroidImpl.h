@@ -64,6 +64,7 @@ namespace carto {
         JNIUniqueGlobalRef<jobject> _paintObject;
 
     };
+
 }
 
 #endif

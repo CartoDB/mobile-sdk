@@ -20,70 +20,6 @@
 
 namespace carto {
 
-    void BillboardRenderer::CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) {
-        const ViewState::RotationState& rotationState = viewState.getRotationState();
-        switch (drawData.getOrientationMode()) {
-        case BillboardOrientation::BILLBOARD_ORIENTATION_GROUND:
-            xAxis = drawData.getXAxis();
-            yAxis = drawData.getYAxis();
-            break;
-        case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA_GROUND:
-            xAxis = cglib::unit(cglib::vector_product(rotationState.yAxis, drawData.getZAxis()));
-            yAxis = cglib::unit(cglib::vector_product(drawData.getZAxis(), xAxis));
-            break;
-        case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA:
-        default:
-            xAxis = rotationState.xAxis;
-            yAxis = rotationState.yAxis;
-            break;
-        }
-    }
-    
-    bool BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
-                                                     std::vector<float>& coordBuf, std::size_t drawDataIndex, float sizeScale)
-    {
-        cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - viewState.getCameraPos());
-        if (cglib::dot_product(drawData.getZAxis(), translate) > 0) {
-            return false;
-        }
-        
-        const std::array<cglib::vec2<float>, 4>& coords = drawData.getCoords();
-        for (int i = 0; i < 4; i++) {
-            std::size_t coordIndex = (drawDataIndex * 4 + i) * 3;
-            float x = coords[i](0);
-            float y = coords[i](1);
-            
-            float scale = drawData.isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
-            scale *= sizeScale;
-
-            // Calculate scaling
-            switch (drawData.getScalingMode()) {
-            case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
-                break;
-            case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
-                x *= scale;
-                y *= scale;
-                break;
-            case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
-            default:
-                float coef = static_cast<float>(scale * drawData.getCameraPlaneZoomDistance());
-                x *= coef;
-                y *= coef;
-                break;
-            }
-            
-            // Calculate axis
-            cglib::vec3<float> xAxis, yAxis;
-            CalculateBillboardAxis(drawData, viewState, xAxis, yAxis);
-        
-            // Build coordinates
-            coordBuf[coordIndex + 0] = x * xAxis(0) + y * yAxis(0) + translate(0);
-            coordBuf[coordIndex + 1] = x * xAxis(1) + y * yAxis(1) + translate(1);
-            coordBuf[coordIndex + 2] = x * xAxis(2) + y * yAxis(2) + translate(2);
-        }
-        return true;
-    }
-    
     BillboardRenderer::BillboardRenderer() :
         _mapRenderer(),
         _layer(),
@@ -329,6 +265,72 @@ namespace carto {
         }
     }
         
+    void BillboardRenderer::CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) {
+        const ViewState::RotationState& rotationState = viewState.getRotationState();
+        switch (drawData.getOrientationMode()) {
+        case BillboardOrientation::BILLBOARD_ORIENTATION_GROUND:
+            xAxis = drawData.getXAxis();
+            yAxis = drawData.getYAxis();
+            break;
+        case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA_GROUND:
+            xAxis = cglib::unit(cglib::vector_product(rotationState.yAxis, drawData.getZAxis()));
+            yAxis = cglib::unit(cglib::vector_product(drawData.getZAxis(), xAxis));
+            break;
+        case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA:
+        default:
+            xAxis = rotationState.xAxis;
+            yAxis = rotationState.yAxis;
+            break;
+        }
+    }
+    
+    bool BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
+                                                     std::vector<float>& coordBuf, std::size_t drawDataIndex, float sizeScale)
+    {
+        cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - viewState.getCameraPos());
+        if (cglib::dot_product(drawData.getZAxis(), translate) > 0) {
+            return false;
+        }
+        
+        const std::array<cglib::vec2<float>, 4>& coords = drawData.getCoords();
+        for (int i = 0; i < 4; i++) {
+            std::size_t coordIndex = (drawDataIndex * 4 + i) * 3;
+            float x = coords[i](0);
+            float y = coords[i](1);
+            
+            float scale = drawData.isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
+            scale *= sizeScale;
+
+            // Calculate scaling
+            switch (drawData.getScalingMode()) {
+            case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
+                x *= sizeScale;
+                y *= sizeScale;
+                break;
+            case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
+                x *= scale;
+                y *= scale;
+                break;
+            case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
+            default:
+                float coef = static_cast<float>(scale * drawData.getCameraPlaneZoomDistance());
+                x *= coef;
+                y *= coef;
+                break;
+            }
+            
+            // Calculate axis
+            cglib::vec3<float> xAxis, yAxis;
+            CalculateBillboardAxis(drawData, viewState, xAxis, yAxis);
+        
+            // Build coordinates
+            coordBuf[coordIndex + 0] = x * xAxis(0) + y * yAxis(0) + translate(0);
+            coordBuf[coordIndex + 1] = x * xAxis(1) + y * yAxis(1) + translate(1);
+            coordBuf[coordIndex + 2] = x * xAxis(2) + y * yAxis(2) + translate(2);
+        }
+        return true;
+    }
+    
     void BillboardRenderer::BuildAndDrawBuffers(GLuint a_color,
                                                 GLuint a_coord,
                                                 GLuint a_texCoord,
@@ -363,7 +365,7 @@ namespace carto {
                 glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
                 glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
                 glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
-                glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, indexBuf.data());
+                glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(drawDataIndex * 6), GL_UNSIGNED_SHORT, indexBuf.data());
                 // Start filling buffers from the beginning
                 drawDataIndex = 0;
             }
@@ -434,7 +436,7 @@ namespace carto {
         glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
         glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
         glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
-        glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, indexBuf.data());
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(drawDataIndex * 6), GL_UNSIGNED_SHORT, indexBuf.data());
     }
         
     bool BillboardRenderer::calculateBaseBillboardDrawData(const std::shared_ptr<BillboardDrawData>& drawData, const ViewState& viewState) {
@@ -467,10 +469,8 @@ namespace carto {
             labelAnchorVec = cglib::transform(labelAnchorVec, cglib::rotate2_matrix(static_cast<float>(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD)));
         }
         
-        const ViewState::RotationState& rotationState = viewState.getRotationState();
-        
-        float scale = baseBillboardDrawData->isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
         // Calculate scaling
+        float scale = baseBillboardDrawData->isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
         switch (baseBillboardDrawData->getScalingMode()) {
         case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
             break;

@@ -85,21 +85,6 @@ namespace carto {
         void setCustomParameter(const std::string& param, const Variant& value);
 
         /**
-         * Returns the geometry tag filter list of the request.
-         * This method is now deprecated, getPointParameter method should be used instead.
-         * @return The geometry tag filter list of the request.
-         * @deprecated
-         */
-        std::vector<Variant> getGeometryTagFilters() const;
-        /**
-         * Sets the geometry tag filter list for the request.
-         * This method is now deprecated, setPointParameter method should be used instead.
-         * @param filters The new filter list for the request.
-         * @deprecated
-         */
-        void setGeometryTagFilters(const std::vector<Variant>& filters);
-
-        /**
          * Creates a string representation of this request object, useful for logging.
          * @return The string representation of this request object.
          */

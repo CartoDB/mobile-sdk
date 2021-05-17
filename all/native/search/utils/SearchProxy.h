@@ -13,10 +13,9 @@
 #include "search/SearchRequest.h"
 
 #include <memory>
+#include <optional>
 #include <vector>
 #include <regex>
-
-#include <boost/optional.hpp>
 
 namespace carto {
     class Geometry;
@@ -41,7 +40,7 @@ namespace carto {
         double _searchRadius;
         std::shared_ptr<Projection> _projection;
         std::shared_ptr<QueryExpression> _expr;
-        boost::optional<std::regex> _re;
+        std::optional<std::regex> _re;
     };
     
 }

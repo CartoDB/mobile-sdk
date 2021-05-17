@@ -10,17 +10,14 @@
 #include "core/ScreenPos.h"
 #include "core/ScreenBounds.h"
 #include "graphics/Color.h"
+#include "graphics/Bitmap.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace carto {
-    class Bitmap;
 
-    /**
-     * A canvas class for constructing bitmaps procedurally.
-     */
     class BitmapCanvas {
     public:
         enum DrawMode {
@@ -77,6 +74,7 @@ namespace carto {
         
         std::unique_ptr<Impl> _impl;
     };
+
 }
 
 #endif

@@ -23,6 +23,7 @@ namespace carto {
 
     /**
      * A search service for finding features from the specified vector tile data source.
+     * Depending on the datasource, searching may perform network requests and must be executed in non-UI background thread.
      */
     class VectorTileSearchService {
     public:

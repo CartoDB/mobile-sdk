@@ -24,14 +24,12 @@
 %attribute(carto::RoutingInstruction, RoutingAction::RoutingAction, Action, getAction)
 %attribute(carto::RoutingInstruction, int, PointIndex, getPointIndex)
 %attribute(carto::RoutingInstruction, std::string, StreetName, getStreetName)
+%attribute(carto::RoutingInstruction, std::string, Instruction, getInstruction)
 %attribute(carto::RoutingInstruction, float, TurnAngle, getTurnAngle)
 %attribute(carto::RoutingInstruction, float, Azimuth, getAzimuth)
 %attribute(carto::RoutingInstruction, double, Distance, getDistance)
 %attribute(carto::RoutingInstruction, double, Time, getTime)
 %attributeval(carto::RoutingInstruction, carto::Variant, GeometryTag, getGeometryTag)
-%ignore carto::RoutingInstruction::setDistance;
-%ignore carto::RoutingInstruction::setTime;
-%ignore carto::RoutingInstruction::setGeometryTag;
 !standard_equals(carto::RoutingInstruction);
 !custom_tostring(carto::RoutingInstruction);
 

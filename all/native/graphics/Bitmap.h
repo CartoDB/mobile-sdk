@@ -127,13 +127,6 @@ namespace carto {
         std::shared_ptr<BinaryData> getPixelDataPtr() const;
         
         /**
-         * Compresses this bitmap to a png.
-         * @return A byte vector of the png's data.
-         * @deprecated Use compressToPNG.
-         */
-        std::shared_ptr<BinaryData> compressToPng() const;
-    
-        /**
          * Compresses this bitmap to a PNG format.
          * @return A byte vector of the PNG's data.
          */

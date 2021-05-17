@@ -78,7 +78,9 @@ def buildAndroidSO(args, abi):
   ]):
     return False
   if not cmake(args, buildDir, [
-    '--build', '.', '--', '-j4'
+    '--build', '.',
+    '--parallel', '4',
+    '--config', args.configuration
   ]):
     return False
   return makedirs('%s/%s' % (distDir, abi)) and copyfile('%s/libcarto_mobile_sdk.so' % buildDir, '%s/%s/libcarto_mobile_sdk.so' % (distDir, abi))
@@ -97,12 +99,15 @@ def buildAndroidJAR(args):
   for sourceDir in ["%s/generated/android-java/proxies" % baseDir, "%s/android/java" % baseDir]:
     for dirpath, dirnames, filenames in os.walk(sourceDir):
       for filename in [f for f in filenames if f.endswith(".java")]:
+        if os.name == 'nt':
+          javaFiles.append(os.path.join(dirpath, "*.java"))
+          break
         javaFiles.append(os.path.join(dirpath, filename))
 
   if not javac(args, buildDir,
     '-g:vars',
-    '-source', '1.6',
-    '-target', '1.6',
+    '-source', '1.7',
+    '-target', '1.7',
     '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
     '-classpath', '%s/platforms/android-%d/android.jar' % (args.androidsdkpath, apiJava),
     '-d', buildDir,
@@ -115,6 +120,9 @@ def buildAndroidJAR(args):
   classFiles = []
   for dirpath, dirnames, filenames in os.walk("."):
     for filename in [f for f in filenames if f.endswith(".class")]:
+      if os.name == 'nt':
+        classFiles.append(os.path.join(dirpath[2:], "*.class"))
+        break
       classFiles.append(os.path.join(dirpath[2:], filename))
   os.chdir(currentDir)
 
@@ -173,7 +181,7 @@ def buildAndroidAAR(args):
      copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) and \
      copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)):
     zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print("Output available in:\n%s\n\nTo publish, upload .pom, sources.jar and .aar to bintray.\n" % distDir)
+    print("Output available in:\n%s\n\nTo publish, use:\ngradle -p android-aar publishReleasePublicationToSonatypeRepository -Dbuild-version=%s\nThe log in to https://s01.oss.sonatype.org, 'Close' and then 'Release'.\n" % (distDir, version))
     return True
   return False
 

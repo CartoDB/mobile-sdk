@@ -56,6 +56,7 @@ namespace carto {
         Microsoft::WRL::ComPtr<IDWriteFactory> _dwriteFactory;
         Microsoft::WRL::ComPtr<IDWriteTextFormat> _dwriteTextFormat;
     };
+
 }
 
 #endif

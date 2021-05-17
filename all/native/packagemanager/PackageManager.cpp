@@ -31,11 +31,11 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/document.h>
 
-#include <rc5.h>
-#include <sha.h>
-#include <modes.h>
-#include <filters.h>
-#include <hex.h>
+#include <cryptopp/rc5.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/hex.h>
 
 namespace {
 
@@ -88,6 +88,7 @@ namespace carto {
                 _taskQueue = std::make_shared<PersistentTaskQueue>(createLocalFilePath(taskDbFileName));
             }
             catch (const std::exception& ex) {
+                Log::Errorf("PackageManager: Second error while constructing PackageManager::PersistentTaskQueue: %s", ex.what());
                 throw FileException("Failed to create/open package manager task queue database", taskDbFileName);
             }
         }
@@ -100,12 +101,13 @@ namespace carto {
         catch (const std::exception& ex) {
             Log::Errorf("PackageManager: Error while constructing PackageManager: %s, trying to remove", ex.what());
             _localDb.reset();
-            utf8_filesystem::unlink(packageDbFileName.c_str());
             try {
+                utf8_filesystem::unlink(packageDbFileName.c_str());
                 _localDb = std::make_shared<sqlite3pp::database>(createLocalFilePath(packageDbFileName).c_str());
                 InitializeDb(*_localDb, _serverEncKey + _localEncKey);
             }
             catch (const std::exception& ex) {
+                Log::Errorf("PackageManager: Second attempt at constructing PackageManager failed: %s", ex.what());
                 throw FileException("Failed to create/open package manager database", packageDbFileName);
             }
         }
