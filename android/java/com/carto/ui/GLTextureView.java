@@ -1,8 +1,28 @@
+/*
+ * Copyright (C) 2018 Wasabeef
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.carto.ui;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLDebugHelper;
+import android.opengl.GLSurfaceView.EGLConfigChooser;
+import android.opengl.GLSurfaceView.EGLContextFactory;
+import android.opengl.GLSurfaceView.EGLWindowSurfaceFactory;
+import android.opengl.GLSurfaceView.GLWrapper;
+import android.opengl.GLSurfaceView.Renderer;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.TextureView;
@@ -22,20 +42,8 @@ import javax.microedition.khronos.egl.EGLSurface;
 import javax.microedition.khronos.opengles.GL;
 import javax.microedition.khronos.opengles.GL10;
 
-/*
- * Copyright (C) 2018 Wasabeef
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * GLTextureView is a wrapper for TextureView class that emulates GLSurfaceView API.
  */
 public class GLTextureView extends TextureView
         implements TextureView.SurfaceTextureListener, View.OnLayoutChangeListener {
@@ -531,157 +539,6 @@ public class GLTextureView extends TextureView
 
     // ----------------------------------------------------------------------
 
-    /**
-     * An interface used to wrap a GL interface.
-     * <p>Typically
-     * used for implementing debugging and tracing on top of the default
-     * GL interface. You would typically use this by creating your own class
-     * that implemented all the GL methods by delegating to another GL instance.
-     * Then you could add your own behavior before or after calling the
-     * delegate. All the GLWrapper would do was instantiate and return the
-     * wrapper GL instance:
-     * <pre class="prettyprint">
-     * class MyGLWrapper implements GLWrapper {
-     * GL wrap(GL gl) {
-     * return new MyGLImplementation(gl);
-     * }
-     * static class MyGLImplementation implements GL,GL10,GL11,... {
-     * ...
-     * }
-     * }
-     * </pre>
-     *
-     * @see #setGLWrapper(GLWrapper)
-     */
-    public interface GLWrapper {
-        /**
-         * Wraps a gl interface in another gl interface.
-         *
-         * @param gl a GL interface that is to be wrapped.
-         * @return either the input argument or another GL object that wraps the input argument.
-         */
-        GL wrap(GL gl);
-    }
-
-    /**
-     * A generic renderer interface.
-     * <p>
-     * The renderer is responsible for making OpenGL calls to render a frame.
-     * <p>
-     * GLTextureView clients typically create their own classes that implement
-     * this interface, and then call {@link GLTextureView#setRenderer} to
-     * register the renderer with the GLTextureView.
-     * <p>
-     *
-     * <div class="special reference">
-     * <h3>Developer Guides</h3>
-     * <p>For more information about how to use OpenGL, read the
-     * <a href="{@docRoot}guide/topics/graphics/opengl.html">OpenGL</a> developer guide.</p>
-     * </div>
-     *
-     * <h3>Threading</h3>
-     * The renderer will be called on a separate thread, so that rendering
-     * performance is decoupled from the UI thread. Clients typically need to
-     * communicate with the renderer from the UI thread, because that's where
-     * input events are received. Clients can communicate using any of the
-     * standard Java techniques for cross-thread communication, or they can
-     * use the {@link GLTextureView#queueEvent(Runnable)} convenience method.
-     * <p>
-     * <h3>EGL Context Lost</h3>
-     * There are situations where the EGL rendering context will be lost. This
-     * typically happens when device wakes up after going to sleep. When
-     * the EGL context is lost, all OpenGL resources (such as textures) that are
-     * associated with that context will be automatically deleted. In order to
-     * keep rendering correctly, a renderer must recreate any lost resources
-     * that it still needs. The {@link #onSurfaceCreated(javax.microedition.khronos.opengles.GL10,
-     * javax.microedition.khronos.egl.EGLConfig)} method
-     * is a convenient place to do this.
-     *
-     * @see #setRenderer(Renderer)
-     */
-    public interface Renderer {
-        /**
-         * Called when the surface is created or recreated.
-         * <p>
-         * Called when the rendering thread
-         * starts and whenever the EGL context is lost. The EGL context will typically
-         * be lost when the Android device awakes after going to sleep.
-         * <p>
-         * Since this method is called at the beginning of rendering, as well as
-         * every time the EGL context is lost, this method is a convenient place to put
-         * code to create resources that need to be created when the rendering
-         * starts, and that need to be recreated when the EGL context is lost.
-         * Textures are an example of a resource that you might want to create
-         * here.
-         * <p>
-         * Note that when the EGL context is lost, all OpenGL resources associated
-         * with that context will be automatically deleted. You do not need to call
-         * the corresponding "glDelete" methods such as glDeleteTextures to
-         * manually delete these lost resources.
-         * <p>
-         *
-         * @param gl     the GL interface. Use <code>instanceof</code> to
-         *               test if the interface supports GL11 or higher interfaces.
-         * @param config the EGLConfig of the created surface. Can be used
-         *               to create matching pbuffers.
-         */
-        void onSurfaceCreated(GL10 gl, EGLConfig config);
-
-        /**
-         * Called when the surface changed size.
-         * <p>
-         * Called after the surface is created and whenever
-         * the OpenGL ES surface size changes.
-         * <p>
-         * Typically you will set your viewport here. If your camera
-         * is fixed then you could also set your projection matrix here:
-         * <pre class="prettyprint">
-         * void onSurfaceChanged(GL10 gl, int width, int height) {
-         * gl.glViewport(0, 0, width, height);
-         * // for a fixed camera, set the projection too
-         * float ratio = (float) width / height;
-         * gl.glMatrixMode(GL10.GL_PROJECTION);
-         * gl.glLoadIdentity();
-         * gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
-         * }
-         * </pre>
-         *
-         * @param gl the GL interface. Use <code>instanceof</code> to
-         *           test if the interface supports GL11 or higher interfaces.
-         */
-        void onSurfaceChanged(GL10 gl, int width, int height);
-
-        /**
-         * Called to draw the current frame.
-         * <p>
-         * This method is responsible for drawing the current frame.
-         * <p>
-         * The implementation of this method typically looks like this:
-         * <pre class="prettyprint">
-         * void onDrawFrame(GL10 gl) {
-         * gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
-         * //... other gl calls to render the scene ...
-         * }
-         * </pre>
-         *
-         * @param gl the GL interface. Use <code>instanceof</code> to
-         *           test if the interface supports GL11 or higher interfaces.
-         */
-        void onDrawFrame(GL10 gl);
-    }
-
-    /**
-     * An interface for customizing the eglCreateContext and eglDestroyContext calls.
-     * <p>
-     * This interface must be implemented by clients wishing to call
-     * {@link GLTextureView#setEGLContextFactory(EGLContextFactory)}
-     */
-    public interface EGLContextFactory {
-        EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig);
-
-        void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context);
-    }
-
     private class DefaultContextFactory implements EGLContextFactory {
         private int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
@@ -703,22 +560,6 @@ public class GLTextureView extends TextureView
                 EglHelper.throwEglException("eglDestroyContex", egl.eglGetError());
             }
         }
-    }
-
-    /**
-     * An interface for customizing the eglCreateWindowSurface and eglDestroySurface calls.
-     * <p>
-     * This interface must be implemented by clients wishing to call
-     * {@link GLTextureView#setEGLWindowSurfaceFactory(EGLWindowSurfaceFactory)}
-     */
-    public interface EGLWindowSurfaceFactory {
-        /**
-         * @return null if the surface cannot be constructed.
-         */
-        EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display, EGLConfig config,
-                                       Object nativeWindow);
-
-        void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface);
     }
 
     private static class DefaultWindowSurfaceFactory implements EGLWindowSurfaceFactory {
@@ -743,27 +584,6 @@ public class GLTextureView extends TextureView
         public void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface) {
             egl.eglDestroySurface(display, surface);
         }
-    }
-
-    /**
-     * An interface for choosing an EGLConfig configuration from a list of
-     * potential configurations.
-     * <p>
-     * This interface must be implemented by clients wishing to call
-     * {@link GLTextureView#setEGLConfigChooser(EGLConfigChooser)}
-     */
-    public interface EGLConfigChooser {
-        /**
-         * Choose a configuration from the list. Implementors typically
-         * implement this method by calling
-         * {@link EGL10#eglChooseConfig} and iterating through the results. Please consult the
-         * EGL specification available from The Khronos Group to learn how to call eglChooseConfig.
-         *
-         * @param egl     the EGL10 for the current display.
-         * @param display the current display.
-         * @return the chosen configuration.
-         */
-        EGLConfig chooseConfig(EGL10 egl, EGLDisplay display);
     }
 
     private abstract class BaseConfigChooser implements EGLConfigChooser {
@@ -1635,7 +1455,7 @@ public class GLTextureView extends TextureView
         private int renderMode;
         private boolean requestRender;
         private boolean renderComplete;
-        private ArrayList<Runnable> eventQueue = new ArrayList<>();
+        private ArrayList<Runnable> eventQueue = new ArrayList<Runnable>();
         private boolean sizeChanged = true;
 
         // End of member variables protected by the glThreadManager monitor.
@@ -1794,7 +1614,7 @@ public class GLTextureView extends TextureView
 
     private static final GLThreadManager glThreadManager = new GLThreadManager();
 
-    private final WeakReference<GLTextureView> mThisWeakRef = new WeakReference<>(this);
+    private final WeakReference<GLTextureView> mThisWeakRef = new WeakReference<GLTextureView>(this);
     private GLThread glThread;
     private Renderer renderer;
     private boolean detached;
@@ -1805,5 +1625,5 @@ public class GLTextureView extends TextureView
     private int debugFlags;
     private int eglContextClientVersion;
     private boolean preserveEGLContextOnPause;
-    private List<SurfaceTextureListener> surfaceTextureListeners = new ArrayList<>();
+    private List<SurfaceTextureListener> surfaceTextureListeners = new ArrayList<SurfaceTextureListener>();
 }

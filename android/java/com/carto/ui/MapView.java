@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.content.res.TypedArray;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.Renderer;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -30,7 +29,7 @@ import com.carto.utils.AssetUtils;
 /**
  * MapView is a view class supporting map rendering and interaction.
  */
-public class MapView extends GLSurfaceView implements Renderer {
+public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, MapViewInterface {
     
     private static final int NATIVE_ACTION_POINTER_1_DOWN = 0;
     private static final int NATIVE_ACTION_POINTER_2_DOWN = 1;

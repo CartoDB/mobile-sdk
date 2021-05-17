@@ -1,6 +1,5 @@
 package com.carto.ui;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -11,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.content.res.TypedArray;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.Renderer;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -31,22 +29,7 @@ import com.carto.utils.AssetUtils;
 /**
  * MapView is a view class supporting map rendering and interaction.
  */
-public class TextureMapView extends GLTextureView implements GLTextureView.Renderer {
-
-    private class MapRedrawRequestListener extends RedrawRequestListener {
-        private final WeakReference<TextureMapView> mapViewRef;
-
-        public MapRedrawRequestListener(TextureMapView mapView) {
-            mapViewRef = new WeakReference<TextureMapView>(mapView);
-        }
-
-        public void onRedrawRequested() {
-            TextureMapView mapView = mapViewRef.get();
-            if (mapView != null) {
-                mapView.requestRender();
-            }
-        }
-    }
+public class TextureMapView extends GLTextureView implements GLSurfaceView.Renderer, MapViewInterface {
     private static final int NATIVE_ACTION_POINTER_1_DOWN = 0;
     private static final int NATIVE_ACTION_POINTER_2_DOWN = 1;
     private static final int NATIVE_ACTION_MOVE = 2;
@@ -159,16 +142,11 @@ public class TextureMapView extends GLTextureView implements GLTextureView.Rende
 
             baseMapView = new BaseMapView();
             baseMapView.getOptions().setDPI(getResources().getDisplayMetrics().densityDpi);
-            baseMapView.setRedrawRequestListener(new MapRedrawRequestListener(this));
+            baseMapView.setRedrawRequestListener(new TextureMapRedrawRequestListener(this));
 
-            try {
-                Method m = GLSurfaceView.class.getMethod("setPreserveEGLContextOnPause", Boolean.TYPE);
-                m.invoke(this, true);
-            } catch (Exception e) {
-                com.carto.utils.Log.info("MapView: Preserving EGL context on pause is not possible: " + e);
-            }
+            setPreserveEGLContextOnPause(true);
             setEGLContextClientVersion(2);
-            setEGLConfigChooser(new TextureConfigChooser());
+            setEGLConfigChooser(new ConfigChooser());
             setRenderer(this);
             setRenderMode(RENDERMODE_WHEN_DIRTY);
         }
@@ -223,81 +201,83 @@ public class TextureMapView extends GLTextureView implements GLTextureView.Rende
             int pointer1Index;
             int pointer2Index;
             switch (event.getActionMasked()) {
-                case MotionEvent.ACTION_DOWN:
-                    pointer1Index = event.getActionIndex();
-                    pointer1Id = event.getPointerId(pointer1Index);
-                    baseMapView.onInputEvent(NATIVE_ACTION_POINTER_1_DOWN,
+            case MotionEvent.ACTION_DOWN:
+                pointer1Index = event.getActionIndex();
+                pointer1Id = event.getPointerId(pointer1Index);
+                baseMapView.onInputEvent(NATIVE_ACTION_POINTER_1_DOWN, 
+                        event.getX(pointer1Index), event.getY(pointer1Index), 
+                        NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                if (event.getPointerCount() == 2) {
+                    // Check which pointer to use
+                    if (pointer1Id != INVALID_POINTER_ID) {
+                        pointer1Index = event.findPointerIndex(pointer1Id);
+                        pointer2Index = event.getActionIndex();
+                        pointer2Id = event.getPointerId(event.getActionIndex());
+                    } else if (pointer2Id != INVALID_POINTER_ID) {
+                        pointer2Index = event.findPointerIndex(pointer2Id);
+                        pointer1Index = event.getActionIndex();
+                        pointer1Id = event.getPointerId(event.getActionIndex());
+                    } else {
+                        break;
+                    }
+                    baseMapView.onInputEvent(NATIVE_ACTION_POINTER_2_DOWN, 
                             event.getX(pointer1Index), event.getY(pointer1Index),
+                            event.getX(pointer2Index), event.getY(pointer2Index));
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (pointer1Id != INVALID_POINTER_ID && pointer2Id == INVALID_POINTER_ID) {
+                    pointer1Index = event.findPointerIndex(pointer1Id);
+                    baseMapView.onInputEvent(NATIVE_ACTION_MOVE, 
+                            event.getX(pointer1Index), event.getY(pointer1Index), 
                             NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-                    break;
-                case MotionEvent.ACTION_POINTER_DOWN:
-                    if (event.getPointerCount() == 2) {
-                        // Check which pointer to use
-                        if (pointer1Id != INVALID_POINTER_ID) {
-                            pointer1Index = event.findPointerIndex(pointer1Id);
-                            pointer2Index = event.getActionIndex();
-                            pointer2Id = event.getPointerId(event.getActionIndex());
-                        } else if (pointer2Id != INVALID_POINTER_ID) {
-                            pointer2Index = event.findPointerIndex(pointer2Id);
-                            pointer1Index = event.getActionIndex();
-                            pointer1Id = event.getPointerId(event.getActionIndex());
-                        } else {
-                            break;
-                        }
-                        baseMapView.onInputEvent(NATIVE_ACTION_POINTER_2_DOWN,
-                                event.getX(pointer1Index), event.getY(pointer1Index),
-                                event.getX(pointer2Index), event.getY(pointer2Index));
-                    }
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    if (pointer1Id != INVALID_POINTER_ID && pointer2Id == INVALID_POINTER_ID) {
-                        pointer1Index = event.findPointerIndex(pointer1Id);
-                        baseMapView.onInputEvent(NATIVE_ACTION_MOVE,
-                                event.getX(pointer1Index), event.getY(pointer1Index),
-                                NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-                    } else if (pointer1Id != INVALID_POINTER_ID && pointer2Id != INVALID_POINTER_ID) {
-                        pointer1Index = event.findPointerIndex(pointer1Id);
-                        pointer2Index = event.findPointerIndex(pointer2Id);
-                        baseMapView.onInputEvent(NATIVE_ACTION_MOVE,
-                                event.getX(pointer1Index), event.getY(pointer1Index),
-                                event.getX(pointer2Index), event.getY(pointer2Index));
-                    }
-                    break;
-                case MotionEvent.ACTION_CANCEL:
-                    baseMapView.onInputEvent(NATIVE_ACTION_CANCEL,
-                            NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE,
+                } else if (pointer1Id != INVALID_POINTER_ID && pointer2Id != INVALID_POINTER_ID) {
+                    pointer1Index = event.findPointerIndex(pointer1Id);
+                    pointer2Index = event.findPointerIndex(pointer2Id);
+                    baseMapView.onInputEvent(NATIVE_ACTION_MOVE, 
+                            event.getX(pointer1Index), event.getY(pointer1Index), 
+                            event.getX(pointer2Index), event.getY(pointer2Index));
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                baseMapView.onInputEvent(NATIVE_ACTION_CANCEL, 
+                        NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE, 
+                        NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                pointer1Id = INVALID_POINTER_ID;
+                pointer2Id = INVALID_POINTER_ID;
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP:
+                int pointerIndex = event.getActionIndex();
+                int pointerId = event.getPointerId(pointerIndex);
+                // Single pointer
+                if (pointer1Id == pointerId && pointer2Id == INVALID_POINTER_ID) {
+                    pointer1Index = event.findPointerIndex(pointer1Id);
+                    baseMapView.onInputEvent(NATIVE_ACTION_POINTER_1_UP, 
+                            event.getX(pointer1Index), event.getY(pointer1Index), 
                             NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-                    break;
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_POINTER_UP:
-                    int pointerIndex = event.getActionIndex();
-                    int pointerId = event.getPointerId(pointerIndex);
-                    // Single pointer
-                    if (pointer1Id == pointerId && pointer2Id == INVALID_POINTER_ID) {
-                        pointer1Index = event.findPointerIndex(pointer1Id);
-                        baseMapView.onInputEvent(NATIVE_ACTION_POINTER_1_UP,
-                                event.getX(pointer1Index), event.getY(pointer1Index),
-                                NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-                        pointer1Id = INVALID_POINTER_ID;
-                        // Dual pointer, first pointer up
-                    } else if (pointer1Id == pointerId) {
-                        pointer1Index = event.findPointerIndex(pointer1Id);
-                        pointer2Index = event.findPointerIndex(pointer2Id);
-                        baseMapView.onInputEvent(NATIVE_ACTION_POINTER_1_UP,
-                                event.getX(pointer1Index), event.getY(pointer1Index),
-                                event.getX(pointer2Index), event.getY(pointer2Index));
-                        pointer1Id = pointer2Id;
-                        pointer2Id = INVALID_POINTER_ID;
-                        // Dual pointer, second finger up
-                    } else if (pointer2Id == pointerId) {
-                        pointer1Index = event.findPointerIndex(pointer1Id);
-                        pointer2Index = event.findPointerIndex(pointer2Id);
-                        baseMapView.onInputEvent(NATIVE_ACTION_POINTER_2_UP,
-                                event.getX(pointer1Index), event.getY(pointer1Index),
-                                event.getX(pointer2Index), event.getY(pointer2Index));
-                        pointer2Id = INVALID_POINTER_ID;
-                    }
-                    break;
+                    pointer1Id = INVALID_POINTER_ID;
+                    // Dual pointer, first pointer up
+                } else if (pointer1Id == pointerId) {
+                    pointer1Index = event.findPointerIndex(pointer1Id);
+                    pointer2Index = event.findPointerIndex(pointer2Id);
+                    baseMapView.onInputEvent(NATIVE_ACTION_POINTER_1_UP, 
+                            event.getX(pointer1Index), event.getY(pointer1Index), 
+                            event.getX(pointer2Index), event.getY(pointer2Index));
+                    pointer1Id = pointer2Id;
+                    pointer2Id = INVALID_POINTER_ID;
+                    // Dual pointer, second finger up
+                } else if (pointer2Id == pointerId) {
+                    pointer1Index = event.findPointerIndex(pointer1Id);
+                    pointer2Index = event.findPointerIndex(pointer2Id);
+                    baseMapView.onInputEvent(NATIVE_ACTION_POINTER_2_UP, 
+                            event.getX(pointer1Index), event.getY(pointer1Index), 
+                            event.getX(pointer2Index), event.getY(pointer2Index));
+                    pointer2Id = INVALID_POINTER_ID;
+                }
+                break;
             }
         }
         catch (IllegalArgumentException e) {
