@@ -26,7 +26,8 @@ namespace carto {
     class SolidRenderer;
     
     /**
-     * A solid layer that displays predefined color or bitmap and does not depend on actual view settings.
+     * A solid layer that displays predefined color or bitmap.
+     * @deprecated
      */
     class SolidLayer : public Layer {
     public:
