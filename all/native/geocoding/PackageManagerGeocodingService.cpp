@@ -85,7 +85,9 @@ namespace carto {
             std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<sqlite3pp::database> > packageDatabaseMap;
             for (auto it = packageHandlerMap.begin(); it != packageHandlerMap.end(); it++) {
                 if (auto geocodingHandler = std::dynamic_pointer_cast<GeocodingPackageHandler>(it->second)) {
-                    packageDatabaseMap[it->first] = geocodingHandler->getGeocodingDatabase();
+                    if (auto packageDatabase = geocodingHandler->getGeocodingDatabase()) {
+                        packageDatabaseMap[it->first] = packageDatabase;
+                    }
                 }
             }
 
