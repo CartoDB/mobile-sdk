@@ -24,6 +24,9 @@ namespace carto {
         _bitmapScale(1.0f),
         _solidRenderer(std::make_shared<SolidRenderer>())
     {
+        if (!bitmap) {
+            throw NullArgumentException("Null bitmap");
+        }
     }
 
     SolidLayer::~SolidLayer() {
