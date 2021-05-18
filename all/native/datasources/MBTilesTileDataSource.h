@@ -87,6 +87,8 @@ namespace carto {
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
     
     private:
+        static std::unique_ptr<sqlite3pp::database> OpenDatabase(const std::string& path);
+
         MBTilesScheme::MBTilesScheme _scheme;
         std::unique_ptr<sqlite3pp::database> _database;
         mutable std::optional<MapBounds> _cachedDataExtent;

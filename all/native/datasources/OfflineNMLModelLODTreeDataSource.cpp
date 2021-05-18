@@ -24,7 +24,7 @@ namespace carto {
         if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database", path);
         }
-        _database->execute("PRAGMA encoding='UTF-8'");
+        _database->execute("PRAGMA temp_store=MEMORY");
     }
     
     OfflineNMLModelLODTreeDataSource::~OfflineNMLModelLODTreeDataSource() {

@@ -17,6 +17,8 @@ namespace carto {
         if (database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open geocoding database", path);
         }
+        database->execute("PRAGMA temp_store=MEMORY");
+
         _geocoder = std::make_shared<geocoding::Geocoder>();
         if (!_geocoder->import(database)) {
             throw GenericException("Failed to import geocoding database", path);

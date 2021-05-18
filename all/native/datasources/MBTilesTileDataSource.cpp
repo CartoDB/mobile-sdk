@@ -18,14 +18,10 @@ namespace carto {
     MBTilesTileDataSource::MBTilesTileDataSource(const std::string& path) :
         TileDataSource(),
         _scheme(MBTilesScheme::MBTILES_SCHEME_TMS),
-        _database(std::make_unique<sqlite3pp::database>()),
+        _database(OpenDatabase(path)),
         _cachedDataExtent(),
         _mutex()
     {
-        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
-            throw FileException("Failed to open database file", path);
-        }
-
         // First try to use metadata table for min/maxzoom values
         bool foundMinZoom = false, foundMaxZoom = false;
         try {
@@ -71,39 +67,22 @@ namespace carto {
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path) :
         TileDataSource(minZoom, maxZoom),
         _scheme(MBTilesScheme::MBTILES_SCHEME_TMS),
-        _database(std::make_unique<sqlite3pp::database>()),
+        _database(OpenDatabase(path)),
         _cachedDataExtent(),
         _mutex()
     {
-        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
-            throw FileException("Failed to open database file", path);
-        }
     }
     
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path, MBTilesScheme::MBTilesScheme scheme) :
         TileDataSource(minZoom, maxZoom),
         _scheme(scheme),
-        _database(std::make_unique<sqlite3pp::database>()),
+        _database(OpenDatabase(path)),
         _cachedDataExtent(),
         _mutex()
     {
-        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
-            throw FileException("Failed to open database file", path);
-        }
     }
         
     MBTilesTileDataSource::~MBTilesTileDataSource() {
-        if (_database) {
-            try {
-                if (_database->disconnect() != SQLITE_OK) {
-                    Log::Error("MBTilesTileDataSource: Failed to close database");
-                }
-            }
-            catch (const std::exception& ex) {
-                Log::Errorf("MBTilesTileDataSource: Failed to close database: %s", ex.what());
-            }
-            _database.reset();
-        }
     }
     
     std::map<std::string, std::string> MBTilesTileDataSource::getMetaData() const {
@@ -244,6 +223,15 @@ namespace carto {
             Log::Errorf("MBTilesTileDataSource::loadTile: Failed to query tile data from the database: %s", ex.what());
             return std::shared_ptr<TileData>();
         }
+    }
+
+    std::unique_ptr<sqlite3pp::database> MBTilesTileDataSource::OpenDatabase(const std::string& path) {
+        auto database = std::make_unique<sqlite3pp::database>();
+        if (database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+            throw FileException("Failed to open database file", path);
+        }
+        database->execute("PRAGMA temp_store=MEMORY");
+        return database;
     }
     
 }
