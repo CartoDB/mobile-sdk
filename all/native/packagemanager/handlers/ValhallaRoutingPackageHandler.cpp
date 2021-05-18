@@ -25,10 +25,14 @@ namespace carto {
         if (!_packageDb) {
             try {
                 // Open package database
-                _packageDb.reset(new sqlite3pp::database());
+                _packageDb = std::make_unique<sqlite3pp::database>();
                 if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
                     Log::Errorf("ValhallaRoutingPackageHandler::getDatabase: Could not open database %s", _fileName.c_str());
                     _packageDb.reset();
+                }
+                if (_packageDb) {
+                    _packageDb->execute("PRAGMA temp_store=MEMORY");
+                    _packageDb->execute("PRAGMA cache_size=256");
                 }
             }
             catch (const std::exception& ex) {

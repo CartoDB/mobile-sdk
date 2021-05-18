@@ -14,26 +14,37 @@ namespace carto {
     GeocodingPackageHandler::GeocodingPackageHandler(const std::string& fileName) :
         PackageHandler(fileName),
         _uncompressedFileName(fileName + ".uncompressed"),
-        _database()
+        _packageDb()
     {
     }
 
     GeocodingPackageHandler::~GeocodingPackageHandler() {
     }
 
-    std::shared_ptr<sqlite3pp::database> GeocodingPackageHandler::getGeocodingDatabase() {
+    std::shared_ptr<sqlite3pp::database> GeocodingPackageHandler::getDatabase() {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        if (!_database) {
-            _database = std::make_shared<sqlite3pp::database>();
-            if (_database->connect_v2(_uncompressedFileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) { // try locally uncompressed package first
-                if (_database->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) { // assume that the package was not gzipped, so use original file
-                    Log::Errorf("GeocodingPackageHandler::getGeocodingDatabase: Can not connect to database %s", _fileName.c_str());
-                    _database.reset();
+        if (!_packageDb) {
+            try {
+                // Open package database
+                _packageDb = std::make_shared<sqlite3pp::database>();
+                if (_packageDb->connect_v2(_uncompressedFileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) { // try locally uncompressed package first
+                    if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) { // assume that the package was not gzipped, so use original file
+                        Log::Errorf("GeocodingPackageHandler::getDatabase: Can not connect to database %s", _fileName.c_str());
+                        _packageDb.reset();
+                    }
+                }
+                if (_packageDb) {
+                    _packageDb->execute("PRAGMA temp_store=MEMORY");
+                    _packageDb->execute("PRAGMA cache_size=256");
                 }
             }
+            catch (const std::exception& ex) {
+                Log::Errorf("GeocodingPackageHandler::getDatabase: Exception %s", ex.what());
+                _packageDb.reset();
+            }
         }
-        return _database;
+        return _packageDb;
     }
 
     void GeocodingPackageHandler::onImportPackage() {

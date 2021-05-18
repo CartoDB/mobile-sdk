@@ -22,7 +22,7 @@ namespace carto {
         explicit GeocodingPackageHandler(const std::string& fileName);
         virtual ~GeocodingPackageHandler();
 
-        std::shared_ptr<sqlite3pp::database> getGeocodingDatabase();
+        std::shared_ptr<sqlite3pp::database> getDatabase();
 
         virtual void onImportPackage();
         virtual void onDeletePackage();
@@ -31,7 +31,7 @@ namespace carto {
 
     private:
         const std::string _uncompressedFileName;
-        std::shared_ptr<sqlite3pp::database> _database;
+        std::shared_ptr<sqlite3pp::database> _packageDb;
     };
     
 }
