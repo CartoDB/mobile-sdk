@@ -32,11 +32,11 @@ namespace carto {
     MapPackageHandler::~MapPackageHandler() {
     }
 
-    void MapPackageHandler::openDatabase() {
+    bool MapPackageHandler::openDatabase() {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         if (_packageDb) {
-            return;
+            return true;
         }
 
         try {
@@ -44,7 +44,8 @@ namespace carto {
             _packageDb = std::make_unique<sqlite3pp::database>();
             if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
                 Log::Errorf("MapPackageHandler::openDatabase: Failed to open database %s", _fileName.c_str());
-                return;
+                _packageDb.reset();
+                return false;
             }
             _packageDb->execute("PRAGMA temp_store=MEMORY");
             _packageDb->execute("PRAGMA cache_size=256");
@@ -74,9 +75,12 @@ namespace carto {
                 std::size_t dataSize = qit->column_bytes(0);
                 _sharedDictionary = std::make_unique<BinaryData>(dataPtr, dataSize);
             }
+            return true;
         }
         catch (const std::exception& ex) {
             Log::Errorf("MapPackageHandler::openDatabase: Exception %s", ex.what());
+            _packageDb.reset();
+            return false;
         }
     }
 
@@ -92,7 +96,9 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         try {
-            openDatabase();
+            if (!openDatabase()) {
+                return std::shared_ptr<BinaryData>();
+            }
 
             // Try to load the tile (this could fail, as tile masks may not be complete to the last zoom level)
             sqlite3pp::query query(*_packageDb, "SELECT tile_decrypt(tile_data, zoom_level, tile_column, tile_row) FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");

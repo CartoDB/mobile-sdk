@@ -29,7 +29,7 @@ namespace carto {
         MapPackageHandler(const std::string& fileName, const std::string& serverEncKey, const std::string& localEncKey);
         virtual ~MapPackageHandler();
 
-        void openDatabase();
+        bool openDatabase();
         void closeDatabase();
         std::shared_ptr<BinaryData> loadTile(const MapTile& mapTile);
 
