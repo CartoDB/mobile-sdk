@@ -127,7 +127,7 @@ namespace carto {
     
     void PersistentCacheTileDataSource::openDatabase(const std::string& databasePath) {
         try {
-            _database.reset(new sqlite3pp::database(databasePath.c_str()));
+            _database = std::make_unique<sqlite3pp::database>(databasePath.c_str());
         }
         catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::openDatabase: Failed to connect to database: %s", ex.what());

@@ -13,12 +13,11 @@
 namespace carto {
 
     ValhallaOfflineRoutingService::ValhallaOfflineRoutingService(const std::string& path) :
-        _database(),
+        _database(std::make_unique<sqlite3pp::database>()),
         _profile("pedestrian"),
         _configuration(ValhallaRoutingProxy::GetDefaultConfiguration()),
         _mutex()
     {
-        _database.reset(new sqlite3pp::database());
         if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open routing database", path);
         }

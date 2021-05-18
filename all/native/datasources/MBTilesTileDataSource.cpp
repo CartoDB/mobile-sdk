@@ -18,18 +18,18 @@ namespace carto {
     MBTilesTileDataSource::MBTilesTileDataSource(const std::string& path) :
         TileDataSource(),
         _scheme(MBTilesScheme::MBTILES_SCHEME_TMS),
-        _db(new sqlite3pp::database()),
+        _database(std::make_unique<sqlite3pp::database>()),
         _cachedDataExtent(),
         _mutex()
     {
-        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
 
         // First try to use metadata table for min/maxzoom values
         bool foundMinZoom = false, foundMaxZoom = false;
         try {
-            sqlite3pp::query query(*_db, "SELECT name, value FROM metadata WHERE name IN ('minzoom', 'maxzoom')");
+            sqlite3pp::query query(*_database, "SELECT name, value FROM metadata WHERE name IN ('minzoom', 'maxzoom')");
             for (auto it = query.begin(); it != query.end(); it++) {
                 std::string name = (*it).get<const char*>(0);
                 std::string strValue = (*it).get<const char*>(1);
@@ -51,7 +51,7 @@ namespace carto {
         // If either was not found, do table scan
         if (!foundMinZoom || !foundMaxZoom) {
             try {
-                sqlite3pp::query query(*_db, "SELECT MIN(zoom_level), MAX(zoom_level) FROM tiles");
+                sqlite3pp::query query(*_database, "SELECT MIN(zoom_level), MAX(zoom_level) FROM tiles");
                 for (auto it = query.begin(); it != query.end(); it++) {
                     if (!foundMinZoom) {
                         _minZoom = it->get<int>(0);
@@ -71,11 +71,11 @@ namespace carto {
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path) :
         TileDataSource(minZoom, maxZoom),
         _scheme(MBTilesScheme::MBTILES_SCHEME_TMS),
-        _db(new sqlite3pp::database()),
+        _database(std::make_unique<sqlite3pp::database>()),
         _cachedDataExtent(),
         _mutex()
     {
-        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
     }
@@ -83,32 +83,32 @@ namespace carto {
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path, MBTilesScheme::MBTilesScheme scheme) :
         TileDataSource(minZoom, maxZoom),
         _scheme(scheme),
-        _db(new sqlite3pp::database()),
+        _database(std::make_unique<sqlite3pp::database>()),
         _cachedDataExtent(),
         _mutex()
     {
-        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
     }
         
     MBTilesTileDataSource::~MBTilesTileDataSource() {
-        if (_db) {
+        if (_database) {
             try {
-                if (_db->disconnect() != SQLITE_OK) {
+                if (_database->disconnect() != SQLITE_OK) {
                     Log::Error("MBTilesTileDataSource: Failed to close database");
                 }
             }
             catch (const std::exception& ex) {
                 Log::Errorf("MBTilesTileDataSource: Failed to close database: %s", ex.what());
             }
-            _db.reset();
+            _database.reset();
         }
     }
     
     std::map<std::string, std::string> MBTilesTileDataSource::getMetaData() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (!_db) {
+        if (!_database) {
             Log::Error("MBTilesTileDataSource::getMetaData: Not connected to the database");
             return std::map<std::string, std::string>();
         }
@@ -116,7 +116,7 @@ namespace carto {
         try {
             // Make the query and check for database error
             std::map<std::string, std::string> metaData;
-            sqlite3pp::query query(*_db, "SELECT name, value FROM metadata");
+            sqlite3pp::query query(*_database, "SELECT name, value FROM metadata");
             for (auto it = query.begin(); it != query.end(); it++) {
                 metaData[it->get<const char*>(0)] = it->get<const char*>(1);
             }
@@ -131,7 +131,7 @@ namespace carto {
     
     MapBounds MBTilesTileDataSource::getDataExtent() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (!_db) {
+        if (!_database) {
             Log::Error("MBTilesTileDataSource::getDataExtent: Not connected to the database");
             return MapBounds();
         }
@@ -145,7 +145,7 @@ namespace carto {
         MapBounds mapBounds;
         bool foundMapBounds = false;
         try {
-            sqlite3pp::query query(*_db, "SELECT value FROM metadata WHERE name='bounds'");
+            sqlite3pp::query query(*_database, "SELECT value FROM metadata WHERE name='bounds'");
             for (auto it = query.begin(); it != query.end(); it++) {
                 std::string bounds = (*it).get<const char*>(0);
                 std::vector<std::string> coordinates;
@@ -171,7 +171,7 @@ namespace carto {
         // If metadata was not available, use tiles at last zoom level
         if (!foundMapBounds) {
             try {
-                sqlite3pp::query query(*_db, "SELECT MIN(tile_column), MIN(tile_row), MAX(tile_column), MAX(tile_row) FROM tiles WHERE zoom_level=:zoom");
+                sqlite3pp::query query(*_database, "SELECT MIN(tile_column), MIN(tile_row), MAX(tile_column), MAX(tile_row) FROM tiles WHERE zoom_level=:zoom");
                 query.bind(":zoom", _maxZoom);
                 for (auto it = query.begin(); it != query.end(); it++) {
                     int tileX0 = (*it).get<int>(0);
@@ -201,21 +201,21 @@ namespace carto {
             }
         }
 
-        _cachedDataExtent.reset(new MapBounds(mapBounds));
+        _cachedDataExtent = mapBounds;
         return mapBounds;
     }
     
     std::shared_ptr<TileData> MBTilesTileDataSource::loadTile(const MapTile& mapTile) {
         std::lock_guard<std::mutex> lock(_mutex);
         Log::Infof("MBTilesTileDataSource::loadTile: Loading %s", mapTile.toString().c_str());
-        if (!_db) {
+        if (!_database) {
             Log::Errorf("MBTilesTileDataSource::loadTile: Failed to load %s: Couldn't connect to the database", mapTile.toString().c_str());
             return std::shared_ptr<TileData>();
         }
         
         try {
             // Make the query and check for database error
-            sqlite3pp::query query(*_db, "SELECT tile_data FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
+            sqlite3pp::query query(*_database, "SELECT tile_data FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
             query.bind(":zoom", mapTile.getZoom());
             query.bind(":x", mapTile.getX());
             query.bind(":y", _scheme == MBTilesScheme::MBTILES_SCHEME_XYZ ? mapTile.getY() : (1 << (mapTile.getZoom())) - 1 - mapTile.getY());

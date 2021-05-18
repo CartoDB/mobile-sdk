@@ -181,7 +181,7 @@ namespace carto {
         for (auto it = _tempDrawDatas.begin(); it != _tempDrawDatas.end(); it++) {
             std::shared_ptr<ModelNodeDrawRecord>& record = _drawRecordMap[(*it)->getNodeId()];
             if (!record) {
-                record.reset(new ModelNodeDrawRecord(**it));
+                record = std::make_shared<ModelNodeDrawRecord>(**it);
             } else {
                 record->drawData = **it;
             }

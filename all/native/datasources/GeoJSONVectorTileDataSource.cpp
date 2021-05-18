@@ -16,7 +16,7 @@ namespace carto {
 
     GeoJSONVectorTileDataSource::GeoJSONVectorTileDataSource(int minZoom, int maxZoom) :
         TileDataSource(minZoom, maxZoom),
-        _tileBuilder(new mbvtbuilder::MBVTTileBuilder(minZoom, maxZoom)),
+        _tileBuilder(std::make_unique<mbvtbuilder::MBVTTileBuilder>(minZoom, maxZoom)),
         _mutex()
     {
     }
