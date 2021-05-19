@@ -37,7 +37,6 @@ namespace carto {
     class BillboardSorter;
     class GeometryCollectionRenderer;
     class LineRenderer;
-    class NMLModelRenderer;
     class PointRenderer;
     class Polygon3DRenderer;
     class PolygonRenderer;
@@ -154,7 +153,6 @@ namespace carto {
         std::shared_ptr<PointRenderer> _pointRenderer;
         std::shared_ptr<PolygonRenderer> _polygonRenderer;
         std::shared_ptr<Polygon3DRenderer> _polygon3DRenderer;
-        std::shared_ptr<NMLModelRenderer> _nmlModelRenderer;
     
         std::shared_ptr<CancelableTask> _lastTask;
     };

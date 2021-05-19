@@ -11,8 +11,7 @@
 
 namespace carto {
 
-    PopupDrawData::PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface, const std::shared_ptr<Options>& options,
-                                 const ViewState& viewState) :
+    PopupDrawData::PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface, const std::shared_ptr<Options>& options, const ViewState& viewState) :
         BillboardDrawData(popup,
                           style,
                           projection,

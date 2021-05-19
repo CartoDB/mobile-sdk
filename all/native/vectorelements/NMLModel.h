@@ -7,7 +7,7 @@
 #ifndef _CARTO_NMLMODEL_H_
 #define _CARTO_NMLMODEL_H_
 
-#include "VectorElement.h"
+#include "Billboard.h"
 #include "core/MapPos.h"
 #include "core/MapVec.h"
 
@@ -17,7 +17,6 @@
 #include <cglib/mat.h>
 
 namespace carto {
-    class BinaryData;
     class NMLModelDrawData;
     class NMLModelStyle;
 
@@ -31,44 +30,50 @@ namespace carto {
      * NML models can be created from Collada files directly and placed anywhere on the map or converted from KMZ files.
      * NML models are optimized for fast loading and rendering.
      */
-    class NMLModel : public VectorElement {
+    class NMLModel : public Billboard {
     public:
+        /**
+         * Constructs a NMLModel object with the specified style and attaches it to a billboard element.
+         * @param baseBillboard The billboard this model will be attached to.
+         * @param style The style for this model.
+         */
+        NMLModel(const std::shared_ptr<Billboard>& baseBillboard, const std::shared_ptr<NMLModelStyle>& style);
         /**
          * Constructs a NMLModel object from a geometry object and a source model.
          * @param geometry The geometry object that defines the location of this model.
-         * @param style The style to used for this model.
+         * @param style The style for this model.
          */
         NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<NMLModelStyle>& style);
         /**
          * Constructs a NMLModel object from a map position and a source model.
          * @param pos The map position that defines the location of this model.
-         * @param style The style to used for this model.
+         * @param style The style for this model.
          */
         NMLModel(const MapPos& pos, const std::shared_ptr<NMLModelStyle>& style);
         virtual ~NMLModel();
 
         /**
-         * Sets the location for this model.
-         * @param geometry The new geometry object that defines the location of this model.
+         * Returns the rotation angle of this model. This is deprecated. Use getRotation instead.
+         * @return The rotation angle of this model in degrees.
+         * @deprecated
          */
-        void setGeometry(const std::shared_ptr<Geometry>& geometry);
-
+        float getRotationAngle() const;
         /**
-         * Sets the location for this model.
-         * @param pos The new map position that defines the location of this model.
+         * Sets the rotation angle of this model. This is deprecated. Use setRotation instead.
+         * @param angle The new rotation angle in degrees.
+         * @deprecated
          */
-        void setPos(const MapPos& pos);
-        
+        void setRotationAngle(float angle);
         /**
          * Returns the rotation axis of this model. If rotation angle is 0, then the axis is irrelevant.
          * @return The rotation axis vector.
          */
         MapVec getRotationAxis() const;
         /**
-         * Returns the rotation angle of this model.
-         * @return The rotation angle of this model in degrees.
+         * Sets the rotation axis of this model.
+         * @param axis The new axis of rotation.
          */
-        float getRotationAngle() const;
+        void setRotationAxis(const MapVec& axis);
         /**
          * Sets the rotation of this model using an axis and an angle.
          * @param axis The axis of rotation.
@@ -98,18 +103,12 @@ namespace carto {
          */
         void setStyle(const std::shared_ptr<NMLModelStyle>& style);
         
-        std::shared_ptr<NMLModelDrawData> getDrawData() const;
-        void setDrawData(const std::shared_ptr<NMLModelDrawData>& drawData);
-
     protected:
-        friend class NMLModelRenderer;
+        friend class BillboardRenderer;
         friend class VectorLayer;
         
     private:
-        std::shared_ptr<NMLModelDrawData> _drawData;
-        
         MapVec _rotationAxis;
-        float _rotationAngle;
         
         float _scale;
         
