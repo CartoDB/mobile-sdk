@@ -2,7 +2,7 @@
 
 #include "PackageManagerReverseGeocodingService.h"
 #include "components/Exceptions.h"
-#include "geocoding/utils/GeocodingProxy.h"
+#include "geocoding/utils/CartoGeocodingProxy.h"
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/GeocodingPackageHandler.h"
 
@@ -82,7 +82,7 @@ namespace carto {
                 _cachedRevGeocoder = revGeocoder;
             }
 
-            results = GeocodingProxy::CalculateAddresses(_cachedRevGeocoder, request);
+            results = CartoGeocodingProxy::CalculateAddresses(_cachedRevGeocoder, request);
         });
         return results;
     }

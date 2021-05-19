@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_GEOCODINGPROXY_H_
-#define _CARTO_GEOCODINGPROXY_H_
+#ifndef _CARTO_CARTOGEOCODINGPROXY_H_
+#define _CARTO_CARTOGEOCODINGPROXY_H_
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
@@ -28,14 +28,14 @@ namespace carto {
     class Feature;
     class FeatureCollection;
     
-    class GeocodingProxy {
+    class CartoGeocodingProxy {
     public:
         static std::vector<std::shared_ptr<GeocodingResult> > CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<GeocodingRequest>& request);
 
         static std::vector<std::shared_ptr<GeocodingResult> > CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<ReverseGeocodingRequest>& request);
 
     private:
-        GeocodingProxy();
+        CartoGeocodingProxy();
 
         static std::shared_ptr<GeocodingResult> TranslateAddress(const std::shared_ptr<Projection>& proj, const geocoding::Address& addr, float rank);
 

@@ -1,6 +1,6 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-#include "GeocodingProxy.h"
+#include "CartoGeocodingProxy.h"
 #include "core/Variant.h"
 #include "geometry/Feature.h"
 #include "geometry/FeatureCollection.h"
@@ -31,7 +31,7 @@ namespace {
 
 namespace carto {
 
-    std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<GeocodingRequest>& request) {
+    std::vector<std::shared_ptr<GeocodingResult> > CartoGeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<GeocodingRequest>& request) {
         geocoding::Geocoder::Options options;
         if (request->isLocationDefined()) {
             MapPos wgs84Center = request->getProjection()->toWgs84(request->getLocation());
@@ -75,7 +75,7 @@ namespace carto {
         return results;
     }
 
-    std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<ReverseGeocodingRequest>& request) {
+    std::vector<std::shared_ptr<GeocodingResult> > CartoGeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<ReverseGeocodingRequest>& request) {
         MapPos posWgs84 = request->getProjection()->toWgs84(request->getLocation());
         std::vector<std::pair<geocoding::Address, float> > addrs = revGeocoder->findAddresses(posWgs84.getX(), posWgs84.getY(), request->getSearchRadius());
 
@@ -86,19 +86,19 @@ namespace carto {
         return results;
     }
 
-    GeocodingProxy::GeocodingProxy() {
+    CartoGeocodingProxy::CartoGeocodingProxy() {
     }
 
-    std::shared_ptr<GeocodingResult> GeocodingProxy::TranslateAddress(const std::shared_ptr<Projection>& proj, const geocoding::Address& addr, float rank) {
+    std::shared_ptr<GeocodingResult> CartoGeocodingProxy::TranslateAddress(const std::shared_ptr<Projection>& proj, const geocoding::Address& addr, float rank) {
         std::vector<std::shared_ptr<Feature> > features;
-        std::transform(addr.features.begin(), addr.features.end(), std::back_inserter(features), std::bind(&GeocodingProxy::TranslateFeature, proj, std::placeholders::_1));
+        std::transform(addr.features.begin(), addr.features.end(), std::back_inserter(features), std::bind(&CartoGeocodingProxy::TranslateFeature, proj, std::placeholders::_1));
         auto featureCollection = std::make_shared<FeatureCollection>(features);
         std::vector<std::string> categories(addr.categories.begin(), addr.categories.end());
-        Address address(addr.country, addr.region, addr.county, addr.locality, addr.neighbourhood, addr.street, addr.postcode, addr.houseNumber, addr.name, categories);
+        GeocodingAddress address(addr.country, addr.region, addr.county, addr.locality, addr.neighbourhood, addr.street, addr.postcode, addr.houseNumber, addr.name, categories);
         return std::make_shared<GeocodingResult>(proj, address, rank, featureCollection);
     }
 
-    std::shared_ptr<Feature> GeocodingProxy::TranslateFeature(const std::shared_ptr<Projection>& proj, const geocoding::Feature& feature) {
+    std::shared_ptr<Feature> CartoGeocodingProxy::TranslateFeature(const std::shared_ptr<Projection>& proj, const geocoding::Feature& feature) {
         std::map<std::string, Variant> properties;
         if (feature.getId()) {
             properties["_id"] = Variant(static_cast<long long>(feature.getId()));
@@ -110,7 +110,7 @@ namespace carto {
         return std::make_shared<Feature>(geom, Variant(properties));
     }
 
-    std::shared_ptr<Geometry> GeocodingProxy::TranslateGeometry(const std::shared_ptr<Projection>& proj, const std::shared_ptr<geocoding::Geometry>& geom) {
+    std::shared_ptr<Geometry> CartoGeocodingProxy::TranslateGeometry(const std::shared_ptr<Projection>& proj, const std::shared_ptr<geocoding::Geometry>& geom) {
         auto translatePoint = [&proj](const cglib::vec2<double>& point) -> MapPos {
             return proj->fromWgs84(MapPos(point(0), point(1)));
         };
@@ -131,7 +131,7 @@ namespace carto {
             return std::make_shared<PolygonGeometry>(translateRing(polygonGeom->getPoints()), holes);
         } else if (auto multiGeom = std::dynamic_pointer_cast<geocoding::MultiGeometry>(geom)) {
             std::vector<std::shared_ptr<Geometry> > geometries;
-            std::transform(multiGeom->getGeometries().begin(), multiGeom->getGeometries().end(), std::back_inserter(geometries), std::bind(&GeocodingProxy::TranslateGeometry, proj, std::placeholders::_1));
+            std::transform(multiGeom->getGeometries().begin(), multiGeom->getGeometries().end(), std::back_inserter(geometries), std::bind(&CartoGeocodingProxy::TranslateGeometry, proj, std::placeholders::_1));
             return std::make_shared<MultiGeometry>(geometries);
         }
         return std::shared_ptr<Geometry>();

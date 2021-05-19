@@ -177,6 +177,7 @@
 #endif
 
 #ifdef _CARTO_GEOCODING_SUPPORT
+#import "NTGeocodingAddress.h"
 #import "NTGeocodingRequest.h"
 #import "NTGeocodingResult.h"
 #import "NTReverseGeocodingRequest.h"

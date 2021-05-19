@@ -10,7 +10,7 @@
 
 namespace carto {
 
-    GeocodingResult::GeocodingResult(const std::shared_ptr<Projection>& projection, const Address& address, float rank, const std::shared_ptr<FeatureCollection>& featureCollection) :
+    GeocodingResult::GeocodingResult(const std::shared_ptr<Projection>& projection, const GeocodingAddress& address, float rank, const std::shared_ptr<FeatureCollection>& featureCollection) :
         _address(address),
         _rank(rank),
         _featureCollection(featureCollection),
@@ -27,7 +27,7 @@ namespace carto {
     GeocodingResult::~GeocodingResult() {
     }
 
-    const Address& GeocodingResult::getAddress() const {
+    const GeocodingAddress& GeocodingResult::getAddress() const {
         return _address;
     }
 

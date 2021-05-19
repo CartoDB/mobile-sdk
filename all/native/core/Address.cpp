@@ -32,6 +32,9 @@ namespace carto {
     {
     }
 
+    Address::~Address() {
+    }
+
     const std::string& Address::getCountry() const {
         return _country;
     }
