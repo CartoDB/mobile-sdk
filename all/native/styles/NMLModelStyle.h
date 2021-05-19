@@ -74,7 +74,7 @@ namespace carto {
          * Returns the source model used for this style.
          * @return The source model used for this style.
          */
-        const std::shared_ptr<nml::Model>& getSourceModel() const;
+        std::shared_ptr<nml::Model> getSourceModel() const;
     
     protected:
         BillboardOrientation::BillboardOrientation _orientationMode;

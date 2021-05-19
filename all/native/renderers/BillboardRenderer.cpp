@@ -69,7 +69,9 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
     
         for (const std::shared_ptr<Billboard>& element : _elements) {
-            element->getDrawData()->offsetHorizontally(offset);
+            if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
+                drawData->offsetHorizontally(offset);
+            }
         }
     }
     
@@ -90,6 +92,9 @@ namespace carto {
         for (auto it = _elements.begin(); it != _elements.end(); ) {
             std::shared_ptr<Billboard> element = *it++;
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
+            if (!drawData) {
+                continue;
+            }
 
             // Update animation state
             if (UpdateBillboardAnimationState(*drawData, deltaSeconds)) {
@@ -247,6 +252,9 @@ namespace carto {
         std::vector<float> coordBuf(12);
         for (const std::shared_ptr<Billboard>& element : _elements) {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
+            if (!drawData) {
+                continue;
+            }
 
             // Don't detect clicks on overlapping billboards that are hidden or removed elements
             if (drawData->getRenderer().lock() != shared_from_this()) {
@@ -611,6 +619,10 @@ namespace carto {
     }
     
     void BillboardRenderer::drawBatch(float opacity, const ViewState& viewState) {
+        if (_drawDataBuffer.empty()) {
+            return;
+        }
+
         // Bind texture
         const std::shared_ptr<Bitmap>& bitmap = _drawDataBuffer.front()->getBitmap();
         std::shared_ptr<Texture> texture = _textureCache->get(bitmap);
@@ -699,6 +711,9 @@ namespace carto {
 
     void BillboardRenderer::calculateNMLRayIntersections(const std::shared_ptr<NMLModel>& element, const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::shared_ptr<NMLModelDrawData> drawData = std::static_pointer_cast<NMLModelDrawData>(element->getDrawData());
+        if (!drawData) {
+            return;
+        }
 
         std::shared_ptr<nml::Model> sourceModel = drawData->getSourceModel();
         auto modelIt = _nmlModelMap.find(sourceModel);

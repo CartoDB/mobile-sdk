@@ -49,7 +49,7 @@ namespace carto {
         return _modelAsset;
     }
 
-    const std::shared_ptr<nml::Model>& NMLModelStyle::getSourceModel() const {
+    std::shared_ptr<nml::Model> NMLModelStyle::getSourceModel() const {
         return _sourceModel;
     }
     
