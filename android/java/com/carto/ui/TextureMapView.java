@@ -29,8 +29,7 @@ import com.carto.utils.AssetUtils;
 /**
  * MapView is a view class supporting map rendering and interaction.
  */
-public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, MapViewInterface {
-    
+public class TextureMapView extends GLTextureView implements GLSurfaceView.Renderer, MapViewInterface {
     private static final int NATIVE_ACTION_POINTER_1_DOWN = 0;
     private static final int NATIVE_ACTION_POINTER_2_DOWN = 1;
     private static final int NATIVE_ACTION_MOVE = 2;
@@ -38,7 +37,7 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
     private static final int NATIVE_ACTION_POINTER_1_UP = 4;
     private static final int NATIVE_ACTION_POINTER_2_UP = 5;
     private static final int NATIVE_NO_COORDINATE = -1;
-    
+
     private static final int INVALID_POINTER_ID = -1;
 
     static {
@@ -49,14 +48,14 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
             android.util.Log.e("carto_mobile_sdk", "Failed to initialize Carto Mobile Maps SDK, native .so library failed to load?", t);
         }
     }
-    
+
     private static AssetManager assetManager;
-    
+
     private BaseMapView baseMapView;
-    
+
     private int pointer1Id = INVALID_POINTER_ID;
     private int pointer2Id = INVALID_POINTER_ID;
-    
+
     /**
      * Registers the SDK license. This class method and must be called before
      * creating any actual MapView instances.
@@ -96,12 +95,12 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
         }
         return BaseMapView.registerLicense(newLicenseKey != null ? newLicenseKey : licenseKey, listener);
     }
-    
+
     /**
      * Creates a new MapView object from a context object.
      * @param context The context object.
      */
-    public MapView(Context context) {
+    public TextureMapView(Context context) {
         this(context, null);
     }
 
@@ -110,7 +109,7 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
      * @param context The context object.
      * @param attrs The attributes.
      */
-    public MapView(Context context, AttributeSet attrs) {
+    public TextureMapView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         // Unless explictly not clickable, make clickable by default
@@ -136,21 +135,16 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
                 assetManager = context.getApplicationContext().getAssets();
                 AssetUtils.setAssetManagerPointer(assetManager);
             }
-        
+
             // Set asset manager pointer to allow native access to assets
             assetManager = context.getApplicationContext().getAssets();
             AssetUtils.setAssetManagerPointer(assetManager);
-        
+
             baseMapView = new BaseMapView();
             baseMapView.getOptions().setDPI(getResources().getDisplayMetrics().densityDpi);
-            baseMapView.setRedrawRequestListener(new MapRedrawRequestListener(this));
-        
-            try {
-                Method m = GLSurfaceView.class.getMethod("setPreserveEGLContextOnPause", Boolean.TYPE);
-                m.invoke(this, true);
-            } catch (Exception e) {
-                com.carto.utils.Log.info("MapView: Preserving EGL context on pause is not possible: " + e);
-            }
+            baseMapView.setRedrawRequestListener(new TextureMapRedrawRequestListener(this));
+
+            setPreserveEGLContextOnPause(true);
             setEGLContextClientVersion(2);
             setEGLConfigChooser(new ConfigChooser());
             setRenderer(this);
@@ -170,28 +164,28 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
             baseMapView = null;
         }
     }
-    
+
     @Override
     public synchronized void onSurfaceCreated(GL10 gl, EGLConfig config) {
         if (baseMapView != null) {
             baseMapView.onSurfaceCreated();
         }
     }
-    
+
     @Override
     public synchronized void onSurfaceChanged(GL10 gl, int width, int height) {
         if (baseMapView != null) {
             baseMapView.onSurfaceChanged(width, height);
         }
     }
-    
+
     @Override
     public synchronized void onDrawFrame(GL10 gl) {
         if (baseMapView != null) {
             baseMapView.onDrawFrame();
         }
     }
-    
+
     @Override
     public synchronized boolean onTouchEvent(MotionEvent event) {
         if (baseMapView == null) {
@@ -291,7 +285,7 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
         }
         return true;
     }
-    
+
     /**
      * Returns the Layers object, that can be used for adding and removing map layers.
      * @return The Layer object.
@@ -353,10 +347,10 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
      * Pans the view relative to the current focus position. The deltaPos vector is expected to be in
      * the coordinate system of the base projection. The new calculated focus position will be clamped to
      * the world bounds and to the bounds set by Options::setPanBounds.
-     * 
+     *
      * If durationSeconds &gt; 0 the panning operation will be animated over time. If the previous panning animation has not
      * finished by the time this method is called, it will be stopped.
-     * 
+     *
      * @param deltaPos The coordinate difference the map should be moved by.
      * @param durationSeconds The duration in which the tilting operation will be completed in seconds.
      */
@@ -368,10 +362,10 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
      * Sets the new absolute focus position. The new focus position is expected to be in
      * the coordinate system of the base projection. The new focus position will be clamped to
      * the world bounds and to the bounds set by Options::setPanBounds.
-     * 
+     *
      * If durationSeconds &gt; 0 the panning operation will be animated over time. If the previous panning animation has not
      * finished by the time this method is called, it will be stopped.
-     * 
+     *
      * @param pos The new focus point position in base coordinate system.
      * @param durationSeconds The duration in which the tilting operation will be completed in seconds.
      */
@@ -381,12 +375,12 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
 
     /**
      * Rotates the view relative to the current rotation value. Positive values rotate clockwise, negative values counterclockwise.
-     * The new calculated rotation value will be wrapped to the range of (-180 .. 180]. Rotations are ignored if Options::setRotatable 
+     * The new calculated rotation value will be wrapped to the range of (-180 .. 180]. Rotations are ignored if Options::setRotatable
      * is set to false.
-     * 
+     *
      * If durationSeconds &gt; 0 the rotating operation will be animated over time. If the previous rotating animation has not
      * finished by the time this method is called, it will be stopped.
-     * 
+     *
      * @param deltaAngle The delta angle value in degrees.
      * @param durationSeconds The duration in which the zooming operation will be completed in seconds.
      */
@@ -398,12 +392,12 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
      * Rotates the view relative to the current rotation value. Positive values rotate clockwise, negative values counterclockwise.
      * The new calculated rotation value will be wrapped to the range of (-180 .. 180]. Rotations are ignored if Options::setRotatable
      * is set to false.
-     * 
+     *
      * Rotating is done around the specified target position, keeping it at the same location on the screen.
-     * 
+     *
      * If durationSeconds &gt; 0 the rotating operation will be animated over time. If the previous rotating animation has not
      * finished by the time this method is called, it will be stopped.
-     * 
+     *
      * @param deltaAngle The delta angle value in degrees.
      * @param targetPos The zooming target position in the coordinate system of the base projection.
      * @param durationSeconds The duration in which the zooming operation will be completed in seconds.
@@ -416,10 +410,10 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
      * Sets the new absolute rotation value. 0 means look north, 90 means west, -90 means east and 180 means south.
      * The rotation value will be wrapped to the range of (-180 .. 180]. Rotations are ignored if Options::setRotatable
      * is set to false.
-     * 
+     *
      * If durationSeconds &gt; 0 the rotating operation will be animated over time. If the previous rotating animation has not
      * finished by the time this method is called, it will be stopped.
-     * 
+     *
      * @param angle The new absolute rotation angle value in degrees.
      * @param durationSeconds The duration in which the zooming operation will be completed in seconds.
      */
@@ -429,14 +423,14 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
 
     /**
      * Sets the new absolute rotation value. 0 means look north, 90 means west, -90 means east and 180 means south.
-     * The rotation value will be wrapped to the range of (-180 .. 180]. Rotations are ignored if Options::setRotatable 
+     * The rotation value will be wrapped to the range of (-180 .. 180]. Rotations are ignored if Options::setRotatable
      * is set to false.
-     * 
+     *
      * Rotating is done around the specified target position, keeping it at the same location on the screen.
-     * 
+     *
      * If durationSeconds &gt; 0 the rotating operation will be animated over time. If the previous rotating animation has not
      * finished by the time this method is called, it will be stopped.
-     * 
+     *
      * @param angle The new absolute rotation angle value in degrees.
      * @param targetPos The zooming target position in the coordinate system of the base projection.
      * @param durationSeconds The duration in which the zooming operation will be completed in seconds.
@@ -446,10 +440,10 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
     }
 
     /**
-     * Tilts the view relative to the current tilt value. Positive values tilt the view down towards the map, 
+     * Tilts the view relative to the current tilt value. Positive values tilt the view down towards the map,
      * negative values tilt the view up towards the horizon. The new calculated tilt value will be clamped to
      * the range of [30 .. 90] and to the range set by Options::setZoomRange.
-     * 
+     *
      * If durationSeconds &gt; 0 the tilting operation will be animated over time. If the previous tilting animation has not
      * finished by the time this method is called, it will be stopped.
      * @param deltaTilt The number of degrees the camera should be tilted by.
@@ -463,7 +457,7 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
      * Sets the new absolute tilt value. 0 means look directly at the horizon, 90 means look directly down. The
      * minimum tilt angle is 30 degrees and the maximum is 90 degrees. The tilt value can be further constrained
      * by the Options::setTiltRange method. Values exceeding these ranges will be clamped.
-     * 
+     *
      * If durationSeconds &gt; 0 the tilting operation will be animated over time. If the previous tilting animation has not
      * finished by the time this method is called, it will be stopped.
      * @param tilt The new absolute tilt value in degrees.
@@ -476,7 +470,7 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
     /**
      * Zooms the view relative to the current zoom value. Positive values zoom in, negative values zoom out.
      * The new calculated zoom value will be clamped to the range of [0 .. 24] and to the range set by Options::setZoomRange.
-     * 
+     *
      * If durationSeconds &gt; 0 the zooming operation will be animated over time. If the previous zooming animation has not
      * finished by the time this method is called, it will be stopped.
      * @param deltaZoom The delta zoom value.
@@ -489,9 +483,9 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
     /**
      * Zooms the view relative to the current zoom value. Positive values zoom in, negative values zoom out.
      * The new calculated zoom value will be clamped to the range of [0 .. 24] and to the range set by Options::setZoomRange.
-     * 
+     *
      * Zooming is done towards the specified target position, keeping it at the same location on the screen.
-     * 
+     *
      * If durationSeconds &gt; 0 the zooming operation will be animated over time. If the previous zooming animation has not
      * finished by the time this method is called, it will be stopped.
      * @param deltaZoom The delta zoom value.
@@ -505,8 +499,8 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
     /**
      * Sets the new absolute zoom value. The minimum zoom value is 0, which means absolutely zoomed out and the maximum
      * zoom value is 24. The zoom value can be further constrained by the Options::setZoomRange method. Values
-     * exceeding these ranges will be clamped. 
-     * 
+     * exceeding these ranges will be clamped.
+     *
      * If durationSeconds &gt; 0 the zooming operation will be animated over time. If the previous zooming animation has not
      * finished by the time this method is called, it will be stopped.
      * @param zoom The new absolute zoom value.
@@ -517,12 +511,12 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
     }
 
     /**
-     * Sets the new absolute zoom value. The minimum zoom value is 0, which means absolutely zoomed out and the maximum 
-     * zoom value is 24. The zoom value can be further constrained by the Options::setZoomRange method. Values 
+     * Sets the new absolute zoom value. The minimum zoom value is 0, which means absolutely zoomed out and the maximum
+     * zoom value is 24. The zoom value can be further constrained by the Options::setZoomRange method. Values
      * exceeding these ranges will be clamped.
-     * 
+     *
      * Zooming is done towards the specified target position, keeping it at the same location on the screen.
-     * 
+     *
      * If durationSeconds &gt; 0, the zooming operation will be animated over time. If the previous zooming animation has not
      * finished by the time this method is called, it will be stopped.
      * @param zoom The new absolute zoom value.
@@ -556,11 +550,11 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
      * @param resetRotation If true, rotation will be reset. If false, current rotation will be kept.
      * @param durationSeconds The duration in which the operation will be completed in seconds.
      */
-    public void moveToFitBounds(MapBounds mapBounds, ScreenBounds screenBounds, boolean integerZoom, boolean resetRotation, 
-            boolean resetTilt, float durationSeconds) {
+    public void moveToFitBounds(MapBounds mapBounds, ScreenBounds screenBounds, boolean integerZoom, boolean resetRotation,
+                                boolean resetTilt, float durationSeconds) {
         baseMapView.moveToFitBounds(mapBounds, screenBounds, integerZoom, resetRotation, resetTilt, durationSeconds);
     }
-    
+
     /**
      * Returns the map event listener. May be null.
      * @return The map event listener.
@@ -617,7 +611,7 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
      * including the visible area.
      */
     public void clearAllCaches() {
-        baseMapView.clearAllCaches();	
+        baseMapView.clearAllCaches();
     }
-    
+
 }

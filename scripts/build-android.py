@@ -33,7 +33,7 @@ def detectAndroidAPIs(args):
     minapi = platforms.get('min', 1)
     maxapi = platforms.get('max', 0)
     for api in range(minapi, maxapi + 1):
-      if api >= 9:
+      if api >= 11:
         api32 = min(api32 or api, api)
       if api >= 21:
         api64 = min(api64 or api, api)
@@ -44,7 +44,7 @@ def detectAndroidJavaAPI(args):
   for name in os.listdir('%s/platforms' % args.androidsdkpath):
     if name.startswith('android-'):
       api = int(name[8:])
-      if api >= 10:
+      if api >= 11:
         apiJava = min(apiJava or api, api)
   return apiJava
 

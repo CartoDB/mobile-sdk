@@ -5,7 +5,7 @@ import java.lang.ref.WeakReference;
 import com.carto.renderers.RedrawRequestListener;
 
 /**
- * Android-specific implementation of RedrawRequestListener.
+ * Android-specific implementation of RedrawRequestListener, used by MapView.
  */
 public class MapRedrawRequestListener extends RedrawRequestListener {
     private final WeakReference<MapView> mapViewRef;

@@ -7,21 +7,21 @@ import javax.microedition.khronos.egl.EGLDisplay;
 import android.opengl.GLSurfaceView;
 
 /**
- * EGL configuration chooser for MapView.
+ * EGL configuration chooser for MapView and TextureMapView.
  */
 public class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
     
     private static int[][] ATTRIBUTE_TABLE = new int[][] {
-            // 8-8-8-8-bit color, 8-bit stencil, 24-bit z buffer. Should work on most devices.
-            new int[] { EGL10.EGL_RED_SIZE, 8, EGL10.EGL_GREEN_SIZE, 8, EGL10.EGL_BLUE_SIZE, 8, EGL10.EGL_ALPHA_SIZE, 8, EGL10.EGL_DEPTH_SIZE, 24, EGL10.EGL_STENCIL_SIZE, 8, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
-            // 8-8-8-8-bit color, 8-bit stencil, 16-bit z buffer. Better than 5-6-5/16 bit, should also fix problems on some obscure devices.
-            new int[] { EGL10.EGL_RED_SIZE, 8, EGL10.EGL_GREEN_SIZE, 8, EGL10.EGL_BLUE_SIZE, 8, EGL10.EGL_ALPHA_SIZE, 8, EGL10.EGL_DEPTH_SIZE, 16, EGL10.EGL_STENCIL_SIZE, 8, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
-            // 5-6-5-bit color, 24-bit z buffer, unspecified stencil. Should work on most devices.
-            new int[] { EGL10.EGL_RED_SIZE, 5, EGL10.EGL_GREEN_SIZE, 6, EGL10.EGL_BLUE_SIZE, 5, EGL10.EGL_DEPTH_SIZE, 24, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
-            // 5-6-5-bit color, 16-bit z buffer, unspecified stencil. Fallback for original Tegra devices. 
-            new int[] { EGL10.EGL_RED_SIZE, 5, EGL10.EGL_GREEN_SIZE, 6, EGL10.EGL_BLUE_SIZE, 5, EGL10.EGL_DEPTH_SIZE, 16, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
-            // 5-6-5-bit color, unspecified z/stencil buffer.
-            new int[] { EGL10.EGL_RED_SIZE, 5, EGL10.EGL_GREEN_SIZE, 6, EGL10.EGL_BLUE_SIZE, 5, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
+        // 8-8-8-8-bit color, 8-bit stencil, 24-bit z buffer. Should work on most devices.
+        new int[] { EGL10.EGL_RED_SIZE, 8, EGL10.EGL_GREEN_SIZE, 8, EGL10.EGL_BLUE_SIZE, 8, EGL10.EGL_ALPHA_SIZE, 8, EGL10.EGL_DEPTH_SIZE, 24, EGL10.EGL_STENCIL_SIZE, 8, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
+        // 8-8-8-8-bit color, 8-bit stencil, 16-bit z buffer. Better than 5-6-5/16 bit, should also fix problems on some obscure devices.
+        new int[] { EGL10.EGL_RED_SIZE, 8, EGL10.EGL_GREEN_SIZE, 8, EGL10.EGL_BLUE_SIZE, 8, EGL10.EGL_ALPHA_SIZE, 8, EGL10.EGL_DEPTH_SIZE, 16, EGL10.EGL_STENCIL_SIZE, 8, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
+        // 5-6-5-bit color, 24-bit z buffer, unspecified stencil. Should work on most devices.
+        new int[] { EGL10.EGL_RED_SIZE, 5, EGL10.EGL_GREEN_SIZE, 6, EGL10.EGL_BLUE_SIZE, 5, EGL10.EGL_DEPTH_SIZE, 24, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
+        // 5-6-5-bit color, 16-bit z buffer, unspecified stencil. Fallback for original Tegra devices. 
+        new int[] { EGL10.EGL_RED_SIZE, 5, EGL10.EGL_GREEN_SIZE, 6, EGL10.EGL_BLUE_SIZE, 5, EGL10.EGL_DEPTH_SIZE, 16, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
+        // 5-6-5-bit color, unspecified z/stencil buffer.
+        new int[] { EGL10.EGL_RED_SIZE, 5, EGL10.EGL_GREEN_SIZE, 6, EGL10.EGL_BLUE_SIZE, 5, EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_NONE },
     };
 
     @Override
