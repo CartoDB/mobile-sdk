@@ -110,6 +110,7 @@
 
 #import "ui/MapView.h"
 #import "NTMapClickInfo.h"
+#import "NTMapInteractionInfo.h"
 #import "NTMapEventListener.h"
 #import "NTBalloonPopupButtonClickInfo.h"
 #import "NTRasterTileClickInfo.h"
