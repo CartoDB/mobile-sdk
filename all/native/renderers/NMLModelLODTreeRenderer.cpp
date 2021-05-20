@@ -70,6 +70,7 @@ namespace carto {
 
         // Calculate lighting state
         Color optionsAmbientLightColor = options->getAmbientLightColor();
+        cglib::vec4<float> modelColor = cglib::vec4<float>(1.0f, 1.0f, 1.0f, 1.0f);
         cglib::vec4<float> ambientLightColor = cglib::vec4<float>(optionsAmbientLightColor.getR(), optionsAmbientLightColor.getG(), optionsAmbientLightColor.getB(), optionsAmbientLightColor.getA()) * (1.0f / 255.0f);
         Color optionsMainLightColor = options->getMainLightColor();
         cglib::vec4<float> mainLightColor = cglib::vec4<float>(optionsMainLightColor.getR(), optionsMainLightColor.getG(), optionsMainLightColor.getB(), optionsMainLightColor.getA()) * (1.0f / 255.0f);
@@ -127,7 +128,7 @@ namespace carto {
             }
 
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * record.drawData.getLocalMat());
-            nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, mainLightDir);
+            nml::RenderState renderState(projMat, mvMat, modelColor, ambientLightColor, mainLightColor, mainLightDir);
 
             record.drawData.getGLModel()->draw(*resourceManager, renderState);
         }

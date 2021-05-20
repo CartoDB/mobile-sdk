@@ -2,7 +2,9 @@
 #include "renderers/BillboardRenderer.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
+#include "renderers/drawdatas/NMLModelDrawData.h"
 #include "utils/Log.h"
+#include "utils/GeomUtils.h"
 #include "utils/ThreadUtils.h"
 #include "vectorelements/Billboard.h"
 
@@ -109,6 +111,7 @@ namespace carto {
         }
 
         ViewState viewState = mapRenderer->getViewState();
+        const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
         const cglib::mat4x4<float>& rteMVPMat = viewState.getRTEModelviewProjectionMat();
 
         // Sort draw datas
@@ -130,8 +133,6 @@ namespace carto {
             _kdTree.clear();
         }
 
-        std::vector<float> coordBuf(12);
-        std::vector<MapPos> convexHull;
         bool changed = false;
         for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -140,31 +141,40 @@ namespace carto {
             }
 
             // Calculate billboard world coordinates
-            if (!BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
-                continue;
+            std::vector<MapPos> points;
+            if (auto nmlDrawData = std::dynamic_pointer_cast<NMLModelDrawData>(drawData)) {
+                cglib::mat4x4<double> modelMat;
+                if (!BillboardRenderer::CalculateNMLModelMatrix(*nmlDrawData, viewState, modelMat)) {
+                    continue;
+                }
+
+                points.reserve(8);
+                for (int i = 0; i < 8; i++) {
+                    const cglib::bbox3<float>& bounds = nmlDrawData->getSourceModelBounds();
+                    cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(i & 1 ? bounds.max(0) : bounds.min(0), i & 2 ? bounds.max(1) : bounds.min(1), i & 4 ? bounds.max(2) : bounds.min(2)), mvpMat * modelMat);
+                    points.emplace_back(pos(0), pos(1), 0);
+                }
+            } else {
+                std::vector<float> coordBuf(12);
+                if (!BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
+                    continue;
+                }
+
+                points.reserve(4);
+                for (int i = 0; i < 4; i++) {
+                    cglib::vec3<float> pos = cglib::transform_point(cglib::vec3<float>(coordBuf[i * 3 + 0], coordBuf[i * 3 + 1], coordBuf[i * 3 + 2]), rteMVPMat);
+                    points.emplace_back(pos(0), pos(1), 0);
+                }
             }
 
-            // Transform the world coordinates to screen coordinates
-            cglib::vec3<float> topLeft(cglib::transform_point(cglib::vec3<float>(coordBuf[0], coordBuf[1], coordBuf[2]), rteMVPMat));
-            cglib::vec3<float> bottomLeft(cglib::transform_point(cglib::vec3<float>(coordBuf[3], coordBuf[4], coordBuf[5]), rteMVPMat));
-            cglib::vec3<float> topRight(cglib::transform_point(cglib::vec3<float>(coordBuf[6], coordBuf[7], coordBuf[8]), rteMVPMat));
-            cglib::vec3<float> bottomRight(cglib::transform_point(cglib::vec3<float>(coordBuf[9], coordBuf[10], coordBuf[11]), rteMVPMat));
-
+            // Calculate bounding box and envelope
             cglib::bbox3<double> bounds = cglib::bbox3<double>::smallest();
-            bounds.add(cglib::vec3<double>(topLeft(0), topLeft(1), 0));
-            bounds.add(cglib::vec3<double>(bottomLeft(0), bottomLeft(1), 0));
-            bounds.add(cglib::vec3<double>(topRight(0), topRight(1), 0));
-            bounds.add(cglib::vec3<double>(bottomRight(0), bottomRight(1), 0));
+            for (const MapPos& point : points) {
+                bounds.add(cglib::vec3<double>(point.getX(), point.getY(), 0));
+            }
+            MapEnvelope envelope(GeomUtils::CalculateConvexHull(points));
 
-            // Construct convex polygons from the screen coordinatees
-            convexHull.clear();
-            convexHull.emplace_back(topLeft(0), topLeft(1), 0);
-            convexHull.emplace_back(bottomLeft(0), bottomLeft(1), 0);
-            convexHull.emplace_back(topRight(0), topRight(1), 0);
-            convexHull.emplace_back(bottomRight(0), bottomRight(1), 0);
-
-            MapEnvelope envelope(convexHull);
-
+            // Do overlap tests
             bool overlapped = false;
             if (drawData->isHideIfOverlapped()) {
                 // Check that there are higher priority billboards overlapping with this one

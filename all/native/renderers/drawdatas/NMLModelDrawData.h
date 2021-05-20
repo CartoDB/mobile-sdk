@@ -12,6 +12,7 @@
 #include <memory>
 
 #include <cglib/mat.h>
+#include <cglib/bbox.h>
 
 namespace carto {
     class NMLModel;
@@ -28,6 +29,7 @@ namespace carto {
         virtual ~NMLModelDrawData();
     
         std::shared_ptr<nml::Model> getSourceModel() const;
+        const cglib::bbox3<float>& getSourceModelBounds() const;
         const cglib::mat4x4<double>& getLocalFrameMat() const;
         const cglib::mat4x4<double>& getLocalTransformMat() const;
         
@@ -35,6 +37,7 @@ namespace carto {
     
     private:
         std::shared_ptr<nml::Model> _sourceModel;
+        cglib::bbox3<float> _sourceModelBounds;
         cglib::mat4x4<double> _localFrameMat;
         cglib::mat4x4<double> _localTransformMat;
     };

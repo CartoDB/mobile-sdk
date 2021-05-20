@@ -260,7 +260,7 @@ namespace carto {
             if (drawData->getRenderer().lock() != shared_from_this()) {
                 continue;
             }
-            if (drawData->getTransition() == 0) {
+            if (drawData->getTransition() == 0.0f) {
                 continue;
             }
 
@@ -514,6 +514,10 @@ namespace carto {
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<BillboardDrawData>& drawData = drawDataBuffer[i];
 
+            if (drawData->getTransition() == 0.0f) {
+                continue;
+            }
+            
             // Alpha value
             int alpha = std::min(256, static_cast<int>(256 * opacity * AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition())));
             
@@ -526,11 +530,6 @@ namespace carto {
                 glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(drawDataIndex * 6), GL_UNSIGNED_SHORT, indexBuf.data());
                 // Start filling buffers from the beginning
                 drawDataIndex = 0;
-            }
-            
-            // If invisible, skip further steps
-            if (drawData->getTransition() == 0) {
-                continue;
             }
             
             // Calculate coordinates
@@ -673,6 +672,10 @@ namespace carto {
         // Draw models
         cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());
         for (const std::shared_ptr<NMLModelDrawData>& drawData : _nmlDrawDataBuffer) {
+            if (drawData->getTransition() == 0.0f) {
+                continue;
+            }
+
             // Render the element
             Color color = drawData->getColor();
             float alpha = opacity * AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition());
@@ -691,7 +694,7 @@ namespace carto {
                 continue;
             }
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * modelMat);
-            nml::RenderState renderState(projMat, mvMat, cglib::pointwise_product(ambientLightColor, modelColor), cglib::pointwise_product(mainLightColor, modelColor), -mainLightDir);
+            nml::RenderState renderState(projMat, mvMat, modelColor, ambientLightColor, mainLightColor, -mainLightDir);
 
             glModel->draw(*resourceManager, renderState);
         }

@@ -6,6 +6,8 @@
 #include "vectorelements/NMLModel.h"
 #include "utils/Const.h"
 
+#include <nml/Package.h>
+
 namespace carto {
 
     NMLModelDrawData::NMLModelDrawData(const NMLModel& model, const NMLModelStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
@@ -30,6 +32,11 @@ namespace carto {
         cglib::mat4x4<double> scaleMat = cglib::scale4_matrix(cglib::vec3<double>(model.getScale(), model.getScale(), model.getScale()));
         _localFrameMat = projectionSurface->calculateLocalFrameMatrix(projectionSurface->calculatePosition(mapPosInternal));
         _localTransformMat = rotateMat * scaleMat;
+
+        // Calculate bounding box coordinates
+        const nml::Vector3& minBounds = _sourceModel->bounds().min();
+        const nml::Vector3& maxBounds = _sourceModel->bounds().max();
+        _sourceModelBounds = cglib::bbox3<float>(cglib::vec3<float>(minBounds.x(), minBounds.y(), minBounds.z()), cglib::vec3<float>(maxBounds.x(), maxBounds.y(), maxBounds.z()));
     }
 
     NMLModelDrawData::~NMLModelDrawData() {
@@ -37,6 +44,10 @@ namespace carto {
     
     std::shared_ptr<nml::Model> NMLModelDrawData::getSourceModel() const {
         return _sourceModel;
+    }
+
+    const cglib::bbox3<float>& NMLModelDrawData::getSourceModelBounds() const {
+        return _sourceModelBounds;
     }
     
     const cglib::mat4x4<double>& NMLModelDrawData::getLocalFrameMat() const {
