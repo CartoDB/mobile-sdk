@@ -43,6 +43,12 @@ namespace carto {
         int getFrameCount() const;
 
         /**
+         * Returns the tile resolution, in pixels.
+         * @return The tile resolution in pixels.
+         */
+        int getResolution() const;
+
+        /**
          * Returns the current style set used by the decoder.
          * @return The current style set.
          */
@@ -53,17 +59,6 @@ namespace carto {
          * @throws std::runtime_error If the decoder could not be updated or there are issues with the style set.
          */
         void setStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
-
-        /**
-         * Returns the tile resolution, in pixels. Default is 256.
-         * @return The tile resolution in pixels.
-         */
-        int getResolution() const;
-        /**
-         * Sets the tile resolution in pixels. Default is 256.
-         * @param resolution The new resolution value.
-         */
-        void setResolution(int resolution);
 
         virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
 
@@ -86,7 +81,6 @@ namespace carto {
         static const int GLYPHMAP_SIZE;
 
         const std::shared_ptr<mvt::Logger> _logger;
-        int _resolution;
         std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
         std::shared_ptr<mvt::TorqueMap> _map;
         std::shared_ptr<mvt::Map::Settings> _mapSettings;

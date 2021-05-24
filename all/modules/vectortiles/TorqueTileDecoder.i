@@ -21,6 +21,7 @@
 !polymorphic_shared_ptr(carto::TorqueTileDecoder, vectortiles.TorqueTileDecoder)
 
 %attribute(carto::TorqueTileDecoder, int, FrameCount, getFrameCount)
+%attribute(carto::TorqueTileDecoder, int, Resolution, getResolution)
 %attributestring(carto::TorqueTileDecoder, std::shared_ptr<carto::CartoCSSStyleSet>, StyleSet, getStyleSet, setStyleSet)
 %std_exceptions(carto::TorqueTileDecoder::TorqueTileDecoder)
 %std_exceptions(carto::TorqueTileDecoder::setStyleSet)

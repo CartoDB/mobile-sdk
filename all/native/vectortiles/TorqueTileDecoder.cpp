@@ -2,7 +2,7 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "styles/CartoCSSStyleSet.h"
-#include "vectortiles/utils/MVTLogger.h"
+#include "vectortiles/utils/MapnikVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
 #include "utils/Const.h"
@@ -20,8 +20,7 @@
 namespace carto {
     
     TorqueTileDecoder::TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet) :
-        _logger(std::make_shared<MVTLogger>("TorqueTileDecoder")),
-        _resolution(256),
+        _logger(std::make_shared<MapnikVTLogger>("TorqueTileDecoder")),
         _fallbackFonts(),
         _map(),
         _mapSettings(),
@@ -41,9 +40,14 @@ namespace carto {
 
     int TorqueTileDecoder::getFrameCount() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().frameCount;
+        return _map->getTorqueSettings().frameCount;
     }
 
+    int TorqueTileDecoder::getResolution() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _map->getTorqueSettings().resolution;
+    }
+    
     std::shared_ptr<CartoCSSStyleSet> TorqueTileDecoder::getStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _styleSet;
@@ -61,19 +65,6 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    int TorqueTileDecoder::getResolution() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _resolution;
-    }
-    
-    void TorqueTileDecoder::setResolution(int resolution) {
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _resolution = resolution;
-        }
-        notifyDecoderChanged();
-    }
-    
     std::shared_ptr<mvt::Map::Settings> TorqueTileDecoder::getMapSettings() const  {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
@@ -123,7 +114,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             int settingsResolution = (_map ? _map->getTorqueSettings().resolution : -1);
-            resolution = _resolution / (settingsResolution > 0 ? settingsResolution : 1);
+            resolution = DEFAULT_TILE_SIZE / (settingsResolution > 0 ? settingsResolution : 1);
             map = _map;
             symbolizerContext = _symbolizerContext;
         }
@@ -165,7 +156,7 @@ namespace carto {
         auto strokeMap = std::make_shared<vt::StrokeMap>(1, 1);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
 
-        std::shared_ptr<const vt::Font> fallbackFont;
+        std::shared_ptr<vt::Font> fallbackFont;
         for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
             std::shared_ptr<BinaryData> fontData = *it;
             std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
