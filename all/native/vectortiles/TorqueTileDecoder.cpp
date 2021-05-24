@@ -122,7 +122,8 @@ namespace carto {
         std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            resolution = _resolution;
+            int settingsResolution = (_map ? _map->getTorqueSettings().resolution : -1);
+            resolution = _resolution / (settingsResolution > 0 ? settingsResolution : 1);
             map = _map;
             symbolizerContext = _symbolizerContext;
         }
@@ -175,7 +176,7 @@ namespace carto {
 
         _map = map;
         _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
-        _mapSettings->backgroundColor = std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().clearColor;
+        _mapSettings->backgroundColor = _map->getTorqueSettings().clearColor;
         _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
     }
