@@ -2,7 +2,7 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "styles/CartoCSSStyleSet.h"
-#include "vectortiles/utils/MapnikVTLogger.h"
+#include "vectortiles/utils/MVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
 #include "utils/Const.h"
