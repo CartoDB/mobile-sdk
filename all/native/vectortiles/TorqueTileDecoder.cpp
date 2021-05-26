@@ -47,12 +47,17 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         return _map->getTorqueSettings().resolution;
     }
-    
+
+    float TorqueTileDecoder::getAnimationDuration() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _map->getTorqueSettings().animationDuration;
+    }
+
     std::shared_ptr<CartoCSSStyleSet> TorqueTileDecoder::getStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _styleSet;
     }
-    
+
     void TorqueTileDecoder::setStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
         if (!styleSet) {
             throw NullArgumentException("Null styleSet");
@@ -69,7 +74,7 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
     }
-    
+
     void TorqueTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -88,7 +93,7 @@ namespace carto {
     int TorqueTileDecoder::getMaxZoom() const {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
-        
+
     std::shared_ptr<VectorTileFeature> TorqueTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
         Log::Warn("TorqueTileDecoder::decodeFeature: Not implemented");
         return std::shared_ptr<VectorTileFeature>();
@@ -118,7 +123,7 @@ namespace carto {
             map = _map;
             symbolizerContext = _symbolizerContext;
         }
-    
+
         try {
             mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
@@ -171,7 +176,7 @@ namespace carto {
         _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
     }
-    
+
     const int TorqueTileDecoder::DEFAULT_TILE_SIZE = 256;
     const int TorqueTileDecoder::GLYPHMAP_SIZE = 2048;
 }

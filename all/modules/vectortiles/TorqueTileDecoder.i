@@ -22,6 +22,7 @@
 
 %attribute(carto::TorqueTileDecoder, int, FrameCount, getFrameCount)
 %attribute(carto::TorqueTileDecoder, int, Resolution, getResolution)
+%attribute(carto::TorqueTileDecoder, float, AnimationDuration, getAnimationDuration)
 %attributestring(carto::TorqueTileDecoder, std::shared_ptr<carto::CartoCSSStyleSet>, StyleSet, getStyleSet, setStyleSet)
 %std_exceptions(carto::TorqueTileDecoder::TorqueTileDecoder)
 %std_exceptions(carto::TorqueTileDecoder::setStyleSet)

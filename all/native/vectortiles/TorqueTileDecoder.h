@@ -49,6 +49,12 @@ namespace carto {
         int getResolution() const;
 
         /**
+         * Returns the animation duration, in seconds.
+         * @return The animation duration, in seconds.
+         */
+        float getAnimationDuration() const;
+
+        /**
          * Returns the current style set used by the decoder.
          * @return The current style set.
          */
