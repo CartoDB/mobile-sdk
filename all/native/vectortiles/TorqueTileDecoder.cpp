@@ -123,14 +123,15 @@ namespace carto {
 
         try {
             float resolution = map->getTorqueSettings().resolution;
+            int frameCount = map->getTorqueSettings().frameCount;
             std::string dataAggregation = map->getTorqueSettings().dataAggregation;
             int tileSize = static_cast<int>(DEFAULT_TILE_SIZE / (resolution > 0.0f ? resolution : 1.0f));
 
-            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), tileSize, dataAggregation, _logger);
+            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), tileSize, frameCount, dataAggregation, _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
 
             auto tileMap = std::make_shared<TileMap>();
-            for (int frame = 0; frame < map->getTorqueSettings().frameCount; frame++) {
+            for (int frame = 0; frame < frameCount; frame++) {
                 mvt::TorqueTileReader reader(map, frame, true, tileTransformer, *symbolizerContext, decoder);
                 if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                     (*tileMap)[frame] = tile;
