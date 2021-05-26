@@ -113,19 +113,20 @@ namespace carto {
             return std::shared_ptr<TileMap>();
         }
 
-        int resolution;
         std::shared_ptr<mvt::TorqueMap> map;
         std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            int settingsResolution = (_map ? _map->getTorqueSettings().resolution : -1);
-            resolution = DEFAULT_TILE_SIZE / (settingsResolution > 0 ? settingsResolution : 1);
             map = _map;
             symbolizerContext = _symbolizerContext;
         }
 
         try {
-            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, _logger);
+            float resolution = map->getTorqueSettings().resolution;
+            std::string dataAggregation = map->getTorqueSettings().dataAggregation;
+            int tileSize = static_cast<int>(DEFAULT_TILE_SIZE / (resolution > 0.0f ? resolution : 1.0f));
+
+            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), tileSize, dataAggregation, _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
 
             auto tileMap = std::make_shared<TileMap>();
