@@ -28,10 +28,25 @@ namespace carto {
         _localTransformMat()
     {
         MapPos mapPosInternal = projection.toInternal(model.getGeometry()->getCenterPos());
-        cglib::mat4x4<double> rotateMat = cglib::rotate4_matrix(projectionSurface->calculateVector(mapPosInternal, model.getRotationAxis()), model.getRotationAngle() * Const::DEG_TO_RAD);
+
+        // Calculate local transformation matrix
+        MapVec rotationAxis = model.getRotationAxis();
+        cglib::mat4x4<double> rotateMat = cglib::rotate4_matrix(cglib::vec3<double>(rotationAxis.getX(), rotationAxis.getY(), rotationAxis.getZ()), model.getRotationAngle() * Const::DEG_TO_RAD);
         cglib::mat4x4<double> scaleMat = cglib::scale4_matrix(cglib::vec3<double>(model.getScale(), model.getScale(), model.getScale()));
-        _localFrameMat = projectionSurface->calculateLocalFrameMatrix(projectionSurface->calculatePosition(mapPosInternal));
         _localTransformMat = rotateMat * scaleMat;
+        
+        // Calculate local frame matrix. We will reset the axis here, as orientation will be handled separately.
+        _localFrameMat = projectionSurface->calculateLocalFrameMatrix(projectionSurface->calculatePosition(mapPosInternal));
+        for (int i = 0; i < 3; i++) {
+            cglib::vec3<double> axis;
+            for (int j = 0; j < 3; j++) {
+                axis(j) = _localFrameMat(i, j);
+            }
+            float c = cglib::length(axis);
+            for (int j = 0; j < 3; j++) {
+                _localFrameMat(i, j) = (i == j ? c : 0);
+            }
+        }
 
         // Calculate bounding box coordinates
         const nml::Vector3& minBounds = _sourceModel->bounds().min();
