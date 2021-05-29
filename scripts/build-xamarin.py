@@ -179,7 +179,7 @@ parser.add_argument('--configuration', dest='configuration', default='Release', 
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='store_true', help='Build Nuget package')
-parser.add_argument('--metalangle', dest='metalangle', default=False, action='store_true', help='Use MetalANGLE instead of Apple GL')
+parser.add_argument('--use-metalangle', dest='metalangle', default=False, action='store_true', help='Use MetalANGLE instead of Apple GL')
 parser.add_argument(dest='target', choices=['android', 'ios'], help='Target platform')
 
 args = parser.parse_args()
@@ -202,6 +202,8 @@ args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.defines += ';' + 'TARGET_XAMARIN'
 if args.metalangle and args.target == 'ios':
   args.defines += ';' + '_CARTO_USE_METALANGLE'
+  print('Metal ANGLE rendering backend currently not supported for Xamarin/iOS')
+  sys.exit(-1)
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = args.configuration
 
