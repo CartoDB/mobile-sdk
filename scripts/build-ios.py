@@ -211,7 +211,7 @@ def buildIOSCocoapod(args, buildpackage):
   version = args.buildversion
   distName = 'sdk4-ios-%s.zip' % version
   iosversion = '9.0'
-  frameworks = (["IOSurface"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation", "CartoMobileSDK"]
+  frameworks = (["Metal", "MetalKit"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation", "CartoMobileSDK"]
 
   with open('%s/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
     cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'version': version, 'iosversion': iosversion, 'frameworks': ', '.join('"%s"' % framework for framework in frameworks) })
