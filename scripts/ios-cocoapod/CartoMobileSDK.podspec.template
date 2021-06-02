@@ -44,4 +44,6 @@ Pod::Spec.new do |s|
 
   s.xcconfig = { "FRAMEWORK_SEARCH_PATHS" => "\"$(PODS_ROOT)/CartoMobileSDK/\"" }
 
+  s.cocoapods_version = '>= 1.10.1'
+
 end
