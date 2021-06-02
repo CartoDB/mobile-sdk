@@ -135,8 +135,32 @@ namespace carto {
         if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
             opacity = layer->getOpacity();
         }
+
+        // Gather/draw NML models
+        _nmlDrawDataBuffer.clear();
+        for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
+            if (auto nmlDrawData = std::dynamic_pointer_cast<NMLModelDrawData>(drawData)) {
+                _nmlDrawDataBuffer.push_back(std::move(nmlDrawData));
+            }
+        }
+        if (!_nmlDrawDataBuffer.empty()) {
+            if (!initializeNMLRenderer()) {
+                return;
+            }
+
+            // Set expected GL state
+            glDepthMask(GL_TRUE);
+            glEnable(GL_DEPTH_TEST);
+
+            // Draw the collected batch
+            drawNMLBatch(opacity, viewState);
+
+            // Restore expected GL state
+            glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_FALSE);
+        }
     
-        // Prepare for drawing
+        // Prepare for drawing normal billboards
         glUseProgram(_shader->getProgId());
         // Coords, texCoords, colors
         glEnableVertexAttribArray(_a_coord);
@@ -151,11 +175,9 @@ namespace carto {
         
         // Draw billboards, batch by bitmap
         _drawDataBuffer.clear();
-        _nmlDrawDataBuffer.clear();
         std::shared_ptr<Bitmap> prevBitmap;
         for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
             if (auto nmlDrawData = std::dynamic_pointer_cast<NMLModelDrawData>(drawData)) {
-                _nmlDrawDataBuffer.push_back(std::move(nmlDrawData));
                 continue;
             }
 
@@ -179,26 +201,6 @@ namespace carto {
         glDisableVertexAttribArray(_a_texCoord);
         glDisableVertexAttribArray(_a_color);
 
-        // Finally draw batched NML models
-        if (!_nmlDrawDataBuffer.empty()) {
-
-            if (!initializeNMLRenderer()) {
-                return;
-            }
-
-            // Set expected GL state
-            glDepthMask(GL_TRUE);
-            glEnable(GL_DEPTH_TEST);
-
-            // Draw the collected batch
-            drawNMLBatch(opacity, viewState);
-
-            // Restore expected GL state
-            glDisable(GL_DEPTH_TEST);
-            glDepthMask(GL_FALSE);
-            glActiveTexture(GL_TEXTURE0);
-        }
-    
         GLContext::CheckGLError("BillboardRenderer::onDrawFrameSorted");
     }
     
