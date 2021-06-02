@@ -236,12 +236,11 @@ namespace carto {
         // Build actual vector tile using created colormap
         float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
         vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
-        std::shared_ptr<vt::TileBackground> tileBackground = std::make_shared<vt::TileBackground>(vt::Color(), std::shared_ptr<vt::BitmapPattern>());
         std::shared_ptr<const vt::TileTransformer::VertexTransformer> vtTransformer = getTileTransformer()->createTileVertexTransformer(vtTile);
         vt::TileLayerBuilder tileLayerBuilder(vtTile, 0, vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
         tileLayerBuilder.addBitmap(tileBitmap);
         std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer(std::optional<vt::CompOp>(), vt::FloatFunction(1));
-        return std::make_shared<vt::Tile>(vtTile, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
+        return std::make_shared<vt::Tile>(vtTile, tileSize, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
     }
 
     void RasterTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {

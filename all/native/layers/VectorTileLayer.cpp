@@ -20,6 +20,9 @@
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
+#include <vt/TileBackground.h>
+#include <vt/TileLayer.h>
+#include <vt/TileLayerBuilder.h>
 #include <vt/TileTransformer.h>
 
 namespace carto {
@@ -217,11 +220,16 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         vt::Color color = (y < 0 ? _tileDecoder->getMapSettings()->northPoleColor : _tileDecoder->getMapSettings()->southPoleColor);
         std::shared_ptr<vt::Tile>& tile = _poleTiles[y < 0 ? 0 : 1];
-        if (!tile || tile->getBackground()->getColor() != color) {
+        if (!tile || tile->getLayers().at(0)->getBackgrounds().at(0)->getColor() != color) {
+            auto tileBackground = std::make_shared<vt::TileBackground>(color, std::shared_ptr<const vt::BitmapPattern>());
+
             float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
             vt::TileId vtTile(0, 0, y);
-            auto tileBackground = std::make_shared<vt::TileBackground>(color, std::shared_ptr<const vt::BitmapPattern>());
-            tile = std::make_shared<vt::Tile>(vtTile, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer> >());
+            std::shared_ptr<const vt::TileTransformer::VertexTransformer> vtTransformer = getTileTransformer()->createTileVertexTransformer(vtTile);
+            vt::TileLayerBuilder tileLayerBuilder(vtTile, 0, vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
+            tileLayerBuilder.addBackground(tileBackground);
+            std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer(std::optional<vt::CompOp>(), vt::FloatFunction(1));
+            tile = std::make_shared<vt::Tile>(vtTile, tileSize, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
         }
         return tile;
     }

@@ -8,12 +8,15 @@
 #include "renderers/drawdatas/TileDrawData.h"
 #include "renderers/utils/GLResourceManager.h"
 #include "renderers/utils/VTRenderer.h"
+#include "utils/Const.h"
 #include "utils/Log.h"
 
 #include <vt/Label.h>
 #include <vt/LabelCuller.h>
 #include <vt/TileTransformer.h>
 #include <vt/GLExtensions.h>
+
+#include <cmath>
 
 #include <cglib/mat.h>
 
@@ -116,7 +119,6 @@ namespace carto {
         cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat() * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
         tileRenderer->setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
         tileRenderer->setInteractionMode(_interactionMode);
-        tileRenderer->setSubTileBlending(_subTileBlending);
         tileRenderer->setRasterFilterMode(_rasterFilterMode);
 
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
@@ -125,18 +127,17 @@ namespace carto {
             _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(internalFocusPos, options->getMainLightDirection())));
         }
 
-        tileRenderer->startFrame(deltaSeconds * 3);
+        bool refresh = tileRenderer->startFrame(deltaSeconds * 3);
 
-        bool refresh = false;
-        refresh = tileRenderer->renderGeometry2D() || refresh;
+        tileRenderer->renderGeometry2D();
         if (_labelOrder == 0) {
-            refresh = tileRenderer->renderLabels(true, false) || refresh;
+            tileRenderer->renderLabels(true, false);
         }
         if (_buildingOrder == 0) {
-            refresh = tileRenderer->renderGeometry3D() || refresh;
+            tileRenderer->renderGeometry3D();
         }
         if (_labelOrder == 0) {
-            refresh = tileRenderer->renderLabels(false, true) || refresh;
+            tileRenderer->renderLabels(false, true);
         }
     
         // Reset GL state to the expected state
@@ -160,18 +161,17 @@ namespace carto {
             return false;
         }
 
-        bool refresh = false;
         if (_labelOrder == 1) {
-            refresh = tileRenderer->renderLabels(true, false) || refresh;
+            tileRenderer->renderLabels(true, false);
         }
         if (_buildingOrder == 1) {
-            refresh = tileRenderer->renderGeometry3D() || refresh;
+            tileRenderer->renderGeometry3D();
         }
         if (_labelOrder == 1) {
-            refresh = tileRenderer->renderLabels(false, true) || refresh;
+            tileRenderer->renderLabels(false, true);
         }
 
-        tileRenderer->endFrame();
+        bool refresh = tileRenderer->endFrame();
 
         // Reset GL state to the expected state
         glEnable(GL_CULL_FACE);
@@ -218,7 +218,10 @@ namespace carto {
 
         if (_vtRenderer) {
             if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer()) {
-                tileRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
+                if (_horizontalLayerOffset != 0) {
+                    tileRenderer->teleportVisibleTiles((int)std::round(_horizontalLayerOffset / Const::WORLD_SIZE), 0);
+                }
+                tileRenderer->setVisibleTiles(tiles);
             }
         }
         _tiles = std::move(tiles);
@@ -302,7 +305,7 @@ namespace carto {
         _vtRenderer = mapRenderer->getGLResourceManager()->create<VTRenderer>(_tileTransformer);
 
         if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer()) {
-            tileRenderer->setVisibleTiles(_tiles, _horizontalLayerOffset == 0);
+            tileRenderer->setVisibleTiles(_tiles);
 
             if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
                 vt::GLTileRenderer::LightingShader lightingShader2D(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {

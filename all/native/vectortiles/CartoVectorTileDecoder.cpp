@@ -286,23 +286,21 @@ namespace carto {
             }
 
             float tileSize = 256.0f;
-            std::shared_ptr<vt::TileBackground> tileBackground;
             std::vector<std::shared_ptr<vt::TileLayer> > tileLayers;
             for (std::size_t i = 0; i < tiles.size(); i++) {
                 if (std::shared_ptr<vt::Tile> tile = tiles[i]) {
                     if (i == 0) {
                         tileSize = tile->getTileSize();
-                        tileBackground = tile->getBackground();
                     }
                     for (const std::shared_ptr<vt::TileLayer>& tileLayer : tile->getLayers()) {
                         int layerIdx = static_cast<int>(i * 65536) + tileLayer->getLayerIndex();
-                        tileLayers.push_back(std::make_shared<vt::TileLayer>(layerIdx, tileLayer->getCompOp(), tileLayer->getOpacityFunc(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
+                        tileLayers.push_back(std::make_shared<vt::TileLayer>(layerIdx, tileLayer->getCompOp(), tileLayer->getOpacityFunc(), tileLayer->getBackgrounds(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
                     }
                 }
             }
 
             auto tileMap = std::make_shared<TileMap>();
-            (*tileMap)[0] = std::make_shared<vt::Tile>(targetTile, tileSize, tileBackground, tileLayers);
+            (*tileMap)[0] = std::make_shared<vt::Tile>(targetTile, tileSize, tileLayers);
             return tileMap;
         }
         catch (const std::exception& ex) {
