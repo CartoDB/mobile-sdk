@@ -43,7 +43,7 @@ namespace carto {
             if (element1.is3DElement()) {
                 double deltaDistance = element1.getDistance(_viewState.getCameraPos()) - element2.getDistance(_viewState.getCameraPos());
                 if (deltaDistance != 0) {
-                    return deltaDistance < 0;
+                    return deltaDistance > 0;
                 }
             }
 
