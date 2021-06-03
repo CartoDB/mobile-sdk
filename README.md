@@ -3,7 +3,7 @@
 CARTO Mobile SDK is an open, multi-platform framework for visualizing maps and providing location based services on mobile devices like smartphones or tablets. It includes high performance and flexible vector tile renderer, multiple built-in routing engines (for both indoor and street maps) plus built-in geocoding and reverse geocoding support.
 
 
-![Liverpool map](https://drive.google.com/uc?id=1nnNxTse8u1KED5Ez8fWwLRfoD2IKDWqH)
+![Liverpool map](https://drive.google.com/uc?id=1nnNxTse8u1KED5Ez8fWwLRfoD2IKDWqH | width=1024)
 
 ## Features
 
@@ -27,9 +27,8 @@ CARTO Mobile SDK is an open, multi-platform framework for visualizing maps and p
 
 ## Installing and building
 
-**We strongly suggest using the precompiled SDK versions that can be found in the [Releases](https://github.com/CartoDB/mobile-sdk/releases) section.** 
-
-For custom builds, please read the [building guide](scripts/README.md).
+* **We strongly suggest using the precompiled SDK versions that can be found in the [Releases](https://github.com/CartoDB/mobile-sdk/releases) section.** 
+* For custom builds, please read the [building guide](scripts/README.md).
 
 ## Documentation and samples
 
@@ -46,4 +45,4 @@ For custom builds, please read the [building guide](scripts/README.md).
 
 ## Developing & Contributing to CARTO
 
-See [our contributing doc](CONTRIBUTING.md) for how you can improve CARTO, but you will need to sign a Contributor License Agreement (CLA) before making a submission, [learn more here](https://carto.com/contributions).
+* See [our contributing doc](CONTRIBUTING.md) for how you can improve CARTO, but you will need to sign a Contributor License Agreement (CLA) before making a submission, [learn more here](https://carto.com/contributions).
