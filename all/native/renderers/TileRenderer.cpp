@@ -129,12 +129,12 @@ namespace carto {
 
         bool refresh = tileRenderer->startFrame(deltaSeconds * 3);
 
-        tileRenderer->renderGeometry2D();
+        tileRenderer->renderGeometry(true, false);
         if (_labelOrder == 0) {
             tileRenderer->renderLabels(true, false);
         }
         if (_buildingOrder == 0) {
-            tileRenderer->renderGeometry3D();
+            tileRenderer->renderGeometry(false, true);
         }
         if (_labelOrder == 0) {
             tileRenderer->renderLabels(false, true);
@@ -165,7 +165,7 @@ namespace carto {
             tileRenderer->renderLabels(true, false);
         }
         if (_buildingOrder == 1) {
-            tileRenderer->renderGeometry3D();
+            tileRenderer->renderGeometry(false, true);
         }
         if (_labelOrder == 1) {
             tileRenderer->renderLabels(false, true);
