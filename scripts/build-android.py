@@ -181,7 +181,7 @@ def buildAndroidAAR(args):
      copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) and \
      copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)):
     zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print("Output available in:\n%s\n\nTo publish, use:\ngradle -p android-aar publishReleasePublicationToSonatypeRepository -Dbuild-version=%s\nThe log in to https://s01.oss.sonatype.org, 'Close' and then 'Release'.\n" % (distDir, version))
+    print("Output available in:\n%s\n\nTo publish, use:\ngradle -p android-aar publishReleasePublicationToSonatypeRepository -Dbuild-version=%s\nThen log in to https://s01.oss.sonatype.org, 'Close' and then 'Release'.\n" % (distDir, version))
     return True
   return False
 
