@@ -38,6 +38,8 @@ Pod::Spec.new do |s|
 
   s.frameworks = $frameworks
 
+  s.vendored_frameworks = $vendoredFrameworks
+
   s.libraries = "z", "c++"
 
   s.requires_arc = true

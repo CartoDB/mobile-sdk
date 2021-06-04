@@ -118,7 +118,13 @@ def buildWinPhoneNuget(args):
   version = args.buildversion
 
   with open('%s/scripts/nuget/CartoMobileSDK.WinPhone.nuspec.template' % baseDir, 'r') as f:
-    nuspecFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration, 'version': version })
+    nuspecFile = string.Template(f.read()).safe_substitute({
+      'baseDir': baseDir,
+      'buildDir': buildDir,
+      'configuration': args.configuration,
+      'nativeConfiguration': args.nativeconfiguration,
+      'version': version
+    })
   with open('%s/CartoMobileSDK.WinPhone.nuspec' % buildDir, 'w') as f:
     f.write(nuspecFile)
 

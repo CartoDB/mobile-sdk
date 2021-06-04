@@ -212,10 +212,24 @@ def buildIOSCocoapod(args, buildpackage):
   distName = 'sdk4-ios-%s%s.zip' % (version, "-metal" if args.metalangle else "")
   frameworkName 'CartoMobileSDK%s' % ("-Metal" if args.metalangle else "")
   iosversion = '9.0'
-  frameworks = (["Metal", "MetalKit"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation", $frameworkName]
+  frameworks = (["Metal", "MetalKit"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation"]
+  xcframeworks = []
+  if args.buildxcframework:
+    xcframeworks += [frameworkName]
+  else:
+    frameworks += [frameworkName]
 
   with open('%s/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
-    cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'frameworkName': frameworkName, 'version': version, 'iosversion': iosversion, 'frameworks': ', '.join('"%s"' % framework for framework in frameworks) })
+    cocoapodFile = string.Template(f.read()).safe_substitute({
+      'baseDir': baseDir,
+      'distDir': distDir,
+      'distName': distName,
+      'frameworkName': frameworkName,
+      'version': version,
+      'iosversion': iosversion,
+      'frameworks': ', '.join('"%s"' % framework for framework in frameworks),
+      'vendoredFrameworks': ', '.join('"%s.xcframework"' % framework for framework in xcframeworks)
+    })
   with open('%s/%s.podspec' % (distDir, frameworkName), 'w') as f:
     f.write(cocoapodFile)
 
