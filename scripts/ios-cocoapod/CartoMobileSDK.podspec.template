@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
 
   s.platform     = :ios, "$iosversion"
 
-  s.source       = { :http => "https://nutifront.s3.amazonaws.com/sdk_snapshots/$distName"}
+  s.source       = { :http => "https://nutifront.s3.amazonaws.com/sdk_snapshots/$distName" }
 
   s.source_files  = "CartoMobileSDK.framework/**/*.{h,m}"
   # s.exclude_files = "Classes/Exclude"
