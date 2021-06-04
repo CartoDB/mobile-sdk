@@ -118,7 +118,13 @@ def buildWinPhoneNuget(args):
   version = args.buildversion
 
   with open('%s/scripts/nuget/CartoMobileSDK.WinPhone.nuspec.template' % baseDir, 'r') as f:
-    nuspecFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration, 'version': version })
+    nuspecFile = string.Template(f.read()).safe_substitute({
+      'baseDir': baseDir,
+      'buildDir': buildDir,
+      'configuration': args.configuration,
+      'nativeConfiguration': args.nativeconfiguration,
+      'version': version
+    })
   with open('%s/CartoMobileSDK.WinPhone.nuspec' % buildDir, 'w') as f:
     f.write(nuspecFile)
 
@@ -166,6 +172,10 @@ if 'all' in args.winphonearch or args.winphonearch == []:
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = 'RelWithDebInfo' if args.configuration == 'Debug' else args.configuration
+
+if not os.path.exists("%s/generated/winphone-csharp/proxies" % getBaseDir()):
+  print("Proxies/wrappers not generated yet, run swigpp script first.")
+  sys.exit(-1)
 
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')

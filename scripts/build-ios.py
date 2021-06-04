@@ -209,13 +209,28 @@ def buildIOSCocoapod(args, buildpackage):
   baseDir = getBaseDir()
   distDir = getDistDir('ios')
   version = args.buildversion
-  distName = 'sdk4-ios-%s.zip' % version
+  distName = 'sdk4-ios-%s%s.zip' % (version, "-metal" if args.metalangle else "")
+  frameworkName 'CartoMobileSDK%s' % ("-Metal" if args.metalangle else "")
   iosversion = '9.0'
-  frameworks = (["Metal", "MetalKit"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation", "CartoMobileSDK"]
+  frameworks = (["Metal", "MetalKit"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation"]
+  xcframeworks = []
+  if args.buildxcframework:
+    xcframeworks += [frameworkName]
+  else:
+    frameworks += [frameworkName]
 
   with open('%s/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
-    cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'version': version, 'iosversion': iosversion, 'frameworks': ', '.join('"%s"' % framework for framework in frameworks) })
-  with open('%s/CartoMobileSDK.podspec' % distDir, 'w') as f:
+    cocoapodFile = string.Template(f.read()).safe_substitute({
+      'baseDir': baseDir,
+      'distDir': distDir,
+      'distName': distName,
+      'frameworkName': frameworkName,
+      'version': version,
+      'iosversion': iosversion,
+      'frameworks': ', '.join('"%s"' % framework for framework in frameworks),
+      'vendoredFrameworks': ', '.join('"%s.xcframework"' % framework for framework in xcframeworks)
+    })
+  with open('%s/%s.podspec' % (distDir, frameworkName), 'w') as f:
     f.write(cocoapodFile)
 
   if buildpackage:
@@ -223,7 +238,8 @@ def buildIOSCocoapod(args, buildpackage):
       os.remove('%s/%s' % (distDir, distName))
     except:
       pass
-    if not execute('zip', distDir, '-y', '-r', distName, 'CartoMobileSDK.framework'):
+    frameworkDir = 'CartoMobileSDK.xcframework' if args.buildxcframework else 'CartoMobileSDK.framework'
+    if not execute('zip', distDir, '-y', '-r', distName, frameworkDir):
       return False
     print("Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers\npod trunk push\n" % (distDir, distDir, distName, distName))
   return True
@@ -251,6 +267,10 @@ args.defines += ';' + getProfile(args.profile).get('defines', '')
 if args.metalangle:
   args.defines += ';' + '_CARTO_USE_METALANGLE'
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
+
+if not os.path.exists("%s/generated/ios-objc/proxies" % getBaseDir()):
+  print("Proxies/wrappers not generated yet, run swigpp script first.")
+  sys.exit(-1)
 
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')

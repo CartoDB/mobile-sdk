@@ -148,7 +148,12 @@ def buildAndroidAAR(args):
   version = args.buildversion
 
   with open('%s/scripts/android-aar/carto-mobile-sdk.pom.template' % baseDir, 'r') as f:
-    pomFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'distDir': distDir, 'version': version })
+    pomFile = string.Template(f.read()).safe_substitute({
+      'baseDir': baseDir,
+      'buildDir': buildDir,
+      'distDir': distDir,
+      'version': version
+    })
   pomFileName = '%s/carto-mobile-sdk.pom' % buildDir
   with open(pomFileName, 'w') as f:
     f.write(pomFile)
@@ -181,7 +186,7 @@ def buildAndroidAAR(args):
      copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) and \
      copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)):
     zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print("Output available in:\n%s\n\nTo publish, use:\ngradle -p android-aar publishReleasePublicationToSonatypeRepository -Dbuild-version=%s\nThe log in to https://s01.oss.sonatype.org, 'Close' and then 'Release'.\n" % (distDir, version))
+    print("Output available in:\n%s\n\nTo publish, use:\ngradle -p android-aar publishReleasePublicationToSonatypeRepository -Dbuild-version=%s\nThen log in to https://s01.oss.sonatype.org, 'Close' and then 'Release'.\n" % (distDir, version))
     return True
   return False
 
@@ -217,6 +222,10 @@ if args.androidndkpath == 'auto':
     args.androidndkpath = os.path.join(args.androidsdkpath, 'ndk-bundle')
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
+
+if not os.path.exists("%s/generated/android-java/proxies" % getBaseDir()):
+  print("Proxies/wrappers not generated yet, run swigpp script first.")
+  sys.exit(-1)
 
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')
