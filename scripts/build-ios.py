@@ -210,7 +210,7 @@ def buildIOSCocoapod(args, buildpackage):
   distDir = getDistDir('ios')
   version = args.buildversion
   distName = 'sdk4-ios-%s%s.zip' % (version, "-metal" if args.metalangle else "")
-  frameworkName 'CartoMobileSDK%s' % ("-Metal" if args.metalangle else "")
+  frameworkName = 'CartoMobileSDK%s' % ("-Metal" if args.metalangle else "")
   iosversion = '9.0'
   frameworks = (["Metal", "MetalKit"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation"]
   xcframeworks = []
