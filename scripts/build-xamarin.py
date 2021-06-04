@@ -207,6 +207,10 @@ if args.metalangle and args.target == 'ios':
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = args.configuration
 
+if not os.path.exists("%s/generated/%s-csharp/proxies" % (args.target, getBaseDir())):
+  print("Proxies/wrappers not generated yet, run swigpp script first.")
+  sys.exit(-1)
+
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')
   sys.exit(-1)
