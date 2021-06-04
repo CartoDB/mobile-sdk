@@ -17,7 +17,6 @@ CARTO Mobile SDK is an open, multi-platform framework for visualizing maps and p
 * Offline package support for maps, routing and geocoding
 * Support for connecting to CARTO online services like [Maps API](https://carto.com/developers/maps-api/) and [SQL API](https://carto.com/developers/sql-api/).
 
-
 ## Requirements
 
 * iOS 9 or later on Apple iPhones and iPads
@@ -41,6 +40,10 @@ CARTO Mobile SDK is an open, multi-platform framework for visualizing maps and p
 
 * Post an [issue](https://github.com/CartoDB/mobile-sdk/issues) to this project, submit a [Pull Request](https://github.com/CartoDB/mobile-sdk/pulls)
 * Commercial support options: sales@carto.com
+
+## License
+
+* CARTO Mobile SDK is licensed under the BSD 3-clause "New" or "Revised" License - see the [LICENSE file](LICENSE) for details.
 
 ## Developing & Contributing to CARTO
 
