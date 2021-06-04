@@ -44,6 +44,7 @@ def buildAndroidSO(args, abi):
     "-DCMAKE_BUILD_TYPE=%s" % args.configuration,
     "-DCMAKE_MAKE_PROGRAM='%s'" % args.make,
     "-DWRAPPER_DIR=%s" % ('%s/generated/android-csharp/wrappers' % baseDir),
+    "-DSINGLE_LIBRARY:BOOL=ON",
     "-DANDROID_STL='c++_static'",
     "-DANDROID_ABI='%s'" % abi,
     "-DANDROID_PLATFORM='%d'" % (api64 if '64' in abi else api32),
