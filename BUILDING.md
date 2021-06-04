@@ -1,13 +1,5 @@
-# CARTO Mobile SDK 
+# Building CARTO Mobile SDK 
 
-CARTO Mobile SDK is a multi-platform mobile
-mapping SDK written mostly in C++ with bindings to numerous languages
-(Java/C# for Android, ObjectiveC/C# for iOS and C# for Universal Windows Platform).
-
-This project contains the core part of the SDK, for samples, look at
-the ['Usage' section](#usage).
-
-# Building
 **We strongly suggest to use the precompiled SDK versions that can be found in
 the [Releases](https://github.com/CartoDB/mobile-sdk/releases) section** 
 
@@ -89,5 +81,4 @@ python build-winphone.py --profile standard
 
 # Support, Questions?
 * Post an [issue](https://github.com/CartoDB/mobile-sdk/issues) to this project, submit a [Pull Request](https://github.com/CartoDB/mobile-sdk/pulls)
-* Post to CARTO developer group for generic CARTO related questions: https://groups.google.com/forum/#!forum/cartodb
 * Commercial support options: sales@carto.com
