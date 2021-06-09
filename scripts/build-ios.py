@@ -209,7 +209,7 @@ def buildIOSCocoapod(args, buildpackage):
   baseDir = getBaseDir()
   distDir = getDistDir('ios')
   version = args.buildversion
-  distName = 'sdk4-ios-%s%s.zip' % (version, "-metal" if args.metalangle else "")
+  distName = 'sdk4-ios-%s%s.zip' % (("metal-" if args.metalangle else ""), version)
   frameworkName = 'CartoMobileSDK%s' % ("-Metal" if args.metalangle else "")
   iosversion = '9.0'
   frameworks = (["Metal", "MetalKit"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation"]
@@ -228,7 +228,7 @@ def buildIOSCocoapod(args, buildpackage):
       'version': version,
       'iosversion': iosversion,
       'frameworks': ', '.join('"%s"' % framework for framework in frameworks),
-      'vendoredFrameworks': ', '.join('"%s.xcframework"' % framework for framework in xcframeworks)
+      'vendoredFrameworks': ', '.join('"%s.xcframework"' % framework for framework in xcframeworks) if xcframeworks else 'nil'
     })
   with open('%s/%s.podspec' % (distDir, frameworkName), 'w') as f:
     f.write(cocoapodFile)

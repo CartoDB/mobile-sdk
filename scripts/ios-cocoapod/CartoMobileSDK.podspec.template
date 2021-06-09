@@ -2,6 +2,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "$frameworkName"
+  s.module_name  = "CartoMobileSDK"
   s.version      = "$version"
   s.summary      = "CARTO Mobile SDK is an advanced MapView with 3D effects, offline maps and many more features"
 
@@ -44,8 +45,8 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.xcconfig = { "FRAMEWORK_SEARCH_PATHS" => "\"$(PODS_ROOT)/CartoMobileSDK/\"" }
+  s.xcconfig = { "FRAMEWORK_SEARCH_PATHS" => "\"$(PODS_ROOT)/$frameworkName/\"" }
 
-  s.cocoapods_version = '>= 1.10.1'
+  s.cocoapods_version = ">= 1.10.1"
 
 end
