@@ -102,10 +102,16 @@ namespace carto {
     }
     
     void Layer::refresh() {
-        // Reload data using the last known cull state
-        const std::shared_ptr<CullState>& cullState = getLastCullState();
+        std::shared_ptr<CullState> cullState = getLastCullState();
         if (cullState) {
+            // Reload data using the last known cull state.
             loadData(cullState);
+        } else {
+            // Last cullstate not known yet. Let renderer do async update.
+            if (auto mapRenderer = getMapRenderer()) {
+                mapRenderer->layerChanged(shared_from_this(), false);
+                mapRenderer->requestRedraw();
+            }
         }
     }
 
