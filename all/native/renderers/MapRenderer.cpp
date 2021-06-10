@@ -556,7 +556,7 @@ namespace carto {
             _kineticEventHandler.stopRotation();
             _kineticEventHandler.stopZoom();
         
-            _lastFrameTime = std::chrono::steady_clock::now();
+            _lastFrameTime.reset();
 
             // Perform culling without delay
             viewChanged(false);
@@ -564,7 +564,10 @@ namespace carto {
         
         // Calculate time from the last frame
         std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
-        float deltaSeconds = std::chrono::duration_cast<std::chrono::duration<float> >(currentTime - _lastFrameTime).count();
+        float deltaSeconds = 1.0f / 60.0f;
+        if (_lastFrameTime) {
+            deltaSeconds = std::max(0.0f, std::chrono::duration_cast<std::chrono::duration<float> >(currentTime - *_lastFrameTime).count());
+        }
         _lastFrameTime = currentTime;
     
         // Callback for synchronized rendering
@@ -609,6 +612,7 @@ namespace carto {
             for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
                 onChangeListener->onMapIdle();
             }
+            _lastFrameTime.reset();
         }
 
         GLContext::CheckGLError("MapRenderer::onDrawFrame");

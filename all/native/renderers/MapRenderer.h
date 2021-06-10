@@ -19,6 +19,7 @@
 #include "renderers/WatermarkRenderer.h"
 
 #include <atomic>
+#include <optional>
 #include <chrono>
 #include <memory>
 #include <thread>
@@ -166,7 +167,7 @@ namespace carto {
         static const std::string BLEND_VERTEX_SHADER;
         static const std::string BLEND_FRAGMENT_SHADER;
         
-        std::chrono::steady_clock::time_point _lastFrameTime;
+        std::optional<std::chrono::steady_clock::time_point> _lastFrameTime;
     
         ViewState _viewState;
 
