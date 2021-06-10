@@ -14,10 +14,9 @@
 #include "components/DirectorPtr.h"
 #include "datasources/TileDataSource.h"
 #include "layers/Layer.h"
-#include "layers/components/FetchingTileTasks.h"
 
 #include <atomic>
-#include <unordered_set>
+#include <mutex>
 #include <unordered_map>
 
 namespace carto {
@@ -243,7 +242,6 @@ namespace carto {
             bool isInvalidated() const;
             void invalidate();
 
-            virtual bool isCanceled() const;
             virtual void cancel();
             virtual void run();
             
@@ -253,15 +251,88 @@ namespace carto {
             std::weak_ptr<TileLayer> _layer;
             long long _tileId;
             MapTile _tile; // original tile
+            bool _preloadingTile;
             std::vector<MapTile> _dataSourceTiles; // tiles in valid datasource range, ordered to top
 
         private:
             bool loadUTFGridTile(const std::shared_ptr<TileLayer>& layer);
 
-            bool _preloadingTile;
-            bool _invalidated;
+            bool _started;
+            std::atomic<bool> _invalidated;
         };
         
+        class FetchingTileTasks {
+        public:
+            FetchingTileTasks() : _fetchingTiles(), _mutex() { }
+            
+            std::vector<std::shared_ptr<FetchTaskBase> > get(long long tileId) const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                auto it = _fetchingTiles.find(tileId);
+                return it != _fetchingTiles.end() ? it->second : std::vector<std::shared_ptr<FetchTaskBase> >();
+            }
+            
+            void insert(long long tileId, const std::shared_ptr<FetchTaskBase>& task) {
+                std::lock_guard<std::mutex> lock(_mutex);
+                _fetchingTiles[tileId].push_back(task);
+            }
+            
+            void remove(long long tileId, const std::shared_ptr<FetchTaskBase>& task) {
+                std::lock_guard<std::mutex> lock(_mutex);
+                auto it = _fetchingTiles.find(tileId);
+                if (it == _fetchingTiles.end()) {
+                    return;
+                }
+                std::vector<std::shared_ptr<FetchTaskBase> >& tasks = it->second;
+                auto it2 = std::find(tasks.begin(), tasks.end(), task);
+                if (it2 == tasks.end()) {
+                    return;
+                }
+                tasks.erase(it2);
+                if (tasks.empty()) {
+                    _fetchingTiles.erase(it);
+                }
+            }
+            
+            std::vector<std::shared_ptr<FetchTaskBase> > getAll() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                std::vector<std::shared_ptr<FetchTaskBase> > tasks;
+                for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                    tasks.insert(tasks.end(), it->second.begin(), it->second.end());
+                }
+                return tasks;
+            }
+            
+            int getPreloadingCount() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                int count = 0;
+                for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                    for (const std::shared_ptr<FetchTaskBase>& task : it->second) {
+                        if (task->isPreloadingTile()) {
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            }
+            
+            int getVisibleCount() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                int count = 0;
+                for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                    for (const std::shared_ptr<FetchTaskBase>& task : it->second) {
+                        if (!task->isPreloadingTile()) {
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            }
+
+        private:
+            std::unordered_map<long long, std::vector<std::shared_ptr<FetchTaskBase> > > _fetchingTiles;
+            mutable std::mutex _mutex;
+        };
+
         explicit TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
 
         virtual void setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
@@ -313,7 +384,7 @@ namespace carto {
     
         ThreadSafeDirectorPtr<UTFGridEventListener> _utfGridEventListener;
 
-        FetchingTileTasks<FetchTaskBase> _fetchingTileTasks;
+        FetchingTileTasks _fetchingTileTasks;
         
         int _frameNr;
         int _lastFrameNr;

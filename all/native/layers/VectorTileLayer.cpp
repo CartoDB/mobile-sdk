@@ -186,20 +186,23 @@ namespace carto {
     }
 
     void VectorTileLayer::tilesChanged(bool removeTiles) {
-        // Invalidate current tasks
-        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
-            task->invalidate();
-        }
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        // Flush caches
-        if (removeTiles) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleCache.clear();
-            _preloadingCache.clear();
-        } else {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleCache.invalidate_all(std::chrono::steady_clock::now());
-            _preloadingCache.clear();
+            // Invalidate current tasks
+            for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
+                task->invalidate();
+                task->cancel();
+            }
+
+            // Flush caches
+            if (removeTiles) {
+                _visibleCache.clear();
+                _preloadingCache.clear();
+            } else {
+                _visibleCache.invalidate_all(std::chrono::steady_clock::now());
+                _preloadingCache.clear();
+            }
         }
         refresh();
     }
@@ -548,19 +551,22 @@ namespace carto {
                 // Construct tile info - keep original data if interactivity is required
                 VectorTileLayer::TileInfo tileInfo(layer->calculateMapTileBounds(dataSourceTile.getFlipped()), layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
 
-                // Store tile to cache, unless invalidated
-                if (!isInvalidated()) {
+                {
                     std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                    if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
-                        if (isPreloadingTile()) {
-                            layer->_preloadingCache.put(_tileId, tileInfo, tileInfo.getSize());
-                            if (tileData->getMaxAge() >= 0) {
-                                layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                            }
-                        } else {
-                            layer->_visibleCache.put(_tileId, tileInfo, tileInfo.getSize());
-                            if (tileData->getMaxAge() >= 0) {
-                                layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+
+                    // Store tile to cache, unless invalidated
+                    if (!isInvalidated()) {
+                        if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
+                            if (isPreloadingTile()) {
+                                layer->_preloadingCache.put(_tileId, tileInfo, tileInfo.getSize());
+                                if (tileData->getMaxAge() >= 0) {
+                                    layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                                }
+                            } else {
+                                layer->_visibleCache.put(_tileId, tileInfo, tileInfo.getSize());
+                                if (tileData->getMaxAge() >= 0) {
+                                    layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                                }
                             }
                         }
                     }

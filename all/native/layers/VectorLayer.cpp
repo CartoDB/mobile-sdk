@@ -52,7 +52,7 @@ namespace carto {
         _pointRenderer(std::make_shared<PointRenderer>()),
         _polygonRenderer(std::make_shared<PolygonRenderer>()),
         _polygon3DRenderer(std::make_shared<Polygon3DRenderer>()),
-        _lastTask()
+        _fetchingTasks()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -84,8 +84,7 @@ namespace carto {
     }
     
     bool VectorLayer::isUpdateInProgress() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return static_cast<bool>(_lastTask);
+        return _fetchingTasks.getCount() > 0;
     }
     
     void VectorLayer::setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
@@ -104,14 +103,12 @@ namespace carto {
     }
     
     void VectorLayer::loadData(const std::shared_ptr<CullState>& cullState) {
-        // Cancel last task, if it has not started yet
-        std::shared_ptr<CancelableTask> lastTask;
+        // Cancel tasks
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            lastTask = _lastTask;
-        }
-        if (lastTask) {
-            lastTask->cancel();
+            for (const std::shared_ptr<FetchTask>& task : _fetchingTasks.getAll()) {
+                task->cancel();
+            }
         }
 
         // Check if the layer should be shown
@@ -135,15 +132,15 @@ namespace carto {
             return;
         }
 
-        lastTask = createFetchTask(cullState);
         std::shared_ptr<CancelableThreadPool> envelopeThreadPool;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _lastTask = lastTask;
             envelopeThreadPool = _envelopeThreadPool;
         }
         if (envelopeThreadPool) {
-            envelopeThreadPool->execute(lastTask, getUpdatePriority());
+            std::shared_ptr<FetchTask> task = createFetchTask(cullState);
+            _fetchingTasks.insert(task);
+            envelopeThreadPool->execute(task, getUpdatePriority());
         }
     }
 
@@ -433,7 +430,7 @@ namespace carto {
         _dataSourceListener.reset();
     }
 
-    std::shared_ptr<CancelableTask> VectorLayer::createFetchTask(const std::shared_ptr<CullState>& cullState) {
+    std::shared_ptr<VectorLayer::FetchTask> VectorLayer::createFetchTask(const std::shared_ptr<CullState>& cullState) {
         return std::make_shared<FetchTask>(std::static_pointer_cast<VectorLayer>(shared_from_this()));
     }
     
@@ -491,39 +488,42 @@ namespace carto {
     }
     
     VectorLayer::FetchTask::FetchTask(const std::weak_ptr<VectorLayer>& layer) :
-        _layer(layer), _started(false)
+        _layer(layer),
+        _started(false)
     {
     }
     
     void VectorLayer::FetchTask::cancel() {
+        std::shared_ptr<VectorLayer> layer = _layer.lock();
+        if (!layer) {
+            Log::Info("VectorLayer::FetchTask: Lost connection to layer");
+            return;
+        }
+
         bool cancel = false;
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
             if (!_started) {
-                _canceled = true;
                 cancel = true;
             }
+            CancelableTask::cancel();
         }
 
         if (cancel) {
-            if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
-                std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                if (layer->_lastTask == shared_from_this()) {
-                    layer->_lastTask.reset();
-                }
-            }
+            layer->_fetchingTasks.remove(std::static_pointer_cast<FetchTask>(shared_from_this()));
         }
     }
     
     void VectorLayer::FetchTask::run() {
-        const std::shared_ptr<VectorLayer>& layer = _layer.lock();
+        std::shared_ptr<VectorLayer> layer = _layer.lock();
         if (!layer) {
+            Log::Info("VectorLayer::FetchTask: Lost connection to layer");
             return;
         }
         
         {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_canceled) {
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            if (isCanceled()) {
                 return;
             }
             _started = true;
@@ -541,7 +541,7 @@ namespace carto {
             }
             if (lastCullState) {
                 try {
-                    billboardsChanged = loadElements(lastCullState);
+                    billboardsChanged = loadElements(layer, lastCullState);
                 }
                 catch (const std::exception& ex) {
                     Log::Errorf("VectorLayer::FetchTask: Exception while loading elements: %s", ex.what());
@@ -550,12 +550,8 @@ namespace carto {
                 std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
                 billboardsChanged = layer->refreshRendererElements();
             }
-        
-            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-        
-            if (layer->_lastTask == shared_from_this()) {
-                layer->_lastTask.reset();
-            }
+
+            layer->_fetchingTasks.remove(std::static_pointer_cast<FetchTask>(shared_from_this()));
         }
 
         if (auto mapRenderer = layer->getMapRenderer()) {
@@ -567,12 +563,7 @@ namespace carto {
         }
     }
     
-    bool VectorLayer::FetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
-        const std::shared_ptr<VectorLayer>& layer = _layer.lock();
-        if (!layer) {
-            return false;
-        }
-
+    bool VectorLayer::FetchTask::loadElements(const std::shared_ptr<VectorLayer>& layer, const std::shared_ptr<CullState>& cullState) {
         std::shared_ptr<VectorData> vectorData = layer->_dataSource->loadElements(cullState);
         if (!vectorData) {
             return false;

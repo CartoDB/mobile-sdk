@@ -318,7 +318,7 @@ namespace carto {
 
             // If there is an existing task for this tile, keep it. Otherwise fetch it.
             bool found = false;
-            for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.get(tileId)) {
+            for (std::shared_ptr<FetchTaskBase> task : _fetchingTileTasks.get(tileId)) {
                 if (!task->isCanceled()) {
                     if (task->isPreloadingTile() == fetchTileInfo.preloading) {
                         found = true;
@@ -685,8 +685,9 @@ namespace carto {
         _layer(layer),
         _tileId(tileId),
         _tile(tile),
-        _dataSourceTiles(),
         _preloadingTile(preloadingTile),
+        _dataSourceTiles(),
+        _started(false),
         _invalidated(false)
     {
         for (MapTile dataSourceTile = tile; true; ) {
@@ -714,31 +715,49 @@ namespace carto {
     }
     
     bool TileLayer::FetchTaskBase::isInvalidated() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _invalidated;
+        return _invalidated.load();
     }
 
     void TileLayer::FetchTaskBase::invalidate() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _invalidated = true;
-    }
-
-    bool TileLayer::FetchTaskBase::isCanceled() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _canceled;
+        _invalidated.store(true);
     }
         
     void TileLayer::FetchTaskBase::cancel() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _canceled = true;
+        std::shared_ptr<TileLayer> layer = _layer.lock();
+        if (!layer) {
+            Log::Info("TileLayer::FetchTaskBase: Lost connection to layer");
+            return;
+        }
+
+        bool cancel = false;
+        {
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            if (!_started) {
+                cancel = true;
+            }
+            CancelableTask::cancel();
+        }
+
+        if (cancel) {
+            layer->_fetchingTileTasks.remove(_tileId, std::static_pointer_cast<FetchTaskBase>(shared_from_this()));
+        }
     }
-        
+
     void TileLayer::FetchTaskBase::run() {
         std::shared_ptr<TileLayer> layer = _layer.lock();
         if (!layer) {
+            Log::Info("TileLayer::FetchTaskBase: Lost connection to layer");
             return;
         }
             
+        {
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            if (isCanceled()) {
+                return;
+            }
+            _started = true;
+        }
+
         bool refresh = false;
         try {
             refresh = loadTile(layer) && !_preloadingTile;
@@ -785,6 +804,9 @@ namespace carto {
             }
             if (tileData->isReplaceWithParent()) {
                 continue;
+            }
+            if (!tileData->getData()) {
+                break;
             }
 
             std::shared_ptr<UTFGridTile> utfTile = UTFGridTile::DecodeUTFTile(tileData->getData());

@@ -9,7 +9,7 @@
 
 #include "components/Task.h"
 
-#include <mutex>
+#include <atomic>
 
 namespace carto {
 
@@ -18,24 +18,21 @@ namespace carto {
         virtual ~CancelableTask() { }
     
         bool isCanceled() const {
-            std::lock_guard<std::mutex> lock(_mutex);
-            return _canceled;
+            return _canceled.load();
         }
     
         virtual void cancel() {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _canceled = true;
+            _canceled.store(true);
         }
     
     protected:
         CancelableTask() :
-            _canceled(false), _mutex()
+            _canceled(false)
         {
         }
-    
-        bool _canceled;
-    
-        mutable std::mutex _mutex;
+
+    private:
+        std::atomic<bool> _canceled;
     };
     
 }

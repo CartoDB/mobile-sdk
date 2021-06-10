@@ -149,7 +149,7 @@ namespace carto {
         refresh();
     }
 
-    std::shared_ptr<CancelableTask> ClusteredVectorLayer::createFetchTask(const std::shared_ptr<CullState>& cullState) {
+    std::shared_ptr<VectorLayer::FetchTask> ClusteredVectorLayer::createFetchTask(const std::shared_ptr<CullState>& cullState) {
         return std::make_shared<ClusterFetchTask>(std::static_pointer_cast<ClusteredVectorLayer>(shared_from_this()));
     }
 
@@ -158,12 +158,8 @@ namespace carto {
     {
     }
 
-    bool ClusteredVectorLayer::ClusterFetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
-        std::shared_ptr<ClusteredVectorLayer> layer = std::static_pointer_cast<ClusteredVectorLayer>(_layer.lock());
-        if (!layer) {
-            return false;
-        }
-
+    bool ClusteredVectorLayer::ClusterFetchTask::loadElements(const std::shared_ptr<VectorLayer>& vectorLayer, const std::shared_ptr<CullState>& cullState) {
+        std::shared_ptr<ClusteredVectorLayer> layer = std::static_pointer_cast<ClusteredVectorLayer>(vectorLayer);
         if (auto options = layer->getOptions()) {
             std::lock_guard<std::mutex> lock(layer->_clusterMutex);
             layer->_dpiScale = options->getDPI() / Const::UNSCALED_DPI;

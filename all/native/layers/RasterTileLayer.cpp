@@ -185,20 +185,23 @@ namespace carto {
     }
 
     void RasterTileLayer::tilesChanged(bool removeTiles) {
-        // Invalidate current tasks
-        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
-            task->invalidate();
-        }
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        // Flush caches
-        if (removeTiles) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleCache.clear();
-            _preloadingCache.clear();
-        } else {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleCache.invalidate_all(std::chrono::steady_clock::now());
-            _preloadingCache.clear();
+            // Invalidate current tasks
+            for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
+                task->invalidate();
+                task->cancel();
+            }
+
+            // Flush caches
+            if (removeTiles) {
+                _visibleCache.clear();
+                _preloadingCache.clear();
+            } else {
+                _visibleCache.invalidate_all(std::chrono::steady_clock::now());
+                _preloadingCache.clear();
+            }
         }
         refresh();
     }
@@ -464,23 +467,27 @@ namespace carto {
                 std::shared_ptr<vt::Tile> vtTile = layer->createVectorTile(_tile, bitmap);
                 std::size_t vtTileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
 
-                if (!isInvalidated()) {
-                    // Build the bitmap object
+                {
                     std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                    if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
-                        if (isPreloadingTile()) {
-                            layer->_preloadingCache.put(_tileId, vtTile, vtTileSize);
-                            if (tileData->getMaxAge() >= 0) {
-                                layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                            }
-                        } else {
-                            layer->_visibleCache.put(_tileId, vtTile, vtTileSize);
-                            if (tileData->getMaxAge() >= 0) {
-                                layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+
+                    // Build the bitmap object
+                    if (!isInvalidated()) {
+                        if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
+                            if (isPreloadingTile()) {
+                                layer->_preloadingCache.put(_tileId, vtTile, vtTileSize);
+                                if (tileData->getMaxAge() >= 0) {
+                                    layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                                }
+                            } else {
+                                layer->_visibleCache.put(_tileId, vtTile, vtTileSize);
+                                if (tileData->getMaxAge() >= 0) {
+                                    layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                                }
                             }
                         }
                     }
                 }
+
                 refresh = true; // NOTE: need to refresh even when invalidated
             } else {
                 Log::Error("RasterTileLayer::FetchTask: Failed to decode tile");
