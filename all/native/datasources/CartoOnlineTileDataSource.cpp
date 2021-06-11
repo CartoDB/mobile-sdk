@@ -8,6 +8,9 @@
 #include "utils/NetworkUtils.h"
 #include "utils/PlatformUtils.h"
 
+#include <cmath>
+#include <algorithm>
+
 #include <picojson/picojson.h>
 
 #include <stdext/base64.h>
@@ -17,7 +20,8 @@ namespace carto {
     CartoOnlineTileDataSource::CartoOnlineTileDataSource(const std::string& source) :
         TileDataSource(),
         _source(source),
-        _cache(MAX_CACHED_TILES),
+        _cacheRecords(),
+        _cacheSize(0),
         _httpClient(Log::IsShowDebug()),
         _schema(),
         _tmsScheme(false),
@@ -46,12 +50,12 @@ namespace carto {
         std::unique_lock<std::recursive_mutex> lock(_mutex);
 
         // Check if the tile is in cache
-        std::shared_ptr<TileData> tileData;
-        if (_cache.read(mapTile.getTileId(), tileData)) {
+        std::shared_ptr<TileData> tileData = loadCacheTile(mapTile);
+        if (tileData) {
             if (tileData->getMaxAge() != 0) {
                 return tileData;
             }
-            _cache.remove(mapTile.getTileId());
+            removeCacheTile(mapTile);
         }
 
         // Reload tile service URLs, if needed
@@ -66,7 +70,7 @@ namespace carto {
             bool inside = tileMask.tileMask->getTileStatus(mapTile.getFlipped()) == PackageTileStatus::PACKAGE_TILE_STATUS_FULL;
             if (tileMask.inclusive == inside) {
                 Log::Infof("CartoOnlineTileDataSource::loadTile: Using tilemask tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
-                return std::make_shared<TileData>(tileMask.tileData);
+                return tileMask.tileData;
             }
         }
 
@@ -82,7 +86,7 @@ namespace carto {
         // Store the tile in local cache
         if (tileData) {
             if (tileData->getMaxAge() != 0 && tileData->getData() && !tileData->isReplaceWithParent()) {
-                _cache.put(mapTile.getTileId(), tileData, 1);
+                storeCacheTile(mapTile, tileData);
             }
         }
         
@@ -178,8 +182,9 @@ namespace carto {
                     tileMask.inclusive = tileMaskConfig.get("type").get<std::string>() != "exclude";
                 }
                 tileMask.tileMask = std::make_shared<PackageTileMask>(tileMaskConfig.get("tilemask").get<std::string>(), _maxZoom.load());
-                std::string tileData = tileMaskConfig.get("tile").get<std::string>();
-                tileMask.tileData = std::make_shared<BinaryData>(base64::decode_base64<unsigned char>(tileData.data(), tileData.size()));
+                auto encodedTile = tileMaskConfig.get("tile").get<std::string>();
+                auto binaryTile = std::make_shared<BinaryData>(base64::decode_base64<unsigned char>(encodedTile.data(), encodedTile.size()));
+                tileMask.tileData = std::make_shared<TileData>(binaryTile);
                 _tileMasks.push_back(tileMask);
             }
         }
@@ -232,9 +237,65 @@ namespace carto {
         return tileData;
     }
 
+    std::shared_ptr<TileData> CartoOnlineTileDataSource::loadCacheTile(const MapTile& mapTile) {
+        auto it = _cacheRecords.find(mapTile);
+        if (it != _cacheRecords.end()) {
+            it->second.lastAccessTime = std::chrono::steady_clock::now();
+            return it->second.tileData;
+        }
+        return std::shared_ptr<TileData>();
+    }
+
+    void CartoOnlineTileDataSource::removeCacheTile(const MapTile& mapTile) {
+        auto it = _cacheRecords.find(mapTile);
+        if (it != _cacheRecords.end()) {
+            _cacheSize -= it->second.tileData->getData()->size();
+            _cacheRecords.erase(it);
+        }
+    }
+
+    void CartoOnlineTileDataSource::storeCacheTile(const MapTile& mapTile, const std::shared_ptr<TileData>& tileData) {
+        if (!tileData || !tileData->getData()) {
+            return;
+        }
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+
+        // Add the new record to the cache
+        CacheRecord record;
+        record.lastAccessTime = now;
+        record.tileData = tileData;
+        _cacheRecords.insert({ mapTile, record });
+        _cacheSize += tileData->getData()->size();
+
+        // If cache is full, remove the least recent record, but use weighted time, based on zoom level
+        while (_cacheRecords.size() > MAX_CACHED_TILES || _cacheSize > MAX_CACHE_SIZE) {
+            auto weightedRecordTime = [now](const MapTile& mapTile, const CacheRecord& record) -> float {
+                int zoomDelta = std::min(CACHE_MAX_ZOOM_DELTA, DEFAULT_MAX_ZOOM + 1 - mapTile.getZoom());
+                float timeSinceLastAccess = std::chrono::duration_cast<std::chrono::duration<float> >(now - record.lastAccessTime).count();
+                float weightedTime = timeSinceLastAccess / std::pow(CACHE_ZOOM_WEIGHT_FACTOR, zoomDelta);
+                return weightedTime;
+            };
+
+            auto it = std::max_element(_cacheRecords.begin(), _cacheRecords.end(), [&weightedRecordTime](const std::pair<MapTile, CacheRecord>& elem1, const std::pair<MapTile, CacheRecord>& elem2) {
+                return weightedRecordTime(elem1.first, elem1.second) < weightedRecordTime(elem2.first, elem2.second);
+            });
+            if (it == _cacheRecords.end()) {
+                break;
+            }
+            _cacheSize -= it->second.tileData->getData()->size();
+            _cacheRecords.erase(it);
+        }
+    }
+
     const int CartoOnlineTileDataSource::DEFAULT_MAX_ZOOM = 14;
 
-    const unsigned int CartoOnlineTileDataSource::MAX_CACHED_TILES = 8;
+    const int CartoOnlineTileDataSource::CACHE_MAX_ZOOM_DELTA = 8;
+
+    const float CartoOnlineTileDataSource::CACHE_ZOOM_WEIGHT_FACTOR = 1.5f;
+
+    const unsigned int CartoOnlineTileDataSource::MAX_CACHED_TILES = 64;
+
+    const std::size_t CartoOnlineTileDataSource::MAX_CACHE_SIZE = 16 * 1024 * 1024;
 
     const std::string CartoOnlineTileDataSource::TILE_SERVICE_TEMPLATE = "https://api.nutiteq.com/maps/v2/{source}/1/tiles.json";
     
