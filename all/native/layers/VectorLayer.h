@@ -13,6 +13,7 @@
 #include "datasources/VectorDataSource.h"
 #include "layers/Layer.h"
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 
@@ -186,10 +187,12 @@ namespace carto {
         const DirectorPtr<VectorDataSource> _dataSource;
         std::shared_ptr<VectorDataSource::OnChangeListener> _dataSourceListener;
         
-        std::atomic<bool> _zBuffering;
+        FetchingTasks _fetchingTasks;
 
     private:
         ThreadSafeDirectorPtr<VectorElementEventListener> _vectorElementEventListener;
+
+        std::atomic<bool> _zBuffering;
 
         std::shared_ptr<BillboardRenderer> _billboardRenderer;
         std::shared_ptr<GeometryCollectionRenderer> _geometryCollectionRenderer;
@@ -197,8 +200,6 @@ namespace carto {
         std::shared_ptr<PointRenderer> _pointRenderer;
         std::shared_ptr<PolygonRenderer> _polygonRenderer;
         std::shared_ptr<Polygon3DRenderer> _polygon3DRenderer;
-    
-        FetchingTasks _fetchingTasks;
     };
     
 }

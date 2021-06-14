@@ -16,6 +16,7 @@
 #include "graphics/ViewState.h"
 #include "layers/Layer.h"
 
+#include <atomic>
 #include <string>
 #include <memory>
 #include <map>
@@ -217,8 +218,8 @@ namespace carto {
         static const unsigned int DEFAULT_MESH_CACHE_SIZE;
         static const unsigned int DEFAULT_TEXTURE_CACHE_SIZE;
     
-        std::size_t _maxMemorySize;
-        float _LODResolutionFactor;
+        std::atomic<std::size_t> _maxMemorySize;
+        std::atomic<float> _LODResolutionFactor;
     
         MapTileList _mapTileList;
         ViewState _mapTileListViewState;

@@ -54,7 +54,7 @@ namespace carto {
     NMLModelLODTreeLayer::NMLModelLODTreeLayer(const std::shared_ptr<NMLModelLODTreeDataSource>& dataSource) :
         Layer(),
         _maxMemorySize(DEFAULT_MAX_MEMORY_SIZE),
-        _LODResolutionFactor(1),
+        _LODResolutionFactor(1.0f),
         _mapTileList(),
         _mapTileListViewState(),
         _modelLODTreeMap(),
@@ -92,24 +92,20 @@ namespace carto {
     }
 
     std::size_t NMLModelLODTreeLayer::getMaxMemorySize() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _maxMemorySize;
-    }    
+        return _maxMemorySize.load();
+    }
 
     void NMLModelLODTreeLayer::setMaxMemorySize(std::size_t size) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _maxMemorySize = size;
+        _maxMemorySize.store(size);
         refresh();
     }
 
     float NMLModelLODTreeLayer::getLODResolutionFactor() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _LODResolutionFactor;
+        return _LODResolutionFactor.load();
     }
     
     void NMLModelLODTreeLayer::setLODResolutionFactor(float factor) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _LODResolutionFactor = factor;
+        _LODResolutionFactor.store(factor);
         refresh();
     }
 
@@ -245,7 +241,7 @@ namespace carto {
     
     bool NMLModelLODTreeLayer::isDataAvailable(const NMLModelLODTree* modelLODTree, int nodeId) {
         return loadMeshes(modelLODTree, nodeId, true) && loadTextures(modelLODTree, nodeId, true);
-    }    
+    }
     
     bool NMLModelLODTreeLayer::loadModelLODTrees(const MapTileList& mapTileList, bool checkOnly) {
         for (auto it = mapTileList.begin(); it != mapTileList.end(); it++) {
@@ -419,6 +415,7 @@ namespace carto {
         // Create new queue by taking root nodes from initial queue until size limits are exceeded
         std::size_t totalSize = 0;
         std::priority_queue<SizeNodePair> queue;
+        std::size_t maxMemorySize = getMaxMemorySize();
         while (!initialQueue.empty()) {
             SizeNodePair sizeNodePair = initialQueue.top();
             initialQueue.pop();
@@ -435,7 +432,7 @@ namespace carto {
     
             // Test if this node can be added or we have already exceeded max memory footprint
             std::size_t nodeSize = node->model().texture_footprint() + node->model().mesh_footprint();
-            if (totalSize + nodeSize <= _maxMemorySize) {
+            if (totalSize + nodeSize <= maxMemorySize) {
                 queue.push(sizeNodePair);
                 totalSize += nodeSize;
             }
@@ -444,6 +441,7 @@ namespace carto {
         // Create actual draw list by opening bigger nodes (as seen from viewpoint) first and maximum memory footprint is not exceeded
         std::vector<const nml::ModelLODTreeNode*> childList;
         std::vector<Node> nodeDrawList;
+        float lodResolutionFactor = getLODResolutionFactor();
         while (!queue.empty()) {
             SizeNodePair sizeNodePair = queue.top();
             queue.pop();
@@ -454,7 +452,7 @@ namespace carto {
             const nml::ModelLODTreeNode* node = modelLODTree->getSourceNode(nodeId);
     
             // Decide whether to subdivide this node - this depends on node screen size estimation and whether we can stay within memory size constraints after subdividing
-            if (screenSize * _LODResolutionFactor > 2 && node->children_ids_size() > 0) {
+            if (screenSize * lodResolutionFactor > 2 && node->children_ids_size() > 0) {
                 childList.clear();
                 std::size_t nodeSize = node->model().texture_footprint() + node->model().mesh_footprint();
                 std::size_t childListTotalSize = totalSize - nodeSize;
@@ -469,7 +467,7 @@ namespace carto {
                         childListTotalSize += childNodeSize;
                     }
                 }
-                if (childListTotalSize <= _maxMemorySize) {
+                if (childListTotalSize <= maxMemorySize) {
                     for (std::size_t i = 0; i < childList.size(); i++) {
                         const nml::ModelLODTreeNode* childNode = childList[i];
                         float screenSize = calculateProjectedScreenSize(childNode->bounds(), mvpMatrix * CalculateLocalMat(viewState, modelLODTree));

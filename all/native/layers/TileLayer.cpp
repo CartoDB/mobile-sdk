@@ -58,19 +58,16 @@ namespace carto {
     }
     
     void TileLayer::setPreloading(bool preloading) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _preloading = preloading;
-        }
-        refresh();
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _preloading = preloading;
     }
     
     bool TileLayer::isSynchronizedRefresh() const {
-        return _synchronizedRefresh;
+        return _synchronizedRefresh.load();
     }
     
     void TileLayer::setSynchronizedRefresh(bool synchronizedRefresh) {
-        _synchronizedRefresh = synchronizedRefresh;
+        _synchronizedRefresh.store(synchronizedRefresh);
     }
     
     TileSubstitutionPolicy::TileSubstitutionPolicy TileLayer::getTileSubstitutionPolicy() const {
@@ -179,23 +176,23 @@ namespace carto {
         
     TileLayer::TileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         Layer(),
-        _synchronizedRefresh(false),
-        _calculatingTiles(false),
-        _refreshedTiles(false),
         _dataSource(dataSource),
         _dataSourceListener(),
+        _tileRenderer(std::make_shared<TileRenderer>()),
+        _fetchingTileTasks(),
+        _calculatingTiles(false),
+        _refreshedTiles(false),
         _utfGridDataSource(),
         _tileLoadListener(),
         _utfGridEventListener(),
-        _fetchingTileTasks(),
+        _synchronizedRefresh(false),
         _frameNr(0),
-        _lastFrameNr(-1),
+        _lastFrameNr(0),
         _preloading(false),
         _substitutionPolicy(TileSubstitutionPolicy::TILE_SUBSTITUTION_POLICY_ALL),
         _zoomLevelBias(0.0f),
         _maxOverzoomLevel(MAX_PARENT_SEARCH_DEPTH),
         _maxUnderzoomLevel(MAX_CHILD_SEARCH_DEPTH),
-        _tileRenderer(std::make_shared<TileRenderer>()),
         _visibleTiles(),
         _preloadingTiles(),
         _utfGridTiles(),

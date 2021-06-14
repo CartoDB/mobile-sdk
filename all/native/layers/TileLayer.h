@@ -368,37 +368,13 @@ namespace carto {
         std::shared_ptr<vt::TileTransformer> getTileTransformer() const;
         void resetTileTransformer();
 
-        static const float DISCRETE_ZOOM_LEVEL_BIAS;
-
-        std::atomic<bool> _synchronizedRefresh;
-
-        std::atomic<bool> _calculatingTiles;
-        std::atomic<bool> _refreshedTiles;
-        
         const DirectorPtr<TileDataSource> _dataSource;
         std::shared_ptr<DataSourceListener> _dataSourceListener;
 
-        ThreadSafeDirectorPtr<TileDataSource> _utfGridDataSource;
-        
-        ThreadSafeDirectorPtr<TileLoadListener> _tileLoadListener;
-    
-        ThreadSafeDirectorPtr<UTFGridEventListener> _utfGridEventListener;
-
-        FetchingTileTasks _fetchingTileTasks;
-        
-        int _frameNr;
-        int _lastFrameNr;
-    
-        bool _preloading;
-        
-        TileSubstitutionPolicy::TileSubstitutionPolicy _substitutionPolicy;
-    
-        float _zoomLevelBias;
-        int _maxOverzoomLevel;
-        int _maxUnderzoomLevel;
-
         std::shared_ptr<TileRenderer> _tileRenderer;
     
+        FetchingTileTasks _fetchingTileTasks;
+        
     private:
         struct FetchTileInfo {
             MapTile tile;
@@ -415,6 +391,8 @@ namespace carto {
         bool findParentTile(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
         int findChildTiles(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
 
+        static const float DISCRETE_ZOOM_LEVEL_BIAS;
+
         static const int MAX_PARENT_SEARCH_DEPTH;
         static const int MAX_CHILD_SEARCH_DEPTH;
 
@@ -423,6 +401,28 @@ namespace carto {
         static const double PRELOADING_TILE_SCALE;
         static const float SUBDIVISION_THRESHOLD;
         
+        std::atomic<bool> _calculatingTiles;
+        std::atomic<bool> _refreshedTiles;
+        
+        ThreadSafeDirectorPtr<TileDataSource> _utfGridDataSource;
+        
+        ThreadSafeDirectorPtr<TileLoadListener> _tileLoadListener;
+    
+        ThreadSafeDirectorPtr<UTFGridEventListener> _utfGridEventListener;
+
+        std::atomic<bool> _synchronizedRefresh;
+
+        int _frameNr;
+        int _lastFrameNr;
+    
+        bool _preloading;
+        
+        TileSubstitutionPolicy::TileSubstitutionPolicy _substitutionPolicy;
+    
+        float _zoomLevelBias;
+        int _maxOverzoomLevel;
+        int _maxUnderzoomLevel;
+
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;

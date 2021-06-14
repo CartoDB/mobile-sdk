@@ -28,7 +28,8 @@ namespace carto {
         _tileTransformer(),
         _vtRenderer(),
         _interactionMode(false),
-        _subTileBlending(true),
+        _layerBlendingSpeed(1.0f),
+        _labelBlendingSpeed(1.0f),
         _labelOrder(0),
         _buildingOrder(1),
         _rasterFilterMode(vt::RasterFilterMode::BILINEAR),
@@ -70,9 +71,14 @@ namespace carto {
         _interactionMode = enabled;
     }
     
-    void TileRenderer::setSubTileBlending(bool enabled) {
+    void TileRenderer::setLayerBlendingSpeed(float speed) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _subTileBlending = enabled;
+        _layerBlendingSpeed = speed;
+    }
+
+    void TileRenderer::setLabelBlendingSpeed(float speed) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _labelBlendingSpeed = speed;
     }
 
     void TileRenderer::setLabelOrder(int order) {
@@ -120,6 +126,8 @@ namespace carto {
         tileRenderer->setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
         tileRenderer->setInteractionMode(_interactionMode);
         tileRenderer->setRasterFilterMode(_rasterFilterMode);
+        tileRenderer->setLayerBlendingSpeed(_layerBlendingSpeed);
+        tileRenderer->setLabelBlendingSpeed(_labelBlendingSpeed);
 
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {

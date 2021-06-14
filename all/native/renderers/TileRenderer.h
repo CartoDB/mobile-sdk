@@ -47,7 +47,8 @@ namespace carto {
         void setTileTransformer(const std::shared_ptr<vt::TileTransformer>& tileTransformer);
     
         void setInteractionMode(bool enabled);
-        void setSubTileBlending(bool enabled);
+        void setLayerBlendingSpeed(float speed);
+        void setLabelBlendingSpeed(float speed);
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
         void setRasterFilterMode(vt::RasterFilterMode filterMode);
@@ -80,7 +81,8 @@ namespace carto {
 
         std::shared_ptr<VTRenderer> _vtRenderer;
         bool _interactionMode;
-        bool _subTileBlending;
+        float _layerBlendingSpeed;
+        float _labelBlendingSpeed;
         int _labelOrder;
         int _buildingOrder;
         vt::RasterFilterMode _rasterFilterMode;

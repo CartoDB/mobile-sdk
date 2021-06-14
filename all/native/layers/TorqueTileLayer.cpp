@@ -11,8 +11,7 @@ namespace carto {
     TorqueTileLayer::TorqueTileLayer(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<TorqueTileDecoder>& decoder) :
         VectorTileLayer(dataSource, decoder)
     {
-        // Configure base class for Torque
-        _useTileMapMode = true;
+        setTileMapsMode(true); // Torque uses tile maps
     }
     
     TorqueTileLayer::~TorqueTileLayer() {
@@ -44,7 +43,7 @@ namespace carto {
             }
             mapRenderer->clearAndBindScreenFBO(backgroundColor, false, false);
 
-            _tileRenderer->setSubTileBlending(false);
+            _tileRenderer->setLayerBlendingSpeed(0.0f);
             bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
 
             mapRenderer->blendAndUnbindScreenFBO(opacity);

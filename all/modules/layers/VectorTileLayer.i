@@ -25,6 +25,8 @@
 %attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, LabelRenderOrder, getLabelRenderOrder, setLabelRenderOrder)
 %attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, BuildingRenderOrder, getBuildingRenderOrder, setBuildingRenderOrder)
 %attribute(carto::VectorTileLayer, float, ClickRadius, getClickRadius, setClickRadius)
+%attribute(carto::VectorTileLayer, float, LayerBlendingSpeed, getLayerBlendingSpeed, setLayerBlendingSpeed)
+%attribute(carto::VectorTileLayer, float, LabelBlendingSpeed, getLabelBlendingSpeed, setLabelBlendingSpeed)
 !attributestring_polymorphic(carto::VectorTileLayer, vectortiles.VectorTileDecoder, TileDecoder, getTileDecoder)
 !attributestring_polymorphic(carto::VectorTileLayer, layers.VectorTileEventListener, VectorTileEventListener, getVectorTileEventListener, setVectorTileEventListener)
 %std_exceptions(carto::VectorTileLayer::VectorTileLayer)

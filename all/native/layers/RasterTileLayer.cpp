@@ -74,8 +74,9 @@ namespace carto {
 
     RasterTileLayer::RasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         TileLayer(dataSource),
-        _tileFilterMode(RasterTileFilterMode::RASTER_TILE_FILTER_MODE_BILINEAR),
         _rasterTileEventListener(),
+        _tileFilterMode(RasterTileFilterMode::RASTER_TILE_FILTER_MODE_BILINEAR),
+        _tileBlendingSpeed(1.0f),
         _visibleTileIds(),
         _tempDrawDatas(),
         _visibleCache(128 * 1024 * 1024), // limit should be never reached during normal use cases
@@ -98,18 +99,22 @@ namespace carto {
     }
     
     RasterTileFilterMode::RasterTileFilterMode RasterTileLayer::getTileFilterMode() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _tileFilterMode;
+        return _tileFilterMode.load();
     }
 
     void RasterTileLayer::setTileFilterMode(RasterTileFilterMode::RasterTileFilterMode filterMode) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _tileFilterMode = filterMode;
-        }
+        _tileFilterMode.store(filterMode);
         redraw();
     }
 
+    float RasterTileLayer::getTileBlendingSpeed() const {
+        return _tileBlendingSpeed.load();
+    }
+
+    void RasterTileLayer::setTileBlendingSpeed(float speed) {
+        _tileBlendingSpeed.store(speed);
+    }
+    
     std::shared_ptr<RasterTileEventListener> RasterTileLayer::getRasterTileEventListener() const {
         return _rasterTileEventListener.get();
     }
@@ -207,8 +212,7 @@ namespace carto {
     }
 
     vt::RasterFilterMode RasterTileLayer::getRasterFilterMode() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        switch (_tileFilterMode) {
+        switch (getTileFilterMode()) {
         case RasterTileFilterMode::RASTER_TILE_FILTER_MODE_NEAREST:
             return vt::RasterFilterMode::NEAREST;
         case RasterTileFilterMode::RASTER_TILE_FILTER_MODE_BICUBIC:
@@ -294,7 +298,7 @@ namespace carto {
         
         // Update renderer if needed, run culler
         bool refresh = false;
-        if (!(_synchronizedRefresh && _fetchingTileTasks.getVisibleCount() > 0)) {
+        if (!(isSynchronizedRefresh() && _fetchingTileTasks.getVisibleCount() > 0)) {
             if (_tileRenderer->refreshTiles(_tempDrawDatas)) {
                 refresh = true;
             }
@@ -353,7 +357,7 @@ namespace carto {
                 std::array<std::uint8_t, 4> nearestComponents = readTileBitmapColor(*tileBitmap, nx, ny);
                 Color nearestColor(nearestComponents[0], nearestComponents[1], nearestComponents[2], nearestComponents[3]);
 
-                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(MapTile(hitResult.tileId.x, hitResult.tileId.y, hitResult.tileId.zoom, _frameNr), nearestColor, interpolatedColor);
+                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(MapTile(hitResult.tileId.x, hitResult.tileId.y, hitResult.tileId.zoom, getFrameNr()), nearestColor, interpolatedColor);
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
                 results.push_back(RayIntersectedElement(pixelInfo, thisLayer, ray(hitResult.rayT), ray(hitResult.rayT), false));
             }
@@ -400,6 +404,7 @@ namespace carto {
             }
 
             _tileRenderer->setRasterFilterMode(getRasterFilterMode());
+            _tileRenderer->setLayerBlendingSpeed(getTileBlendingSpeed());
             bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
 
             if (opacity < 1.0f) {

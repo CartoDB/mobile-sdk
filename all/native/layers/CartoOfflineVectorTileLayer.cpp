@@ -21,7 +21,7 @@ namespace carto {
             throw NullArgumentException("Null packagemanager");
         }
 
-        _preloading = true; // turn preloading on by default
+        setPreloading(true); // turn preloading on by default
 
         _packageManagerListener = std::make_shared<PackageManagerListener>(*this);
         _packageManager->registerOnChangeListener(_packageManagerListener);
@@ -37,7 +37,7 @@ namespace carto {
             throw NullArgumentException("Null packagemanager");
         }
 
-        _preloading = true; // turn preloading on by default
+        setPreloading(true); // turn preloading on by default
     }
     
     CartoOfflineVectorTileLayer::~CartoOfflineVectorTileLayer() {

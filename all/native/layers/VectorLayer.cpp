@@ -44,15 +44,15 @@ namespace carto {
         Layer(),
         _dataSource(dataSource),
         _dataSourceListener(),
-        _zBuffering(false),
+        _fetchingTasks(),
         _vectorElementEventListener(),
+        _zBuffering(false),
         _billboardRenderer(std::make_shared<BillboardRenderer>()),
         _geometryCollectionRenderer(std::make_shared<GeometryCollectionRenderer>()),
         _lineRenderer(std::make_shared<LineRenderer>()),
         _pointRenderer(std::make_shared<PointRenderer>()),
         _polygonRenderer(std::make_shared<PolygonRenderer>()),
-        _polygon3DRenderer(std::make_shared<Polygon3DRenderer>()),
-        _fetchingTasks()
+        _polygon3DRenderer(std::make_shared<Polygon3DRenderer>())
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -75,11 +75,11 @@ namespace carto {
     }
 
     bool VectorLayer::isZBuffering() const {
-        return _zBuffering;
+        return _zBuffering.load();
     }
 
     void VectorLayer::setZBuffering(bool enabled) {
-        _zBuffering = enabled;
+        _zBuffering.store(enabled);
         refresh();
     }
     

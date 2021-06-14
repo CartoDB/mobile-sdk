@@ -15,6 +15,7 @@
 #include "layers/TileLayer.h"
 #include "vectortiles/VectorTileDecoder.h"
 
+#include <atomic>
 #include <memory>
 #include <map>
 
@@ -119,6 +120,28 @@ namespace carto {
          * @param radius The new click radius of vector tile features. The default value is 4.
          */
         void setClickRadius(float radius);
+
+        /**
+         * Returns the current relative layer blending speed.
+         * @return The current relative layer blending speed. Default is 1.0.
+         */
+        float getLayerBlendingSpeed() const;
+        /**
+         * Sets the relative layer blending speed.
+         * @param speed The new relative speed value. Default is 1.0. Use zero or negative values to disable blending.
+         */
+        void setLayerBlendingSpeed(float speed);
+
+        /**
+         * Returns the current relative label blending speed.
+         * @return The current relative label blending speed. Default is 1.0.
+         */
+        float getLabelBlendingSpeed() const;
+        /**
+         * Sets the relative label blending speed.
+         * @param speed The new relative speed value. Default is 1.0. Use zero or negative values to disable blending.
+         */
+        void setLabelBlendingSpeed(float speed);
     
         /**
          * Returns the vector tile event listener.
@@ -166,8 +189,8 @@ namespace carto {
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
-        // Configuration parameters that can be tweaked in subclasses
-        bool _useTileMapMode;
+        bool isTileMapsMode() const;
+        void setTileMapsMode(bool enabled);
     
     private:    
         class TileDecoderListener : public VectorTileDecoder::OnChangeListener {
@@ -216,9 +239,13 @@ namespace carto {
         
         ThreadSafeDirectorPtr<VectorTileEventListener> _vectorTileEventListener;
 
-        VectorTileRenderOrder::VectorTileRenderOrder _labelRenderOrder;
-        VectorTileRenderOrder::VectorTileRenderOrder _buildingRenderOrder;
-        float _clickRadius;
+        std::atomic<VectorTileRenderOrder::VectorTileRenderOrder> _labelRenderOrder;
+        std::atomic<VectorTileRenderOrder::VectorTileRenderOrder> _buildingRenderOrder;
+        std::atomic<float> _clickRadius;
+        std::atomic<float> _layerBlendingSpeed;
+        std::atomic<float> _labelBlendingSpeed;
+
+        std::atomic<bool> _tileMapsMode;
     
         const std::shared_ptr<VectorTileDecoder> _tileDecoder;
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;

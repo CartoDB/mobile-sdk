@@ -29,11 +29,13 @@ namespace carto {
 
     VectorTileLayer::VectorTileLayer(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<VectorTileDecoder>& decoder) :
         TileLayer(dataSource),
-        _useTileMapMode(false),
         _vectorTileEventListener(),
         _labelRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
-        _clickRadius(4),
+        _clickRadius(4.0f),
+        _layerBlendingSpeed(1.0f),
+        _labelBlendingSpeed(1.0f),
+        _tileMapsMode(false),
         _tileDecoder(decoder),
         _tileDecoderListener(),
         _backgroundColor(0, 0, 0, 0),
@@ -72,39 +74,45 @@ namespace carto {
     }
     
     VectorTileRenderOrder::VectorTileRenderOrder VectorTileLayer::getLabelRenderOrder() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _labelRenderOrder;
+        return _labelRenderOrder.load();
     }
     
     void VectorTileLayer::setLabelRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _labelRenderOrder = renderOrder;
-        }
+        _labelRenderOrder.store(renderOrder);
         redraw();
     }
     
     VectorTileRenderOrder::VectorTileRenderOrder VectorTileLayer::getBuildingRenderOrder() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _buildingRenderOrder;
+        return _buildingRenderOrder.load();
     }
     
     void VectorTileLayer::setBuildingRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _buildingRenderOrder = renderOrder;
-        }
+        _buildingRenderOrder.store(renderOrder);
         redraw();
     }
 
     float VectorTileLayer::getClickRadius() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _clickRadius;
+        return _clickRadius.load();
     }
 
     void VectorTileLayer::setClickRadius(float radius) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _clickRadius = radius;
+        _clickRadius.store(radius);
+    }
+
+    float VectorTileLayer::getLayerBlendingSpeed() const {
+        return _layerBlendingSpeed.load();
+    }
+
+    void VectorTileLayer::setLayerBlendingSpeed(float speed) {
+        _layerBlendingSpeed.store(speed);
+    }
+    
+    float VectorTileLayer::getLabelBlendingSpeed() const {
+        return _labelBlendingSpeed.load();
+    }
+    
+    void VectorTileLayer::setLabelBlendingSpeed(float speed) {
+        _labelBlendingSpeed.store(speed);
     }
     
     std::shared_ptr<VectorTileEventListener> VectorTileLayer::getVectorTileEventListener() const {
@@ -121,7 +129,7 @@ namespace carto {
     }
     
     long long VectorTileLayer::getTileId(const MapTile& mapTile) const {
-        if (_useTileMapMode) {
+        if (isTileMapsMode()) {
             return MapTile(mapTile.getX(), mapTile.getY(), mapTile.getZoom(), 0).getTileId();
         } else {
             return mapTile.getTileId();
@@ -247,7 +255,7 @@ namespace carto {
             _preloadingCache.read(closestTileId, tileInfo);
         }
         if (std::shared_ptr<VectorTileDecoder::TileMap> tileMap = tileInfo.getTileMap()) {
-            auto it = tileMap->find(_useTileMapMode ? closestTile.getFrameNr() : 0);
+            auto it = tileMap->find(isTileMapsMode() ? closestTile.getFrameNr() : 0);
             if (it != tileMap->end()) {
                 std::shared_ptr<const vt::Tile> vtTile = it->second;
                 vt::TileId vtTileId(visTile.getZoom(), visTile.getX(), visTile.getY());
@@ -289,7 +297,7 @@ namespace carto {
         
         // Update renderer if needed, run culler
         bool tilesChanged = false;
-        if (!(_synchronizedRefresh && _fetchingTileTasks.getVisibleCount() > 0)) {
+        if (!(isSynchronizedRefresh() && _fetchingTileTasks.getVisibleCount() > 0)) {
             std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
 
             // Add poles
@@ -365,7 +373,7 @@ namespace carto {
                 for (const vt::GLTileRenderer::GeometryIntersectionInfo& hitResult : hitResults) {
                     std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-                    long long tileId = getTileId(MapTile(hitResult.tileId.x, hitResult.tileId.y, hitResult.tileId.zoom, _frameNr));
+                    long long tileId = getTileId(MapTile(hitResult.tileId.x, hitResult.tileId.y, hitResult.tileId.zoom, getFrameNr()));
                     TileInfo tileInfo;
                     _visibleCache.peek(tileId, tileInfo);
                     if (!tileInfo.getTileMap()) {
@@ -423,7 +431,8 @@ namespace carto {
 
             _tileRenderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
             _tileRenderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
-            _tileRenderer->setSubTileBlending(false);
+            _tileRenderer->setLayerBlendingSpeed(getLayerBlendingSpeed());
+            _tileRenderer->setLabelBlendingSpeed(getLabelBlendingSpeed());
             bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
 
             if (opacity < 1.0f) {
@@ -499,6 +508,14 @@ namespace carto {
 
         _tileDecoder->unregisterOnChangeListener(_tileDecoderListener);
         _tileDecoderListener.reset();
+    }
+
+    bool VectorTileLayer::isTileMapsMode() const {
+        return _tileMapsMode.load();
+    }
+
+    void VectorTileLayer::setTileMapsMode(bool enabled) {
+        _tileMapsMode.store(enabled);
     }
     
     VectorTileLayer::TileDecoderListener::TileDecoderListener(const std::shared_ptr<VectorTileLayer>& layer) :

@@ -14,6 +14,7 @@
 #include "graphics/Color.h"
 #include "layers/Layer.h"
 
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 
@@ -101,9 +102,9 @@ namespace carto {
         virtual void unregisterDataSourceListener();
 
     private:
-        Color _color;
+        std::atomic<Color> _color;
         std::shared_ptr<Bitmap> _bitmap;
-        float _bitmapScale;
+        std::atomic<float> _bitmapScale;
         std::shared_ptr<SolidRenderer> _solidRenderer;
     };
     

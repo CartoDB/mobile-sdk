@@ -10,6 +10,8 @@
 #include "graphics/Color.h"
 #include "layers/RasterTileLayer.h"
 
+#include <atomic>
+
 namespace carto {
     
     /**
@@ -75,10 +77,10 @@ namespace carto {
 
         virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const;
 
-        float _contrast;
-        float _heightScale;
-        Color _shadowColor;
-        Color _highlightColor;
+        std::atomic<float> _contrast;
+        std::atomic<float> _heightScale;
+        std::atomic<Color> _shadowColor;
+        std::atomic<Color> _highlightColor;
     };
     
 }

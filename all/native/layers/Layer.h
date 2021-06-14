@@ -199,6 +199,11 @@ namespace carto {
         
         std::shared_ptr<CullState> _lastCullState;
        
+        mutable std::recursive_mutex _mutex;
+
+    private:
+        static const int DEFAULT_CULL_DELAY;
+
         std::atomic<int> _updatePriority;
 
         std::atomic<int> _cullDelay;
@@ -208,11 +213,6 @@ namespace carto {
         std::atomic<bool> _visible;
         
         MapRange _visibleZoomRange;
-
-        mutable std::recursive_mutex _mutex;
-
-    private:
-        static const int DEFAULT_CULL_DELAY;
 
         std::map<std::string, Variant> _metaData;
 

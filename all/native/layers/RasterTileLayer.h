@@ -91,6 +91,17 @@ namespace carto {
         void setTileFilterMode(RasterTileFilterMode::RasterTileFilterMode filterMode);
 
         /**
+         * Returns the current relative tile blending speed.
+         * @return The current relative tile blending speed. Default is 1.0.
+         */
+        float getTileBlendingSpeed() const;
+        /**
+         * Sets the relative tile blending speed.
+         * @param speed The new relative speed value. Default is 1.0. Use zero or negative values to disable blending.
+         */
+        void setTileBlendingSpeed(float speed);
+
+        /**
          * Returns the raster tile event listener.
          * @return The raster tile event listener.
          */
@@ -143,8 +154,6 @@ namespace carto {
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
-        RasterTileFilterMode::RasterTileFilterMode _tileFilterMode;
-
     private:    
         static const int DEFAULT_CULL_DELAY;
 
@@ -152,6 +161,9 @@ namespace carto {
         static const unsigned int DEFAULT_PRELOADING_CACHE_SIZE;
         
         ThreadSafeDirectorPtr<RasterTileEventListener> _rasterTileEventListener;
+
+        std::atomic<RasterTileFilterMode::RasterTileFilterMode> _tileFilterMode;
+        std::atomic<float> _tileBlendingSpeed;
 
         std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
