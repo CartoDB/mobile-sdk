@@ -169,6 +169,11 @@ def readUncommentedLines(fileName):
       lines_out.append(line)
   return lines_out
 
+def readLicense():
+  with open('%s/LICENSE', getBaseDir()) as f:
+    licenseText = f.read()
+  return licenseText
+
 def applyTemplate(template, valueMap):
   result = template
   for key, value in valueMap.items():

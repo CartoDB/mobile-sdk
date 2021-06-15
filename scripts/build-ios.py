@@ -216,8 +216,6 @@ def buildIOSCocoapod(args, buildpackage):
   xcframeworks = []
   if args.buildxcframework:
     xcframeworks += [frameworkName]
-  else:
-    frameworks += [frameworkName]
 
   with open('%s/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
     cocoapodFile = string.Template(f.read()).safe_substitute({
@@ -226,6 +224,7 @@ def buildIOSCocoapod(args, buildpackage):
       'distName': distName,
       'frameworkName': frameworkName,
       'version': version,
+      'license': readLicense(),
       'iosversion': iosversion,
       'frameworks': ', '.join('"%s"' % framework for framework in frameworks),
       'vendoredFrameworks': ', '.join('"%s.xcframework"' % framework for framework in xcframeworks) if xcframeworks else 'nil'
