@@ -21,7 +21,10 @@ Pod::Spec.new do |s|
   s.homepage     = "https://carto.com/developers/mobile-sdk/"
   s.screenshots  = "https://github.com/CartoDB/mobile-ios-samples/blob/gh-pages/carto-mobile-sdk-animated.gif?raw=true"
 
-  s.license      = { :type => "BSD" }
+  s.license      = { :type => "BSD", :text => <<-LICENSE
+                     $license
+                     LICENSE
+                   }
 
   s.author             = { "CARTO" => "https://www.carto.com" }
   s.social_media_url   = "https://twitter.com/carto"

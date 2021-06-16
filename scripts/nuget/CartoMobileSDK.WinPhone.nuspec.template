@@ -6,7 +6,7 @@
         <version>$version</version>
         <authors>CARTO</authors>
         <iconUrl>https://cartodb-libs.global.ssl.fastly.net/cartodb.com/files/img/logo/carto-for-twitter.5f35eb94.png</iconUrl>
-        <licenseUrl>https://carto.com/terms/</licenseUrl>
+        <license type="expression">BSD-3-Clause</license>
         <projectUrl>https://carto.com</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>CARTO Maps SDK for UWP and Windows Phone 10</description>
