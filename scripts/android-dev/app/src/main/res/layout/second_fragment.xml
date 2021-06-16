@@ -22,9 +22,11 @@
         android:id="@+id/zoomText"
         android:layout_width="60dp"
         android:layout_height="30dp"
-        android:shadowColor="#81050505"
+        android:shadowColor="#BFFFFFFF"
+        android:shadowDx="0"
+        android:shadowDy="0"
         android:shadowRadius="4"
-        android:textColor="#FFFFFF"
+        android:textColor="#000000"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"></TextView>
     <Button
