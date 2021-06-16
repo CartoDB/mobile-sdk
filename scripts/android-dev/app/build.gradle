@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
 
     defaultConfig {
         applicationId "com.akylas.cartotest"
-        minSdkVersion 19
-        targetSdkVersion 28
+        minSdkVersion 21
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
 
@@ -23,9 +23,6 @@ android {
 }
 
 dependencies {
-//    implementation fileTree(dir: '/Volumes/dev/carto/mobile-sdk/dist/android', include: ['*.aar'])
-//    implementation files('../mobile-sdk/dist/android/carto-mobile-sdk-4.4.0.RC1.aar')
-//    implementation 'com.carto:carto-mobile-sdk:4.3.0@aar'
     implementation project(':carto_mobile_sdk')
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
