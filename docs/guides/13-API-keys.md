@@ -5,7 +5,9 @@
 The following procedure describes how to register mobile apps under your account settings. While the number of mobile apps is unlimited, application quota consumption rules are enforced based on your account plan. [Contact us](mailto:sales@carto.com) if you have questions about your mobile account options.
 
 1. Access your [Account settings](https://carto.com/docs/carto-editor/your-account/#how-to-access-your-account-options) from the CARTO Dashboard. Your profile information appears. 
-    <span class="wrap-border"><img src="../../img/avatar.gif" alt="Access mobile apps from API keys" /></span>
+
+<span class="wrap-border"><img src="../../img/avatar.gif" alt="Access mobile apps from API keys" /></span>
+
 2. Click _API keys_. The API key page opens, displaying options for _CARTO_ or _Mobile Apps_.
 3. Click _Mobile apps_ to add mobile applications to your account
 
@@ -38,10 +40,12 @@ Once your mobile apps are registered for your account, you can retrieve the API 
 
 1. From the _Mobile apps_ section of your API Keys, click a mobile application name. The application settings appear, and include the license key and amount of quota for the application.
 
- <span class="wrap-border"><img src="../../img/registered_mobile_app.jpg" alt="Registered mobile apps" /></span>
+<span class="wrap-border"><img src="../../img/registered_mobile_app.jpg" alt="Registered mobile apps" /></span>
+
 2. Copy the API Key from the _License key_ section. The following example displays the API Keys section for a selected mobile application.  Note, the API Key in the example image is blurred out for privacy.
 
- <span class="wrap-border"><img src="../../img/example_settings.jpg" alt="Example of mobile app settings" /></span>
+<span class="wrap-border"><img src="../../img/example_settings.jpg" alt="Example of mobile app settings" /></span>
+
 3. Click the back navigation arrow, located next to the app name, to return Mobile apps section of your API Keys
 
 ### API Key Rules
@@ -60,5 +64,6 @@ Once a mobile application is saved, you cannot edit the Platform setting. As an 
 1. From the _Mobile apps_ section of your API Keys, click a mobile application name.  The application settings appear, and include the license key and amount of quota for the application. 
 2. Click _Delete this application_ from the bottom of the app settings
 
- <span class="wrap-border"><img src="../../img/delete_application.jpg" alt="Delete mobile app" /></span>
+<span class="wrap-border"><img src="../../img/delete_application.jpg" alt="Delete mobile app" /></span>
+
 3. Click the back navigation arrow, located next to the app name, to return Mobile apps section of your API Keys

@@ -120,8 +120,8 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     }
 
     {% endhighlight %}
-</div>
-<div id="tab-csharp">
+  </div>
+  <div id="tab-csharp">
   {% highlight csharp linenos %}
   public class MyMapListener : MapEventListener
     {
@@ -192,8 +192,8 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
         }
     }
     {% endhighlight %}
-</div>
-<div id="tab-objectivec">
+  </div>
+  <div id="tab-objectivec">
     {% highlight objc linenos %}
     @interface  MyMapEventListener : NTMapEventListener
 
@@ -265,8 +265,8 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     @end
 
     {% endhighlight %}
-</div>
-<div id="tab-swift">
+  </div>
+  <div id="tab-swift">
     {% highlight swift linenos %}
   
     public class MyMapEventListener : NTMapEventListener {
@@ -335,8 +335,8 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     }
 
     {% endhighlight %}
-</div>
-<div id="tab-kotlin">
+  </div>
+  <div id="tab-kotlin">
     {% highlight kotlin linenos %}
   
     class MyMapEventListener(var mapView: MapView?, var vectorDataSource: LocalVectorDataSource?) : MapEventListener() {
@@ -398,7 +398,6 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
 
     {% endhighlight %}
   </div>
-    
 </div>
 
 
@@ -437,15 +436,15 @@ Apply the following code to initialize listener events for map clicks.
     mapView.setMapEventListener(new MyMapEventListener(mapView, source));
 
     {% endhighlight %}
-</div>
-<div id="tab-csharp">
+  </div>
+  <div id="tab-csharp">
     {% highlight csharp linenos %}
   
     MapView.MapEventListener = new MyMapListener(MapView, source);
 
     {% endhighlight %}
-</div>
-<div id="tab-objectivec">
+  </div>
+  <div id="tab-objectivec">
     {% highlight objc linenos %}
   
     MyMapEventListener* listener = [[MyMapEventListener alloc] init];
@@ -453,16 +452,15 @@ Apply the following code to initialize listener events for map clicks.
     [mapView setMapEventListener:listener];
 
     {% endhighlight %}
-</div>
-<div id="tab-swift">
+  </div>
+  <div id="tab-swift">
     {% highlight swift linenos %}
   
     mapView?.setMapEventListener(MyMapEventListener(mapView: mapView, vectorDataSource: source))
 
     {% endhighlight %}
-</div>
-
-<div id="tab-kotlin">
+  </div>
+  <div id="tab-kotlin">
     {% highlight swift linenos %}
 
     mapView?.mapEventListener = MyMapEventListener(mapView, source)

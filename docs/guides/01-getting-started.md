@@ -448,7 +448,7 @@ Xamarin Forms (version 3.3.0 and higher) support *Native Controls*. If you add M
 
 While you can share most of code using Native Controls, you just need to specify the platform when creating the project:
 
-   {% highlight csharp linenos %}
+  {% highlight csharp linenos %}
  #if __IOS__
   // 1. iOS specific code
   var mapView = new Carto.Ui.MapView();
@@ -459,7 +459,7 @@ While you can share most of code using Native Controls, you just need to specify
   // 2. Indicate the common code from both platforms
   var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleVoyager);
   mapView.Layers.Add(baseLayer);
- {% endhighlight %}
+  {% endhighlight %}
 
 **Note:** Native Controls only work if you create or update `Form` in the code, using the *xaml* definition will not work. This Xamarin development requirement is subject to change with each release. _Mobile SDK with Xamarin Forms is currently in being tested with Native apps._ .
 
@@ -554,7 +554,7 @@ Add into MainViewController.cs:
 #### Add Marker points to the map
 
 This, as given before, is cross-platform code, covering both Xamarin and UWP:
-:
+
 {% highlight csharp linenos %}
 
     // projection will be needed later

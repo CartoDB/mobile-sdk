@@ -896,5 +896,3 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
 
 </div>
-
-
