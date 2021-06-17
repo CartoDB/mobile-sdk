@@ -176,8 +176,8 @@ namespace carto {
             throw ParseException("Invalid license prefix");
         }
         std::string decodedLicense;
-        CryptoPP::Base64Decoder* decoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedLicense));
-        CryptoPP::StringSource(licenseKey.substr(LICENSE_PREFIX.size()), true, decoder);
+        auto licenseDecoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedLicense));
+        CryptoPP::StringSource(licenseKey.substr(LICENSE_PREFIX.size()), true, licenseDecoder);
 
         std::string line;
         std::stringstream ss(decodedLicense);
@@ -196,8 +196,8 @@ namespace carto {
 
         // Decode signature. Note: it is in DER-format and needs to be converted to raw 40-byte signature
         std::string decodedSignature;
-        decoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedSignature));
-        CryptoPP::StringSource(encodedSignature, true, decoder);
+        auto signatureDecoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedSignature));
+        CryptoPP::StringSource(encodedSignature, true, signatureDecoder);
 
         // Extract license Parameters
         std::string message;
@@ -215,28 +215,27 @@ namespace carto {
 
         // Decode the public key
         std::string decodedPublicKey;
-        decoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedPublicKey));
-        CryptoPP::StringSource ww(PUBLIC_KEY, true, decoder);
+        auto publicKeyDecoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedPublicKey));
+        CryptoPP::StringSource(PUBLIC_KEY, true, publicKeyDecoder);
 
         // Load and validate DSA public key
         CryptoPP::DSA::PublicKey publicKey;
         publicKey.Load(CryptoPP::StringSource(decodedPublicKey, true).Ref());
-        CryptoPP::RandomPool rnd;
+        CryptoPP::OldRandomPool rnd;
         if (!publicKey.Validate(rnd, 2)) {
             throw GenericException("Public key validation failed");
         }
 
-        // Check signature, first convert signature from DER to P1364 format
+        // Check signature, first convert signature from DER to P1363 format
         CryptoPP::DSA::Verifier verifier(publicKey);
-        char signature[1024]; // DSA_P1364 signatures are actually 40 bytes
-        CryptoPP::DSAConvertSignatureFormat((CryptoPP::byte*)signature, verifier.SignatureLength(), CryptoPP::DSA_P1363, (const CryptoPP::byte*)decodedSignature.c_str(), decodedSignature.size(), CryptoPP::DSA_DER);
+        CryptoPP::byte signature[1024]; // DSA_P1363 signatures are actually 40 bytes
+        CryptoPP::DSAConvertSignatureFormat(signature, verifier.SignatureLength(), CryptoPP::DSA_P1363, (const CryptoPP::byte*)decodedSignature.c_str(), decodedSignature.size(), CryptoPP::DSA_DER);
+        std::string messageWithSignature = message + std::string(signature, signature + verifier.SignatureLength());
 
-        bool result = false;
-        CryptoPP::SignatureVerificationFilter* verificationFilter = new CryptoPP::SignatureVerificationFilter(
-            verifier,
-            new CryptoPP::ArraySink((CryptoPP::byte*)&result, sizeof(result)),
-            CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END | CryptoPP::SignatureVerificationFilter::PUT_RESULT);
-        CryptoPP::StringSource(message + std::string(signature, signature + verifier.SignatureLength()), true, verificationFilter);
+        CryptoPP::byte result = 0;
+        CryptoPP::word32 flags = CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END | CryptoPP::SignatureVerificationFilter::PUT_RESULT;
+        auto verificationFilter = new CryptoPP::SignatureVerificationFilter(verifier, new CryptoPP::ArraySink(&result, sizeof(result)), flags);
+        CryptoPP::StringSource(messageWithSignature, true, verificationFilter);
         if (!result) {
             throw GenericException("Signature validation failed", ss.str());
         }
