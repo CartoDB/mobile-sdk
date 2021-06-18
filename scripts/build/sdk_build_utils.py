@@ -170,7 +170,7 @@ def readUncommentedLines(fileName):
   return lines_out
 
 def readLicense():
-  with open('%s/LICENSE', getBaseDir()) as f:
+  with open('%s/LICENSE' % getBaseDir(), 'r') as f:
     licenseText = f.read()
   return licenseText
 
