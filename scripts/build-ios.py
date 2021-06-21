@@ -111,6 +111,7 @@ def buildIOSLib(args, arch, outputDir=None):
     '-DCMAKE_OSX_DEPLOYMENT_TARGET=9.0',
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
+    "-DSDK_DEV_TEAM='%s'" % (args.devteam if args.devteam else ""),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='iOS'",
     '%s/scripts/build' % baseDir
@@ -266,6 +267,12 @@ args.defines += ';' + getProfile(args.profile).get('defines', '')
 if args.metalangle:
   args.defines += ';' + '_CARTO_USE_METALANGLE'
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
+
+args.devteam = os.environ.get('IOS_DEV_TEAM', None)
+if args.sharedlib:
+  if args.devteam is None:
+    print("Shared library requires development team, IOS_DEV_TEAM variable not set")
+    sys.exit(-1)
 
 if not os.path.exists("%s/generated/ios-objc/proxies" % getBaseDir()):
   print("Proxies/wrappers not generated yet, run swigpp script first.")
