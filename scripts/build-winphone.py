@@ -43,11 +43,6 @@ def buildWinPhoneNativeDLL(args, arch):
   defines = ["-D%s" % define for define in args.defines.split(';') if define]
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
 
-  copyfile('%s/scripts/winphone10/packages.config' % baseDir, '%s/packages.config' % buildDir)
-  if not nuget(args, buildDir, 'restore', '-PackagesDirectory', '%s/packages' % buildDir):
-    print("Failed to restore required nuget packages")
-    return False
-
   if not cmake(args, buildDir, options + [
     '-G', 'Visual Studio 16 2019',
     '-DCMAKE_SYSTEM_NAME=WindowsStore',
@@ -55,6 +50,7 @@ def buildWinPhoneNativeDLL(args, arch):
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,
     '-DCMAKE_BUILD_TYPE=%s' % args.nativeconfiguration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/winphone-csharp/wrappers' % baseDir),
+    '-DSINGLE_LIBRARY:BOOL=ON',
     "-DWINPHONE_ARCH=%s" % arch,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
@@ -80,8 +76,9 @@ def buildWinPhoneManagedDLL(args, arch):
   with open('%s/CartoMobileSDK.WinPhone.csproj' % buildDir, 'w') as f:
     f.write(csProjFile)
 
-  copyfile('%s/scripts/winphone10/project.json' % baseDir, '%s/project.json' % buildDir)
-  copyfile('%s/scripts/winphone10/project.lock.json' % baseDir, '%s/project.lock.json' % buildDir)
+  if not nuget(args, buildDir, 'restore', '%s/CartoMobileSDK.WinPhone.csproj' % buildDir):
+    print("Failed to restore required nuget packages")
+    return False
 
   return msbuild(args, buildDir,
     '/t:Build',
@@ -192,6 +189,9 @@ if not checkExecutable(args.nuget, 'help'):
 if args.buildnuget:
   if not checkExecutable(args.corflags, '/?'):
     print('Failed to find corflags executable. Use --corflags to specify its location')
+    sys.exit(-1)
+  if 'x86' not in args.winphonearch:
+    print('Nuget package requires x86 architecture')
     sys.exit(-1)
 
 for arch in args.winphonearch:

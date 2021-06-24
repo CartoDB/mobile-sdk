@@ -1,5 +1,5 @@
   <ItemGroup>
-    <SDKReference Include="WindowsMobile, Version=10.0.10586.0" />
+    <SDKReference Include="WindowsMobile, Version=10.0.19041.0" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
