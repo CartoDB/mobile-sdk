@@ -15,6 +15,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
+#include <mutex>
 #include <vector>
 
 #include <cglib/vec.h>
@@ -79,6 +80,13 @@ namespace carto {
             DUAL_POINTER_SCALE,
             DUAL_POINTER_FREE
         };
+
+        enum {
+            CAMERA_PAN = 1,
+            CAMERA_ZOOM = 2,
+            CAMERA_ROTATE = 4,
+            CAMERA_TILT = 8
+        };
     
         class MapRendererListener : public MapRenderer::OnChangeListener {
         public:
@@ -91,6 +99,7 @@ namespace carto {
             std::weak_ptr<TouchHandler> _touchHandler;
         };
         
+        void checkCameraEvents();
         void checkMapStable();
 
         float calculateRotatingScalingFactor(const ScreenPos& screenPos1, const ScreenPos& screenPos2) const;
@@ -154,8 +163,9 @@ namespace carto {
         cglib::vec2<float> _swipe1;
         cglib::vec2<float> _swipe2;
     
+        int _cameraEvents;
         int _pointersDown;
-        bool _mapMoving;
+        bool _idling;
         bool _noDualPointerYet;
         std::chrono::steady_clock::time_point _dualPointerReleaseTime;
     
@@ -168,7 +178,7 @@ namespace carto {
         std::shared_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<MapRendererListener> _mapRendererListener;
     
-        mutable std::mutex _mutex;
+        mutable std::recursive_mutex _mutex;
 
         std::vector<std::shared_ptr<OnTouchListener> > _onTouchListeners;
         mutable std::mutex _onTouchListenersMutex;
