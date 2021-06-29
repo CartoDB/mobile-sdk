@@ -5,14 +5,7 @@ import argparse
 import string
 from build.sdk_build_utils import *
 
-ANDROID_TOOLCHAINS = {
-  'armeabi-v7a': 'arm-linux-androideabi',
-  'x86':         'x86',
-  'arm64-v8a':   'aarch64-linux-android',
-  'x86_64':      'x86_64'
-}
-
-ANDROID_ABIS = list(ANDROID_TOOLCHAINS.keys())
+ANDROID_ABIS = ['armeabi-v7a', 'x86', 'arm64-v8a', 'x86_64']
 
 def javac(args, dir, *cmdArgs):
   return execute(args.javac, dir, *cmdArgs)
@@ -71,6 +64,7 @@ def buildAndroidSO(args, abi):
     "-DANDROID_STL='c++_static'",
     "-DANDROID_ABI='%s'" % abi,
     "-DANDROID_PLATFORM='%d'" % (api64 if '64' in abi else api32),
+    "-DANDROID_ARM_NEON=%s" % ('true' if abi == 'arm64-v8a' else 'false'),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Android'",
