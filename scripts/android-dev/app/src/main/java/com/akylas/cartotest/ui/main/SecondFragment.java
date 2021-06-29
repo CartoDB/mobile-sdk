@@ -65,7 +65,12 @@ public class SecondFragment extends Fragment {
             @Override
             public void onMapMoved() {
                 Log.d(TAG, "onMapMoved " + mapView.getFocusPos());
-                textZoom.setText(String.format("z=%.2f", mapView.getZoom()));
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        textZoom.setText(String.format("z=%.2f", mapView.getZoom()));
+                    }
+                });
             }
         });
 
