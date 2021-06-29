@@ -126,7 +126,8 @@ def buildWinPhoneNuget(args):
     f.write(nuspecFile)
 
   # A hack to generate non-arch dependent assembly, this is nuget peculiarity
-  if not copyfile('%s/../winphone_managed10-x86/bin/%s/CartoMobileSDK.WinPhone.dll' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone.dll' % buildDir):
+  arch = 'x86' if 'x86' in args.winphonearch else args.winphonearch[0]
+  if not copyfile('%s/../winphone_managed10-%s/bin/%s/CartoMobileSDK.WinPhone.dll' % (buildDir, arch, args.configuration), '%s/CartoMobileSDK.WinPhone.dll' % buildDir):
     return False
   if not corflags(args, buildDir,
     '/32BITREQ-',
