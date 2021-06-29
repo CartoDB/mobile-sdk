@@ -1,6 +1,6 @@
 {
 	"lite": {
-		"defines": ""
+		"defines": "_CARTO_LITE"
 	},
 
 	"standard": {

@@ -20,7 +20,7 @@ elseif(NOT SHARED_LIBRARY)
 endif()
 
 # C++ compiler flags
-add_definitions("${SDK_CPP_DEFINES} -DBOOST_ALL_NO_LIB")
+add_definitions("${SDK_CPP_DEFINES}" "-DBOOST_ALL_NO_LIB")
 
 if(CMAKE_BUILD_TYPE MATCHES "Release|RELEASE")
   add_definitions("-DNDEBUG")
@@ -105,10 +105,6 @@ endif(WIN32)
 # Subprojects
 set(SDK_CARTO_SUBPROJECTS vt mapnikvt mbvtbuilder cartocss nml osrm sgre geocoding)
 set(SDK_EXTERNAL_SUBPROJECTS cryptopp pugixml sqlite sqlite3pp bidi freetype harfbuzz brotli miniz libjpeg libpng libwebp tess2 pvrt rg_etc1)
-
-if(ANDROID)
-  set(SDK_EXTERNAL_SUBPROJECTS "${SDK_EXTERNAL_SUBPROJECTS}" "androidcpufeatures")
-endif(ANDROID)
 
 if(WIN32)
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "zlib")
