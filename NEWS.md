@@ -1,3 +1,18 @@
+CARTO Mobile SDK 4.4.0RC3
+-------------------
+
+### Changes, fixes:
+
+* Fixed issues iOS with simulator targets not working due to problems with latest cryptopp library
+* Fixed issues with some 32-bit Android targets due to problems with latest cryptopp library
+* Fixed potential deadlock issue with TouchHandler class. Removed redundant 'onMapMoved' callbacks.
+* Fixed potential deadlocks in AnimationHandler and KineticEventHandler when certain SDK APIs were used in MapEventListener callbacks
+* Changed compilation flags for 32-bit Android targets to make then compatible with really old devices not supporting NEON extensions
+* Tweaked compilation flags for Android, binary sizes are now about 10% smaller while critical code paths are better optimized
+* Enabled Link Time Code Generation for UWP builds. This results in smaller and faster binaries.
+* Various fixes and tweaks in SDK build scripts
+
+
 CARTO Mobile SDK 4.4.0RC2
 -------------------
 
