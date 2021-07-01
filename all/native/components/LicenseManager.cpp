@@ -21,10 +21,7 @@
 
 #include <picojson/picojson.h>
 
-#include <cryptopp/base64.h>
-#include <cryptopp/dsa.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/randpool.h>
+#include <botan/botan_all.h>
 
 namespace carto {
 
@@ -175,12 +172,11 @@ namespace carto {
         if (licenseKey.substr(0, LICENSE_PREFIX.size()) != LICENSE_PREFIX) {
             throw ParseException("Invalid license prefix");
         }
-        std::string decodedLicense;
-        auto licenseDecoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedLicense));
-        CryptoPP::StringSource(licenseKey.substr(LICENSE_PREFIX.size()), true, licenseDecoder);
+        Botan::secure_vector<std::uint8_t> decodedLicense = Botan::base64_decode(licenseKey.substr(LICENSE_PREFIX.size()));
+        std::string license(decodedLicense.begin(), decodedLicense.end());
 
         std::string line;
-        std::stringstream ss(decodedLicense);
+        std::stringstream ss(license);
 
         // Extract the encoded signature
         std::string encodedSignature;
@@ -195,12 +191,11 @@ namespace carto {
         }
 
         // Decode signature. Note: it is in DER-format and needs to be converted to raw 40-byte signature
-        std::string decodedSignature;
-        auto signatureDecoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedSignature));
-        CryptoPP::StringSource(encodedSignature, true, signatureDecoder);
+        Botan::secure_vector<std::uint8_t> decodedSignature = Botan::base64_decode(encodedSignature);
+        std::vector<std::uint8_t> signature(decodedSignature.begin(), decodedSignature.end());
 
         // Extract license Parameters
-        std::string message;
+        std::vector<std::uint8_t> message;
         std::unordered_map<std::string, std::string> parameters;
         while (std::getline(ss, line)) {
             if (line.empty()) {
@@ -210,32 +205,19 @@ namespace carto {
             if (pos != std::string::npos) {
                 parameters[line.substr(0, pos)] = line.substr(pos + 1);
             }
-            message += line;
+            message.insert(message.end(), line.begin(), line.end());
         }
 
-        // Decode the public key
-        std::string decodedPublicKey;
-        auto publicKeyDecoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedPublicKey));
-        CryptoPP::StringSource(PUBLIC_KEY, true, publicKeyDecoder);
+        // Decode the DSA public key
+        Botan::secure_vector<std::uint8_t> decodedPublicKey(Botan::base64_decode(PUBLIC_KEY));
+        Botan::AlgorithmIdentifier algId;
+        std::vector<std::uint8_t> keyBits;
+        Botan::BER_Decoder(decodedPublicKey).start_cons(Botan::SEQUENCE).decode(algId).decode(keyBits, Botan::BIT_STRING).end_cons();
+        std::unique_ptr<Botan::Public_Key> publicKey(new Botan::DSA_PublicKey(algId, keyBits));
 
-        // Load and validate DSA public key
-        CryptoPP::DSA::PublicKey publicKey;
-        publicKey.Load(CryptoPP::StringSource(decodedPublicKey, true).Ref());
-        CryptoPP::OldRandomPool rnd;
-        if (!publicKey.Validate(rnd, 2)) {
-            throw GenericException("Public key validation failed");
-        }
-
-        // Check signature, first convert signature from DER to P1363 format
-        CryptoPP::DSA::Verifier verifier(publicKey);
-        CryptoPP::byte signature[1024]; // DSA_P1363 signatures are actually 40 bytes
-        CryptoPP::DSAConvertSignatureFormat(signature, verifier.SignatureLength(), CryptoPP::DSA_P1363, (const CryptoPP::byte*)decodedSignature.c_str(), decodedSignature.size(), CryptoPP::DSA_DER);
-        std::string messageWithSignature = message + std::string(signature, signature + verifier.SignatureLength());
-
-        CryptoPP::byte result = 0;
-        CryptoPP::word32 flags = CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END | CryptoPP::SignatureVerificationFilter::PUT_RESULT;
-        auto verificationFilter = new CryptoPP::SignatureVerificationFilter(verifier, new CryptoPP::ArraySink(&result, sizeof(result)), flags);
-        CryptoPP::StringSource(messageWithSignature, true, verificationFilter);
+        // Check signature
+        Botan::PK_Verifier verifier(*publicKey, "EMSA1(SHA1)", Botan::Signature_Format::DER_SEQUENCE);
+        bool result = verifier.verify_message(message, signature);
         if (!result) {
             throw GenericException("Signature validation failed", ss.str());
         }

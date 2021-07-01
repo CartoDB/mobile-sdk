@@ -8,10 +8,7 @@
 
 #include <picojson/picojson.h>
 
-#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
-#include <cryptopp/md5.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/hex.h>
+#include <botan/botan_all.h>
 
 namespace {
 
@@ -20,18 +17,9 @@ namespace {
             return std::string();
         }
 
-        CryptoPP::byte digest[CryptoPP::Weak::MD5::DIGESTSIZE];
-
-        CryptoPP::Weak::MD5 hash;
-        hash.CalculateDigest(digest, data->data(), data->size());
-
-        CryptoPP::HexEncoder encoder(NULL, false);
-        std::string output;
-
-        encoder.Attach(new CryptoPP::StringSink(output));
-        encoder.Put(digest, sizeof(digest));
-        encoder.MessageEnd();
-        return output;
+        std::unique_ptr<Botan::HashFunction> hash(new Botan::MD5);
+        hash->update(reinterpret_cast<const std::uint8_t*>(data->data()), data->size());
+        return Botan::hex_encode(hash->final(), false);
     }
 
 }
