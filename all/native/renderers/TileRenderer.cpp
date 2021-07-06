@@ -135,17 +135,23 @@ namespace carto {
             _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(internalFocusPos, options->getMainLightDirection())));
         }
 
-        bool refresh = tileRenderer->startFrame(deltaSeconds * 3);
+        bool refresh = false;
+        try {
+            refresh = tileRenderer->startFrame(deltaSeconds * 3);
 
-        tileRenderer->renderGeometry(true, false);
-        if (_labelOrder == 0) {
-            tileRenderer->renderLabels(true, false);
+            tileRenderer->renderGeometry(true, false);
+            if (_labelOrder == 0) {
+                tileRenderer->renderLabels(true, false);
+            }
+            if (_buildingOrder == 0) {
+                tileRenderer->renderGeometry(false, true);
+            }
+            if (_labelOrder == 0) {
+                tileRenderer->renderLabels(false, true);
+            }
         }
-        if (_buildingOrder == 0) {
-            tileRenderer->renderGeometry(false, true);
-        }
-        if (_labelOrder == 0) {
-            tileRenderer->renderLabels(false, true);
+        catch (const std::exception& ex) {
+            Log::Errorf("TileRenderer::onDrawFrame: Rendering failed: %s", ex.what());
         }
     
         // Reset GL state to the expected state
@@ -169,17 +175,23 @@ namespace carto {
             return false;
         }
 
-        if (_labelOrder == 1) {
-            tileRenderer->renderLabels(true, false);
-        }
-        if (_buildingOrder == 1) {
-            tileRenderer->renderGeometry(false, true);
-        }
-        if (_labelOrder == 1) {
-            tileRenderer->renderLabels(false, true);
-        }
+        bool refresh = false;
+        try {
+            if (_labelOrder == 1) {
+                tileRenderer->renderLabels(true, false);
+            }
+            if (_buildingOrder == 1) {
+                tileRenderer->renderGeometry(false, true);
+            }
+            if (_labelOrder == 1) {
+                tileRenderer->renderLabels(false, true);
+            }
 
-        bool refresh = tileRenderer->endFrame();
+            refresh = tileRenderer->endFrame();
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("TileRenderer::onDrawFrame3D: Rendering failed: %s", ex.what());
+        }
 
         // Reset GL state to the expected state
         glEnable(GL_CULL_FACE);
@@ -207,7 +219,14 @@ namespace carto {
             return false;
         }
         culler.setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
-        tileRenderer->cullLabels(culler);
+
+        try {
+            tileRenderer->cullLabels(culler);
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("TileRenderer::cullLabels: Culling failed: %s", ex.what());
+            return false;
+        }
         return true;
     }
     
