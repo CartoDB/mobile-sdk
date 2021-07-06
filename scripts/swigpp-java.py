@@ -10,8 +10,6 @@ ENUM_TEMPLATE = """
 """
 
 VALUE_TYPE_TEMPLATE = """
-%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
-
 %typemap(out) $CLASSNAME$ "*($&1_ltype*)&$result = new $1_ltype($1);"
 %typemap(directorin, descriptor="$DESCRIPTOR$") $CLASSNAME$ "*($&1_ltype*)&$input = new $1_ltype($1);"
 %typemap(javadirectorin) $CLASSNAME$ "new $TYPE$($jniinput, true)"
@@ -37,8 +35,6 @@ VALUE_TYPE_TEMPLATE = """
 
 SHARED_PTR_TEMPLATE = """
 %shared_ptr($CLASSNAME$)
-
-%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
 
 %typemap(directorin, descriptor="$DESCRIPTOR$") std::shared_ptr< $CLASSNAME$ > "*($&1_ltype*)&$input = new $1_ltype(*$1);"
 %typemap(directorin, descriptor="$DESCRIPTOR$") std::shared_ptr< $CLASSNAME$ >& "*($&1_ltype)&$input = new $*1_ltype($1);"
@@ -133,6 +129,11 @@ POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE = """
 
 VALUE_TEMPLATE_TEMPLATE = """
   %template($TYPE$) $CLASSNAME$;
+"""
+
+DONT_OBFUSCATE_TEMPLATE = """
+%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
+%typemap(javaclassmodifiers) $CLASSNAME$ "@com.carto.utils.DontObfuscate public class"
 """
 
 STANDARD_EQUALS_TEMPLATE = """
@@ -230,10 +231,13 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
   imports_linenum = None
   include_linenum = None
   stl_wrapper = False
+  directors_module = False
   for line in lines_in:
     # Rename module
     match = re.search('^\s*(%module(?:[(].*[)]|)\s+)([^\s]*)\s*$', line)
     if match:
+      if match.group(1):
+        directors_module = 'directors' in match.group(1)
       line = '%s%sModule' % (match.group(1), match.group(2))
 
     # Language-specific method modifiers
@@ -281,6 +285,8 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
       javaClass = match.group(2).strip().split(".")[-1]
       javaDescriptor = "Lcom/carto/%s;" % match.group(2).strip().replace('.', '/')
       args = { 'CLASSNAME': match.group(1).strip(), 'TYPE': javaClass, 'DESCRIPTOR': javaDescriptor }
+      if directors_module:
+        lines_out += applyTemplate(DONT_OBFUSCATE_TEMPLATE, args)
       lines_out += applyTemplate(SHARED_PTR_TEMPLATE, args)
       continue
 
@@ -295,6 +301,8 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
       code = class_code.get(className, [])
       code += applyTemplate(POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE, args)
       class_code[className] = code
+      if directors_module:
+        lines_out += applyTemplate(DONT_OBFUSCATE_TEMPLATE, args)
       lines_out += applyTemplate(POLYMORPHIC_SHARED_PTR_TEMPLATE, args)
       continue
 
