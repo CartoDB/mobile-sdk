@@ -6,7 +6,12 @@ import subprocess
 import shutil
 from build.sdk_build_utils import *
 
+ENUM_TEMPLATE = """
+"""
+
 VALUE_TYPE_TEMPLATE = """
+%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
+
 %typemap(out) $CLASSNAME$ "*($&1_ltype*)&$result = new $1_ltype($1);"
 %typemap(directorin, descriptor="$DESCRIPTOR$") $CLASSNAME$ "*($&1_ltype*)&$input = new $1_ltype($1);"
 %typemap(javadirectorin) $CLASSNAME$ "new $TYPE$($jniinput, true)"
@@ -32,6 +37,8 @@ VALUE_TYPE_TEMPLATE = """
 
 SHARED_PTR_TEMPLATE = """
 %shared_ptr($CLASSNAME$)
+
+%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
 
 %typemap(directorin, descriptor="$DESCRIPTOR$") std::shared_ptr< $CLASSNAME$ > "*($&1_ltype*)&$input = new $1_ltype(*$1);"
 %typemap(directorin, descriptor="$DESCRIPTOR$") std::shared_ptr< $CLASSNAME$ >& "*($&1_ltype)&$input = new $*1_ltype($1);"
@@ -247,6 +254,14 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
     # Attributes
     match = re.search('^\s*(%|!)(static|)attribute.*$', line)
     if match:
+      continue
+
+    # Detect enum directive
+    match = re.search('^\s*!enum\s*[(]([^)]*)[)].*$', line)
+    if match:
+      enumName = match.group(1).strip()
+      args = { 'ENUMNAME': match.group(1).strip() }
+      lines_out += applyTemplate(ENUM_TEMPLATE, args)
       continue
 
     # Detect value_type directive

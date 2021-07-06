@@ -17,6 +17,7 @@
 
 %import "core/BinaryData.i"
 
+!enum(carto::ColorFormat::ColorFormat)
 !shared_ptr(carto::Bitmap, graphics.Bitmap)
 
 %attribute(carto::Bitmap, unsigned int, Width, getWidth)

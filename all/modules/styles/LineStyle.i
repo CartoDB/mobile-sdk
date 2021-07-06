@@ -16,6 +16,8 @@
 %import "graphics/Bitmap.i"
 %import "styles/Style.i"
 
+!enum(carto::LineEndType::LineEndType)
+!enum(carto::LineJoinType::LineJoinType)
 !polymorphic_shared_ptr(carto::LineStyle, styles.LineStyle)
 
 %attribute(carto::LineStyle, float, Width, getWidth)

@@ -14,6 +14,7 @@
 %import "core/MapPos.i"
 %import "vectorelements/VectorElement.i"
 
+!enum(carto::ClusterBuilderMode::ClusterBuilderMode)
 !polymorphic_shared_ptr(carto::ClusterElementBuilder, layers.ClusterElementBuilder)
 
 %feature("director") carto::ClusterElementBuilder;

@@ -14,6 +14,7 @@
 %include <std_string.i>
 %include <cartoswig.i>
 
+!enum(carto::AnimationType::AnimationType)
 !polymorphic_shared_ptr(carto::AnimationStyle, styles.AnimationStyle)
 
 %attribute(carto::AnimationStyle, float, RelativeSpeed, getRelativeSpeed)

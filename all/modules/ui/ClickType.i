@@ -5,10 +5,11 @@
 
 %{
 #include "ui/ClickType.h"
-#include <memory>
 %}
 
 %include <cartoswig.i>
+
+!enum(carto::ClickType::ClickType)
 
 %include "ui/ClickType.h"
 

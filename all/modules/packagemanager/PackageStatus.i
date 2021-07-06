@@ -14,6 +14,7 @@
 %include <std_string.i>
 %include <cartoswig.i>
 
+!enum(carto::PackageAction::PackageAction)
 !shared_ptr(carto::PackageStatus, packagemanager.PackageStatus)
 
 %attribute(carto::PackageStatus, bool, Paused, isPaused)

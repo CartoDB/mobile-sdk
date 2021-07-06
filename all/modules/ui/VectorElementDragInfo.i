@@ -19,6 +19,7 @@
 %import "core/ScreenPos.i"
 %import "vectorelements/VectorElement.i"
 
+!enum(carto::VectorElementDragMode::VectorElementDragMode)
 !shared_ptr(carto::VectorElementDragInfo, ui.VectorElementDragInfo)
 
 %attributeval(carto::VectorElementDragInfo, carto::ScreenPos, ScreenPos, getScreenPos)

@@ -14,6 +14,9 @@ PACKAGE_NAME_REMAP = {
   'wrappedcommons': 'WrappedCommons'
 }
 
+ENUM_TEMPLATE = """
+"""
+
 VALUE_TYPE_TEMPLATE = """
 %typemap(out) $CLASSNAME$ "*($&1_ltype*)&$result = new $1_ltype($1);"
 %typemap(directorin) $CLASSNAME$ "*($&1_ltype*)&$input = new $1_ltype($1);"
@@ -308,6 +311,14 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
       code += applyTemplate(POLYMORPHIC_RO_ATTRIBUTE_CODE_TEMPLATE, args)
       class_code[className] = code
       lines_out += applyTemplate(POLYMORPHIC_RO_ATTRIBUTE_TEMPLATE, args)
+      continue
+
+    # Detect enum directive
+    match = re.search('^\s*!enum\s*[(]([^)]*)[)].*$', line)
+    if match:
+      enumName = match.group(1).strip()
+      args = { 'ENUMNAME': match.group(1).strip() }
+      lines_out += applyTemplate(ENUM_TEMPLATE, args)
       continue
 
     # Detect value_type directive

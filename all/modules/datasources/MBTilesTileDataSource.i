@@ -22,6 +22,7 @@
 %import "datasources/TileDataSource.i"
 %import "datasources/components/TileData.i"
 
+!enum(carto::MBTilesScheme::MBTilesScheme)
 !polymorphic_shared_ptr(carto::MBTilesTileDataSource, datasources.MBTilesTileDataSource)
 
 %std_io_exceptions(carto::MBTilesTileDataSource::MBTilesTileDataSource)
