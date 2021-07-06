@@ -9,10 +9,6 @@
 
 !value_type(std::vector<int>, core.IntVector)
 
-#ifdef SWIGOBJECTIVEC
-%template(NTIntVector) std::vector<int>;
-#else
-%template(IntVector) std::vector<int>;
-#endif
+!value_template(std::vector<int>, core.IntVector)
 
 #endif
