@@ -51,6 +51,9 @@ SHARED_PTR_TEMPLATE = """
 """
 
 POLYMORPHIC_SHARED_PTR_TEMPLATE = SHARED_PTR_TEMPLATE + """
+%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
+%typemap(javaclassmodifiers) $CLASSNAME$ "@com.carto.utils.DontObfuscate public class"
+
 %{
 #include "components/ClassRegistry.h"
 #include "components/Director.h"
@@ -111,7 +114,7 @@ POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE = """
     if (director != null) {
       return ($PACKAGE$.$TYPE$) director;
     }
-	
+
     String objClassName = $PACKAGE$.$TYPE$ModuleJNI.$TYPE$_swigGetClassName(cPtr, null);
     $PACKAGE$.$TYPE$ objInstance = null;
     try {
@@ -129,11 +132,6 @@ POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE = """
 
 VALUE_TEMPLATE_TEMPLATE = """
   %template($TYPE$) $CLASSNAME$;
-"""
-
-DONT_OBFUSCATE_TEMPLATE = """
-%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
-%typemap(javaclassmodifiers) $CLASSNAME$ "@com.carto.utils.DontObfuscate public class"
 """
 
 STANDARD_EQUALS_TEMPLATE = """
@@ -285,8 +283,6 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
       javaClass = match.group(2).strip().split(".")[-1]
       javaDescriptor = "Lcom/carto/%s;" % match.group(2).strip().replace('.', '/')
       args = { 'CLASSNAME': match.group(1).strip(), 'TYPE': javaClass, 'DESCRIPTOR': javaDescriptor }
-      if directors_module:
-        lines_out += applyTemplate(DONT_OBFUSCATE_TEMPLATE, args)
       lines_out += applyTemplate(SHARED_PTR_TEMPLATE, args)
       continue
 
@@ -301,8 +297,6 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
       code = class_code.get(className, [])
       code += applyTemplate(POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE, args)
       class_code[className] = code
-      if directors_module:
-        lines_out += applyTemplate(DONT_OBFUSCATE_TEMPLATE, args)
       lines_out += applyTemplate(POLYMORPHIC_SHARED_PTR_TEMPLATE, args)
       continue
 
