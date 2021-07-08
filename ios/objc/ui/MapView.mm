@@ -16,6 +16,7 @@
 @property (strong, nonatomic) NTGLContext* viewContext;
 @property (assign, nonatomic) BOOL active;
 @property (assign, nonatomic) float scale;
+@property (assign, nonatomic) BOOL surfaceCreated;
 @property (assign, nonatomic) CGSize activeDrawableSize;
 
 @property (strong, nonatomic) UITouch* pointer1;
@@ -76,6 +77,9 @@ static const int NATIVE_NO_COORDINATE = -1;
     _baseMapView = [[NTBaseMapView alloc] init];
     _nativeMapView = [_baseMapView getCptr];
 
+    _surfaceCreated = NO;
+    _activeDrawableSize = CGSizeMake(0, 0);
+
     NTMapRedrawRequestListener* redrawRequestListener = [[NTMapRedrawRequestListener alloc] initWithView:self];
     [_baseMapView setRedrawRequestListener:redrawRequestListener];
     
@@ -92,6 +96,7 @@ static const int NATIVE_NO_COORDINATE = -1;
 
     self.context = _viewContext;
     self.contentScaleFactor = _scale;
+    self.multipleTouchEnabled = YES;
 #ifdef _CARTO_USE_METALANGLE
     self.drawableColorFormat = MGLDrawableColorFormatRGBA8888;
     self.drawableDepthFormat = MGLDrawableDepthFormat24;
@@ -103,18 +108,6 @@ static const int NATIVE_NO_COORDINATE = -1;
     self.drawableMultisample = GLKViewDrawableMultisampleNone;
     self.drawableStencilFormat = GLKViewDrawableStencilFormat8;
 #endif
-    self.multipleTouchEnabled = YES;
-
-    if (_viewContext) {
-        [NTGLContext setCurrentContext:_viewContext];
-
-        [_baseMapView onSurfaceCreated];
-
-        CGFloat drawableWidth = self.bounds.size.width * _scale;
-        CGFloat drawableHeight = self.bounds.size.height * _scale;
-        self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
-        [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
-    }
 
     [self setNeedsDisplay];
 }
@@ -122,25 +115,6 @@ static const int NATIVE_NO_COORDINATE = -1;
 -(void)layoutSubviews {
     [super layoutSubviews];
 
-    @synchronized (self) {
-        if (_viewContext) {
-            NTGLContext* context = [NTGLContext currentContext];
-            if (context != _viewContext) {
-                [NTGLContext setCurrentContext:_viewContext];
-            }
-
-            CGFloat drawableWidth = self.bounds.size.width * _scale;
-            CGFloat drawableHeight = self.bounds.size.height * _scale;
-            if (self.activeDrawableSize.width != drawableWidth || self.activeDrawableSize.height != drawableHeight) {
-                self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
-                [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
-            }
-
-            if (context != _viewContext) {
-                [NTGLContext setCurrentContext:context];
-            }
-        }
-    }
     [self setNeedsDisplay];
 }
 
@@ -153,7 +127,17 @@ static const int NATIVE_NO_COORDINATE = -1;
         if (_viewContext && _active) {
             NTGLContext* context = [NTGLContext currentContext];
             if (context != _viewContext) {
+#ifdef _CARTO_USE_METALANGLE
+                [NTGLContext setCurrentContext:_viewContext forLayer:self.glLayer];
+#else
                 [NTGLContext setCurrentContext:_viewContext];
+#endif
+            }
+
+            if (!_surfaceCreated) {
+                [_baseMapView onSurfaceCreated];
+                _activeDrawableSize = CGSizeMake(0, 0);
+                _surfaceCreated = YES;
             }
 
 #ifdef _CARTO_USE_METALANGLE
@@ -163,11 +147,15 @@ static const int NATIVE_NO_COORDINATE = -1;
             CGFloat drawableWidth = view.drawableWidth;
             CGFloat drawableHeight = view.drawableHeight;
 #endif
-            if (self.activeDrawableSize.width != drawableWidth || self.activeDrawableSize.height != drawableHeight) {
-                self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
-                [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
+            if (_activeDrawableSize.width != drawableWidth || _activeDrawableSize.height != drawableHeight) {
+                _activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
+                [_baseMapView onSurfaceChanged:(int)_activeDrawableSize.width height:(int)_activeDrawableSize.height];
             }
             [_baseMapView onDrawFrame];
+
+#ifdef _CARTO_USE_METALANGLE
+            [_viewContext present:self.glLayer];
+#endif
 
             if (context != _viewContext) {
                 [NTGLContext setCurrentContext:context];
@@ -189,6 +177,7 @@ static const int NATIVE_NO_COORDINATE = -1;
             _nativeMapView = nil;
             _baseMapView = nil;
             _viewContext = nil;
+            _surfaceCreated = NO;
             _activeDrawableSize = CGSizeMake(0, 0);
         }
     }
@@ -205,7 +194,7 @@ static const int NATIVE_NO_COORDINATE = -1;
         if (_viewContext) {
             NTGLContext* context = [NTGLContext currentContext];
             if (context != _viewContext) {
-                [NTGLContext setCurrentContext:_viewContext];
+                [NTGLContext setCurrentContext:_viewContext forLayer:self.glLayer];
             }
 
             [_baseMapView finishRendering];
