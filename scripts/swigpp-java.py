@@ -6,6 +6,9 @@ import subprocess
 import shutil
 from build.sdk_build_utils import *
 
+ENUM_TEMPLATE = """
+"""
+
 VALUE_TYPE_TEMPLATE = """
 %typemap(out) $CLASSNAME$ "*($&1_ltype*)&$result = new $1_ltype($1);"
 %typemap(directorin, descriptor="$DESCRIPTOR$") $CLASSNAME$ "*($&1_ltype*)&$input = new $1_ltype($1);"
@@ -48,6 +51,9 @@ SHARED_PTR_TEMPLATE = """
 """
 
 POLYMORPHIC_SHARED_PTR_TEMPLATE = SHARED_PTR_TEMPLATE + """
+%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
+%typemap(javaclassmodifiers) $CLASSNAME$ "@com.carto.utils.DontObfuscate public class"
+
 %{
 #include "components/ClassRegistry.h"
 #include "components/Director.h"
@@ -108,7 +114,7 @@ POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE = """
     if (director != null) {
       return ($PACKAGE$.$TYPE$) director;
     }
-	
+
     String objClassName = $PACKAGE$.$TYPE$ModuleJNI.$TYPE$_swigGetClassName(cPtr, null);
     $PACKAGE$.$TYPE$ objInstance = null;
     try {
@@ -223,10 +229,13 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
   imports_linenum = None
   include_linenum = None
   stl_wrapper = False
+  directors_module = False
   for line in lines_in:
     # Rename module
     match = re.search('^\s*(%module(?:[(].*[)]|)\s+)([^\s]*)\s*$', line)
     if match:
+      if match.group(1):
+        directors_module = 'directors' in match.group(1)
       line = '%s%sModule' % (match.group(1), match.group(2))
 
     # Language-specific method modifiers
@@ -247,6 +256,14 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
     # Attributes
     match = re.search('^\s*(%|!)(static|)attribute.*$', line)
     if match:
+      continue
+
+    # Detect enum directive
+    match = re.search('^\s*!enum\s*[(]([^)]*)[)].*$', line)
+    if match:
+      enumName = match.group(1).strip()
+      args = { 'ENUMNAME': match.group(1).strip() }
+      lines_out += applyTemplate(ENUM_TEMPLATE, args)
       continue
 
     # Detect value_type directive

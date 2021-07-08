@@ -16,6 +16,7 @@
 
 %import "core/MapPos.i"
 
+!enum(carto::RouteMatchingPointType::RouteMatchingPointType)
 !value_type(carto::RouteMatchingPoint, routing.RouteMatchingPoint)
 !value_type(std::vector<carto::RouteMatchingPoint>, routing.RouteMatchingPointVector)
 

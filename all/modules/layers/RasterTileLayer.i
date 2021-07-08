@@ -18,6 +18,7 @@
 %import "layers/RasterTileEventListener.i"
 %import "layers/TileLayer.i"
 
+!enum(carto::RasterTileFilterMode::RasterTileFilterMode)
 !polymorphic_shared_ptr(carto::RasterTileLayer, layers.RasterTileLayer)
 
 %attribute(carto::RasterTileLayer, std::size_t, TextureCacheCapacity, getTextureCacheCapacity, setTextureCacheCapacity)

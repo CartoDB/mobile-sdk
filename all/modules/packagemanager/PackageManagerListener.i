@@ -17,6 +17,7 @@
 
 %import "packagemanager/PackageStatus.i"
 
+!enum(carto::PackageErrorType::PackageErrorType)
 !polymorphic_shared_ptr(carto::PackageManagerListener, packagemanager.PackageManagerListener)
 
 %feature("director") carto::PackageManagerListener;

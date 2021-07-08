@@ -43,9 +43,7 @@ namespace carto {
         static void UpdateDbEncryption(sqlite3pp::database& db, const std::string& encKey);
 
         static std::string CalculateKeyHash(const std::string& encKey);
-        static void EncryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
-        static void DecryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
-        static void SetCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey);
+        static void EncryptDecryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey, bool encrypt);
 
         const std::string _serverEncKey;
         const std::string _localEncKey;

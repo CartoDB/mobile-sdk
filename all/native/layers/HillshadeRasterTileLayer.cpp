@@ -24,6 +24,7 @@ namespace carto {
         _shadowColor(Color(0, 0, 0, 255)),
         _highlightColor(Color(255, 255, 255, 255))
     {
+        setTileBlendingSpeed(0.0f);
     }
     
     HillshadeRasterTileLayer::~HillshadeRasterTileLayer() {
@@ -76,6 +77,7 @@ namespace carto {
             }
 
             _tileRenderer->setRasterFilterMode(getRasterFilterMode());
+            _tileRenderer->setLayerBlendingSpeed(getTileBlendingSpeed());
             _tileRenderer->setNormalMapShadowColor(getShadowColor());
             _tileRenderer->setNormalMapHighlightColor(getHighlightColor());
             bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);

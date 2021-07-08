@@ -23,6 +23,7 @@
 
 using std::uint64_t;
 
+!enum(carto::PackageType::PackageType)
 !shared_ptr(carto::PackageInfo, packagemanager.PackageInfo)
 !value_type(std::vector<std::shared_ptr<carto::PackageInfo> >, packagemanager.PackageInfoVector)
 

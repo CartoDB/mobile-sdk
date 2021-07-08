@@ -18,6 +18,7 @@
 %import "core/MapPos.i" 
 %import "core/Variant.i"
 
+!enum(carto::RoutingAction::RoutingAction)
 !value_type(carto::RoutingInstruction, routing.RoutingInstruction)
 !value_type(std::vector<carto::RoutingInstruction>, routing.RoutingInstructionVector)
 

@@ -21,6 +21,7 @@
 %import "layers/TileLoadListener.i"
 %import "layers/UTFGridEventListener.i"
 
+!enum(carto::TileSubstitutionPolicy::TileSubstitutionPolicy)
 !polymorphic_shared_ptr(carto::TileLayer, layers.TileLayer)
 
 %attribute(carto::TileLayer, int, FrameNr, getFrameNr, setFrameNr)

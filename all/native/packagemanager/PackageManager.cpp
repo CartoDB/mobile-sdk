@@ -31,11 +31,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/document.h>
 
-#include <cryptopp/rc5.h>
-#include <cryptopp/sha.h>
-#include <cryptopp/modes.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/hex.h>
+#include <botan/botan_all.h>
 
 namespace {
 
@@ -1505,15 +1501,9 @@ namespace carto {
     }
 
     std::string PackageManager::CalculateKeyHash(const std::string& encKey) {
-        CryptoPP::SHA1 hash;
-        unsigned char digest[CryptoPP::SHA1::DIGESTSIZE];
-        hash.CalculateDigest(digest, reinterpret_cast<const unsigned char*>(encKey.c_str()), encKey.size());
-        std::string sha1;
-        CryptoPP::HexEncoder encoder;
-        encoder.Attach(new CryptoPP::StringSink(sha1));
-        encoder.Put(digest, sizeof(digest));
-        encoder.MessageEnd();
-        return sha1;
+        std::unique_ptr<Botan::HashFunction> hash(new Botan::SHA_160);
+        hash->update(reinterpret_cast<const std::uint8_t*>(encKey.data()), encKey.size());
+        return Botan::hex_encode(hash->final(), true);
     }
 
     MapTile PackageManager::CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj) {

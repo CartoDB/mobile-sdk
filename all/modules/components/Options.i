@@ -17,6 +17,9 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+!enum(carto::RenderProjectionMode::RenderProjectionMode)
+!enum(carto::PanningMode::PanningMode)
+!enum(carto::PivotMode::PivotMode)
 !shared_ptr(carto::Options, components.Options)
 
 %import "core/MapBounds.i"

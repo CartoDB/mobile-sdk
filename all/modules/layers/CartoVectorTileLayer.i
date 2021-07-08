@@ -19,6 +19,9 @@
 %import "utils/AssetPackage.i"
 %import "vectortiles/VectorTileDecoder.i"
 
+!enum(carto::CartoBaseMapStyle::CartoBaseMapStyle)
+!enum(carto::CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode)
+!enum(carto::CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode)
 !polymorphic_shared_ptr(carto::CartoVectorTileLayer, layers.CartoVectorTileLayer)
 
 %attributestring(carto::CartoVectorTileLayer, std::string, Language, getLanguage, setLanguage)

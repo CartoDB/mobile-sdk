@@ -19,6 +19,7 @@
 
 %import "core/StringVector.i"
 
+!enum(carto::VariantType::VariantType)
 !value_type(carto::Variant, core.Variant)
 !value_type(std::vector<carto::Variant>, core.VariantVector)
 !value_type(std::map<std::string, carto::Variant>, core.StringVariantMap)

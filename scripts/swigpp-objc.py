@@ -6,6 +6,9 @@ import subprocess
 import shutil
 from build.sdk_build_utils import *
 
+ENUM_TEMPLATE = """
+"""
+
 VALUE_TYPE_TEMPLATE = """
 %typemap(out) $CLASSNAME$ "*($&1_ltype*)&$result = new $1_ltype($1);"
 %typemap(directorin) $CLASSNAME$ "*($&1_ltype*)&$input = new $1_ltype($1);"
@@ -247,6 +250,14 @@ def transformSwigFile(sourcePath, outPath, moduleDirs, headerDirs):
     # Attributes
     match = re.search('^\s*(%|!)(static|)attribute.*$', line)
     if match:
+      continue
+
+    # Detect enum directive
+    match = re.search('^\s*!enum\s*[(]([^)]*)[)].*$', line)
+    if match:
+      enumName = match.group(1).strip()
+      args = { 'ENUMNAME': match.group(1).strip() }
+      lines_out += applyTemplate(ENUM_TEMPLATE, args)
       continue
 
     # Detect value_type directive
