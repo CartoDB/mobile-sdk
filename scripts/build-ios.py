@@ -9,6 +9,11 @@ from build.sdk_build_utils import *
 
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64']
 
+def getPlatformArch(arch):
+  if arch.endswith('-simulator'):
+    return 'SIMULATOR', arch[:-10]
+  return ('OS' if arch.startswith('arm') else 'SIMULATOR'), arch
+
 def updateUmbrellaHeader(filename, defines):
   with open(filename, 'r') as f:
     lines = f.readlines()
@@ -91,7 +96,7 @@ def copyHeaders(args, baseDir, outputDir):
   return True
 
 def buildIOSLib(args, arch, outputDir=None):
-  platform = 'OS' if arch.startswith('arm') else 'SIMULATOR'
+  platform, arch = getPlatformArch(arch)
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   baseDir = getBaseDir()
   buildDir = outputDir or getBuildDir('ios', '%s-%s' % (platform, arch))
@@ -114,6 +119,7 @@ def buildIOSLib(args, arch, outputDir=None):
     "-DSDK_DEV_TEAM='%s'" % (args.devteam if args.devteam else ""),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='iOS'",
+    "-DSDK_IOS_ARCH='%s'" % arch,
     '%s/scripts/build' % baseDir
   ]):
     return False
@@ -124,7 +130,6 @@ def buildIOSLib(args, arch, outputDir=None):
   ])
 
 def buildIOSFramework(args, archs, outputDir=None):
-  platformArchs = [('OS' if arch.startswith('arm') else 'SIMULATOR', arch) for arch in archs]
   baseDir = getBaseDir()
   distDir = outputDir or getDistDir('ios')
   if args.sharedlib:
@@ -135,13 +140,13 @@ def buildIOSFramework(args, archs, outputDir=None):
   makedirs(frameworkDir)
 
   libFilePaths = []
-  for platform, arch in platformArchs:
-    libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else 'iphonesimulator', 'dylib' if args.sharedlib else 'a')
-    if args.metalangle:
+  for platform, arch in map(getPlatformArch, archs):
+    libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, ('iphone%s' % platform.lower()), 'dylib' if args.sharedlib else 'a')
+    if args.metalangle and not args.sharedlib:
       mergedLibFilePath = '%s_merged.%s' % tuple(libFilePath.rsplit('.', 1))
-      angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, arch)
+      angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, arch if not (arch == 'arm64' and platform == 'simulator') else 'arm64-simulator')
       if not execute('libtool', baseDir,
-        '-o', mergedLibFilePath, libFilePath, angleLibFilePath
+        '-static', '-o', mergedLibFilePath, libFilePath, angleLibFilePath
       ):
         return False
       libFilePath = mergedLibFilePath
@@ -180,9 +185,8 @@ def buildIOSFramework(args, archs, outputDir=None):
   return True
 
 def buildIOSXCFramework(args, archs, outputDir=None):
-  platformArchs = [('OS' if arch.startswith('arm') else 'SIMULATOR', arch) for arch in archs]
   groupedPlatformArchs = {}
-  for platform, arch in platformArchs:
+  for platform, arch in map(getPlatformArch, archs):
     groupedPlatformArchs[platform] = groupedPlatformArchs.get(platform, []) + [arch]
   baseDir = getBaseDir()
   distDir = outputDir or getDistDir('ios')
@@ -212,11 +216,10 @@ def buildIOSCocoapod(args, buildpackage):
   version = args.buildversion
   distName = 'sdk4-ios-%s%s.zip' % (("metal-" if args.metalangle else ""), version)
   frameworkName = 'CartoMobileSDK%s' % ("-Metal" if args.metalangle else "")
+  frameworkDir = 'CartoMobileSDK.%s' % ("xcframework" if args.buildxcframework else "framework")
   iosversion = '9.0'
-  frameworks = (["Metal", "MetalKit"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation"]
-  xcframeworks = []
-  if args.buildxcframework:
-    xcframeworks += [frameworkName]
+  frameworks = (["QuartzCore"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation"]
+  weakFrameworks = (["Metal"] if args.metalangle else [])
 
   with open('%s/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
     cocoapodFile = string.Template(f.read()).safe_substitute({
@@ -224,11 +227,12 @@ def buildIOSCocoapod(args, buildpackage):
       'distDir': distDir,
       'distName': distName,
       'frameworkName': frameworkName,
+      'frameworkDir': frameworkDir,
       'version': version,
       'license': readLicense(),
       'iosversion': iosversion,
-      'frameworks': ', '.join('"%s"' % framework for framework in frameworks),
-      'vendoredFrameworks': ', '.join('"%s.xcframework"' % framework for framework in xcframeworks) if xcframeworks else 'nil'
+      'frameworks': ', '.join('"%s"' % framework for framework in frameworks) if frameworks else 'nil',
+      'weakFrameworks': ', '.join('"%s"' % framework for framework in weakFrameworks) if weakFrameworks else 'nil'
     })
   with open('%s/%s.podspec' % (distDir, frameworkName), 'w') as f:
     f.write(cocoapodFile)
@@ -263,6 +267,8 @@ parser.add_argument('--shared-framework', dest='sharedlib', default=False, actio
 args = parser.parse_args()
 if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
+  if args.buildxcframework:
+    args.iosarch += ["arm64-simulator"]
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 if args.metalangle:
   args.defines += ';' + '_CARTO_USE_METALANGLE'

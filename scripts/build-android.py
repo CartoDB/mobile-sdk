@@ -68,6 +68,7 @@ def buildAndroidSO(args, abi):
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Android'",
+    "-DSDK_ANDROID_ABI='%s'" % abi,
     '%s/scripts/build' % baseDir
   ]):
     return False

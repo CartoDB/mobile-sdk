@@ -33,22 +33,21 @@ Pod::Spec.new do |s|
 
   s.source       = { :http => "https://nutifront.s3.amazonaws.com/sdk_snapshots/$distName" }
 
-  s.source_files  = "CartoMobileSDK.framework/**/*.{h,m}"
-  # s.exclude_files = "Classes/Exclude"
+  s.source_files  = "$frameworkDir/**/*.{h,m,mm}"
 
-  s.public_header_files = "CartoMobileSDK.framework/**/*.{h,m}"
+  s.public_header_files = "$frameworkDir/**/*.{h}"
 
-  s.preserve_paths = "CartoMobileSDK.framework"
+  s.preserve_paths = "$frameworkDir"
 
   s.frameworks = $frameworks
 
-  s.vendored_frameworks = $vendoredFrameworks
+  s.weak_frameworks = $weakFrameworks
+
+  s.vendored_frameworks = "$frameworkDir"
 
   s.libraries = "z", "c++"
 
   s.requires_arc = true
-
-  s.xcconfig = { "FRAMEWORK_SEARCH_PATHS" => "\"$(PODS_ROOT)/$frameworkName/\"" }
 
   s.cocoapods_version = ">= 1.10.1"
 

@@ -51,10 +51,10 @@ def buildWinPhoneNativeDLL(args, arch):
     '-DCMAKE_BUILD_TYPE=%s' % args.nativeconfiguration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/winphone-csharp/wrappers' % baseDir),
     '-DSINGLE_LIBRARY:BOOL=ON',
-    "-DWINPHONE_ARCH=%s" % arch,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Windows Phone 10'",
+    "-DSDK_WINPHONE_ARCH='%s'" % arch,
     '%s/scripts/build' % baseDir
   ]):
     return False
