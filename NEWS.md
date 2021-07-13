@@ -1,3 +1,16 @@
+CARTO Mobile SDK 4.4.0RC4
+-------------------
+
+### Changes, fixes:
+
+* Fixed iOS Cocoapod packaging issues, causing issues with MetalANGLE framework when used within other frameworks
+* Introduced 'carto.utils.DontObfuscate' annotation for Android Java library. This can be used to finetune Proguard obfuscation rules.
+* Optimized protobuf library compilation, making SDK binaries 3-5% smaller.
+* Replaced Cryptopp library dependency in SDK with Botan library, fixing portability issues
+* Enabled 'tile blending speed' attribute for HillShaderRasterTileLayer (default value is 0). This also fixes blending artifacts when using the layer.
+* Various fixes and tweaks in SDK build scripts
+
+
 CARTO Mobile SDK 4.4.0RC3
 -------------------
 
