@@ -194,7 +194,11 @@ static const int NATIVE_NO_COORDINATE = -1;
         if (_viewContext) {
             NTGLContext* context = [NTGLContext currentContext];
             if (context != _viewContext) {
+#ifdef _CARTO_USE_METALANGLE
                 [NTGLContext setCurrentContext:_viewContext forLayer:self.glLayer];
+#else
+                [NTGLContext setCurrentContext:_viewContext];
+#endif
             }
 
             [_baseMapView finishRendering];
