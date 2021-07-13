@@ -7,12 +7,12 @@ import argparse
 import string
 from build.sdk_build_utils import *
 
-IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64']
+IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator']
 
-def getPlatformArch(arch):
-  if arch.endswith('-simulator'):
-    return 'SIMULATOR', arch[:-10]
-  return ('OS' if arch.startswith('arm') else 'SIMULATOR'), arch
+def getPlatformArch(baseArch):
+  if baseArch.endswith('-simulator'):
+    return 'SIMULATOR', baseArch[:-10]
+  return ('OS' if baseArch.startswith('arm') else 'SIMULATOR'), baseArch
 
 def updateUmbrellaHeader(filename, defines):
   with open(filename, 'r') as f:
@@ -95,8 +95,8 @@ def copyHeaders(args, baseDir, outputDir):
   buildModuleMap('%s/Modules/module.modulemap' % outputDir, publicHeaders)
   return True
 
-def buildIOSLib(args, arch, outputDir=None):
-  platform, arch = getPlatformArch(arch)
+def buildIOSLib(args, baseArch, outputDir=None):
+  platform, arch = getPlatformArch(baseArch)
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   baseDir = getBaseDir()
   buildDir = outputDir or getBuildDir('ios', '%s-%s' % (platform, arch))
@@ -129,7 +129,7 @@ def buildIOSLib(args, arch, outputDir=None):
     '--config', args.configuration
   ])
 
-def buildIOSFramework(args, archs, outputDir=None):
+def buildIOSFramework(args, baseArchs, outputDir=None):
   baseDir = getBaseDir()
   distDir = outputDir or getDistDir('ios')
   if args.sharedlib:
@@ -140,11 +140,12 @@ def buildIOSFramework(args, archs, outputDir=None):
   makedirs(frameworkDir)
 
   libFilePaths = []
-  for platform, arch in map(getPlatformArch, archs):
+  for baseArch in baseArchs:
+    platform, arch = getPlatformArch(baseArch)
     libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, ('iphone%s' % platform.lower()), 'dylib' if args.sharedlib else 'a')
     if args.metalangle and not args.sharedlib:
       mergedLibFilePath = '%s_merged.%s' % tuple(libFilePath.rsplit('.', 1))
-      angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, arch if not (arch == 'arm64' and platform == 'simulator') else 'arm64-simulator')
+      angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, baseArch)
       if not execute('libtool', baseDir,
         '-static', '-o', mergedLibFilePath, libFilePath, angleLibFilePath
       ):
@@ -184,19 +185,20 @@ def buildIOSFramework(args, archs, outputDir=None):
     print("Output available in:\n%s" % distDir)
   return True
 
-def buildIOSXCFramework(args, archs, outputDir=None):
+def buildIOSXCFramework(args, baseArchs, outputDir=None):
   groupedPlatformArchs = {}
-  for platform, arch in map(getPlatformArch, archs):
-    groupedPlatformArchs[platform] = groupedPlatformArchs.get(platform, []) + [arch]
+  for baseArch in baseArchs:
+    platform, arch = getPlatformArch(baseArch)
+    groupedPlatformArchs[platform] = groupedPlatformArchs.get(platform, []) + [baseArch]
   baseDir = getBaseDir()
   distDir = outputDir or getDistDir('ios')
   shutil.rmtree(distDir, True)
   makedirs(distDir)
 
   frameworkBuildDirs = []
-  for platform, archs in groupedPlatformArchs.items():
-    frameworkBuildDir = getBuildDir('ios-framework', '%s-%s' % (platform, '-'.join(archs)))
-    if not buildIOSFramework(args, archs, frameworkBuildDir):
+  for platform, baseArchs in groupedPlatformArchs.items():
+    frameworkBuildDir = getBuildDir('ios-framework', '%s-%s' % (platform, '-'.join(baseArchs)))
+    if not buildIOSFramework(args, baseArchs, frameworkBuildDir):
       return False
     frameworkBuildDirs.append(frameworkBuildDir)
 
@@ -267,8 +269,8 @@ parser.add_argument('--shared-framework', dest='sharedlib', default=False, actio
 args = parser.parse_args()
 if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
-  if args.buildxcframework:
-    args.iosarch += ["arm64-simulator"]
+  if not args.buildxcframework:
+    args.iosarch = filter(lambda arch:not arch.endswith('-simulator'), args.iosarch)
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 if args.metalangle:
   args.defines += ';' + '_CARTO_USE_METALANGLE'
