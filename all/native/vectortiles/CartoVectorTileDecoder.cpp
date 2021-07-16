@@ -280,7 +280,7 @@ namespace carto {
                     continue;
                 }
 
-                mvt::MBVTTileReader reader(it->second, tileTransformer, *layerSymbolizerContexts[it->first], decoder);
+                mvt::MBVTTileReader reader(it->second, tileTransformer, *layerSymbolizerContexts[it->first], decoder, _logger);
                 reader.setLayerNameOverride(it->first);
                 tiles[index] = reader.readTile(targetTile);
             }

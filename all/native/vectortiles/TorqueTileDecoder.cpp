@@ -132,7 +132,7 @@ namespace carto {
 
             auto tileMap = std::make_shared<TileMap>();
             for (int frame = 0; frame < frameCount; frame++) {
-                mvt::TorqueTileReader reader(map, frame, true, tileTransformer, *symbolizerContext, decoder);
+                mvt::TorqueTileReader reader(map, frame, true, tileTransformer, *symbolizerContext, decoder, _logger);
                 if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                     (*tileMap)[frame] = tile;
                 }
