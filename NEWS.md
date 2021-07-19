@@ -1,3 +1,15 @@
+CARTO Mobile SDK 4.4.0
+-------------------
+
+### Changes, fixes:
+
+* Fixed CartoCSS string-expression evaluation issue, causing some misoptimizations
+* GeoJSONGeometryReader and GeoJSONGeometryWriter are now RFC7946 compliant and accept null geometry in features.
+* Added support for shorthand-encoding of 'nutiparameters' in project.json files
+* SDK now catches feature processing exceptions earlier and report thems without causing whole tile decoding to fail.
+* Fixes to iOS build scripts
+
+
 CARTO Mobile SDK 4.4.0RC4
 -------------------
 
