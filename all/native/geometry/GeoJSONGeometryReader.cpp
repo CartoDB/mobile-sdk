@@ -138,10 +138,13 @@ namespace carto {
         }
         std::string type = value["type"].GetString();
         if (type != "Feature") {
-             throw ParseException("Illegal type for the feature");
+            throw ParseException("Illegal type for the feature");
         }
 
-        std::shared_ptr<Geometry> geometry = readGeometry(value["geometry"]);
+        std::shared_ptr<Geometry> geometry;
+        if (value.HasMember("geometry")) {
+            geometry = readGeometry(value["geometry"]);
+        }
         Variant properties;
         if (value.HasMember("properties")) {
             properties = readProperties(value["properties"]);
@@ -150,6 +153,9 @@ namespace carto {
     }
 
     std::shared_ptr<Geometry> GeoJSONGeometryReader::readGeometry(const rapidjson::Value& value) const {
+        if (value.IsNull()) {
+            return std::shared_ptr<Geometry>();
+        }
         if (!value.IsObject()) {
             throw ParseException("Wrong JSON type for geometry");
         }
@@ -158,46 +164,7 @@ namespace carto {
             throw ParseException("Missing type information from geometry");
         }
         std::string type = value["type"].GetString();
-        if (type == "Point") {
-            return std::make_shared<PointGeometry>(readPoint(value["coordinates"]));
-        } else if (type == "LineString") {
-            return std::make_shared<LineGeometry>(readRing(value["coordinates"]));
-        } else if (type == "Polygon") {
-            return std::make_shared<PolygonGeometry>(readRings(value["coordinates"]));
-        } else if (type == "MultiPoint") {
-            const rapidjson::Value& coordinates = value["coordinates"];
-            if (!coordinates.IsArray()) {
-                throw ParseException("Wrong JSON type for coordinates");
-            }
-            std::vector<std::shared_ptr<PointGeometry> > points;
-            points.reserve(coordinates.Size());
-            for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
-                points.push_back(std::make_shared<PointGeometry>(readPoint(coordinates[i])));
-            }
-            return std::make_shared<MultiPointGeometry>(points);
-        } else if (type == "MultiLineString") {
-            const rapidjson::Value& coordinates = value["coordinates"];
-            if (!coordinates.IsArray()) {
-                throw ParseException("Wrong JSON type for coordinates");
-            }
-            std::vector<std::shared_ptr<LineGeometry> > lines;
-            lines.reserve(coordinates.Size());
-            for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
-                lines.push_back(std::make_shared<LineGeometry>(readRing(coordinates[i])));
-            }
-            return std::make_shared<MultiLineGeometry>(lines);
-        } else if (type == "MultiPolygon") {
-            const rapidjson::Value& coordinates = value["coordinates"];
-            if (!coordinates.IsArray()) {
-                throw ParseException("Wrong JSON type for coordinates");
-            }
-            std::vector<std::shared_ptr<PolygonGeometry> > polygons;
-            polygons.reserve(coordinates.Size());
-            for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
-                polygons.push_back(std::make_shared<PolygonGeometry>(readRings(coordinates[i])));
-            }
-            return std::make_shared<MultiPolygonGeometry>(polygons);
-        } else if (type == "GeometryCollection") {
+        if (type == "GeometryCollection") {
             const rapidjson::Value& geometries = value["geometries"];
             if (!geometries.IsArray()) {
                 throw ParseException("Wrong JSON type for geometries");
@@ -208,6 +175,39 @@ namespace carto {
                 geometryList.push_back(readGeometry(geometries[i]));
             }
             return std::make_shared<MultiGeometry>(geometryList);
+        }
+
+        const rapidjson::Value& coordinates = value["coordinates"];
+        if (!coordinates.IsArray()) {
+            throw ParseException("Wrong JSON type for coordinates");
+        }
+        if (type == "Point") {
+            return std::make_shared<PointGeometry>(readPoint(coordinates));
+        } else if (type == "LineString") {
+            return std::make_shared<LineGeometry>(readRing(coordinates));
+        } else if (type == "Polygon") {
+            return std::make_shared<PolygonGeometry>(readRings(coordinates));
+        } else if (type == "MultiPoint") {
+            std::vector<std::shared_ptr<PointGeometry> > points;
+            points.reserve(coordinates.Size());
+            for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
+                points.push_back(std::make_shared<PointGeometry>(readPoint(coordinates[i])));
+            }
+            return std::make_shared<MultiPointGeometry>(points);
+        } else if (type == "MultiLineString") {
+            std::vector<std::shared_ptr<LineGeometry> > lines;
+            lines.reserve(coordinates.Size());
+            for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
+                lines.push_back(std::make_shared<LineGeometry>(readRing(coordinates[i])));
+            }
+            return std::make_shared<MultiLineGeometry>(lines);
+        } else if (type == "MultiPolygon") {
+            std::vector<std::shared_ptr<PolygonGeometry> > polygons;
+            polygons.reserve(coordinates.Size());
+            for (rapidjson::SizeType i = 0; i < coordinates.Size(); i++) {
+                polygons.push_back(std::make_shared<PolygonGeometry>(readRings(coordinates[i])));
+            }
+            return std::make_shared<MultiPolygonGeometry>(polygons);
         } else {
             throw ParseException("Unsupported geometry type: " + type);
         }

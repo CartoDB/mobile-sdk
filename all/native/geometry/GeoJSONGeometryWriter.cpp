@@ -116,6 +116,10 @@ namespace carto {
     }
 
     void GeoJSONGeometryWriter::writeGeometry(const std::shared_ptr<Geometry>& geometry, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
+        if (!geometry) {
+            value.SetNull();
+            return;
+        }
         value.SetObject();
         if (auto point = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
             value.AddMember("type", "Point", allocator);
@@ -171,6 +175,10 @@ namespace carto {
     }
 
     void GeoJSONGeometryWriter::writeProperties(const Variant& properties, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
+        if (properties.getType() == VariantType::VARIANT_TYPE_NULL) {
+            value.SetNull();
+            return;
+        }
         rapidjson::Document propertiesDoc;
         if (propertiesDoc.Parse<rapidjson::kParseDefaultFlags>(properties.toString().c_str()).HasParseError()) {
             throw GenerateException("Failed to read properties");
