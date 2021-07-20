@@ -32,6 +32,9 @@ namespace carto {
         /**
          * Listener method that gets called when the map is panned, rotated, tilted or zoomed.
          * The callback is used for both UI events and map changes resulting from API calls.
+         * It is recommended to use onMapInteraction callback instead of onMapMoved, if possible.
+         * Doing any calls to update MapView state from this method is potentially dangerous and may
+         * result in deadlocks or crashes.
          * The thread this method is called from may vary.
          */
         virtual void onMapMoved() { }
