@@ -45,7 +45,7 @@ namespace carto {
 
         std::vector<std::uint8_t> bitmapData(width * height * 4);
         CFUniquePtr<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB(), CGColorSpaceRelease);
-        CFUniquePtr<CGContextRef> context(CGBitmapContextCreate(bitmapData.data(), width, height, 8, width * 4, colorSpace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast, CGContextRelease);
+        CFUniquePtr<CGContextRef> context(CGBitmapContextCreate(bitmapData.data(), width, height, 8, width * 4, colorSpace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast), CGContextRelease);
         if (!context) {
             Log::Errorf("BitmapUtils::CreateBitmapFromUIImage: Failed to create bitmap context");
             return std::shared_ptr<Bitmap>();
