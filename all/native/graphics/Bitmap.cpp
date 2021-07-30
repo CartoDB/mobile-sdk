@@ -13,6 +13,11 @@
 #include <png.h>
 #include <webp/decode.h>
 
+#if defined(__APPLE__)
+#include "utils/CFUniquePtr.h"
+#include <CoreGraphics/CoreGraphics.h>
+#endif
+
 namespace {
     const unsigned char NUTiHeader[4] = { 'N', 'U', 'T', 'i' };
 
@@ -140,20 +145,20 @@ namespace carto {
     std::shared_ptr<BinaryData> Bitmap::compressToPNG() const {
         png_structp pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, reportPNGErrorCallback, reportPNGWarningCallback);
         if (!pngPtr) {
-            Log::Error("Bitmap::compressToPng: Failed to compress bitmap to PNG");
+            Log::Error("Bitmap::compressToPNG: Failed to compress bitmap to PNG");
             return std::shared_ptr<BinaryData>();
         }
     
         png_infop infoPtr = png_create_info_struct(pngPtr);
         if (!infoPtr) {
             png_destroy_write_struct(&pngPtr, NULL);
-            Log::Error("Bitmap::compressToPng: Failed to compress bitmap to PNG");
+            Log::Error("Bitmap::compressToPNG: Failed to compress bitmap to PNG");
             return std::shared_ptr<BinaryData>();
         }
     
         if (setjmp(png_jmpbuf(pngPtr))) {
             png_destroy_write_struct(&pngPtr, &infoPtr);
-            Log::Error("Bitmap::compressToPng: Failed to compress bitmap to PNG");
+            Log::Error("Bitmap::compressToPNG: Failed to compress bitmap to PNG");
             return std::shared_ptr<BinaryData>();
         }
     
@@ -180,7 +185,7 @@ namespace carto {
             break;
         default:
             png_destroy_write_struct(&pngPtr, &infoPtr);
-            Log::Errorf("Bitmap::savePNG: Failed to compress bitmap to PNG, unsupported image format: %d", _colorFormat);
+            Log::Errorf("Bitmap::compressToPNG: Failed to compress bitmap to PNG, unsupported image format: %d", _colorFormat);
             return std::shared_ptr<BinaryData>();
         }
     
@@ -521,7 +526,7 @@ namespace carto {
         if (IsJPEG(compressedData, dataSize)) {
             return loadJPEG(compressedData, dataSize);
         } else if (IsPNG(compressedData, dataSize)) {
-            return loadPNG(compressedData, dataSize);
+            return loadExtendedPNG(compressedData, dataSize);
         } else if (IsWEBP(compressedData, dataSize)) {
             return loadWEBP(compressedData, dataSize);
         } else if (IsNUTI(compressedData, dataSize)) {
@@ -748,6 +753,38 @@ namespace carto {
         return true;
     }
     
+    bool Bitmap::loadExtendedPNG(const unsigned char* compressedData, std::size_t dataSize) {
+        if (loadPNG(compressedData, dataSize)) {
+            return true;
+        }
+
+#if defined(__APPLE__)
+        CFUniquePtr<CGDataProviderRef> provider(CGDataProviderCreateWithData(NULL, compressedData, dataSize, NULL), CGDataProviderRelease);
+        CFUniquePtr<CGImageRef> cgImage(CGImageCreateWithPNGDataProvider(provider, NULL, false, kCGRenderingIntentDefault), CGImageRelease);
+        if (!cgImage) {
+            return false;
+        }
+        Log::Warn("Bitmap::loadExtendedPNG: Using non-standard optimized Apple image");
+
+        CGBitmapInfo info = CGImageGetBitmapInfo(cgImage);
+        unsigned int width = static_cast<unsigned int>(CGImageGetWidth(cgImage));
+        unsigned int height = static_cast<unsigned int>(CGImageGetHeight(cgImage));
+
+        std::vector<unsigned char> pixelData(width * height * 4);
+        CFUniquePtr<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB(), CGColorSpaceRelease);
+        CFUniquePtr<CGContextRef> context(CGBitmapContextCreate(pixelData.data(), width, height, 8, width * 4, colorSpace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast), CGContextRelease);
+        if (!context) {
+            return false;
+        }
+
+        CGContextDrawImage(context, CGRectMake(0, 0, width, height), cgImage);
+
+        return loadFromUncompressedBytes(pixelData.data(), width, height, ColorFormat::COLOR_FORMAT_RGBA, 4 * width);
+#else
+        return false;
+#endif
+    }
+
     bool Bitmap::loadPNG(const unsigned char* compressedData, std::size_t dataSize) {
         png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, reportPNGErrorCallback, reportPNGWarningCallback);
         if (!pngPtr) {
