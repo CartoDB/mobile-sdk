@@ -9,6 +9,9 @@ from build.sdk_build_utils import *
 
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator']
 
+def getFinalDistDir(args):
+  return getDistDir('ios-metal' if args.metalangle else 'ios')
+
 def getPlatformArch(baseArch):
   if baseArch.endswith('-simulator'):
     return 'SIMULATOR', baseArch[:-10]
@@ -131,7 +134,7 @@ def buildIOSLib(args, baseArch, outputDir=None):
 
 def buildIOSFramework(args, baseArchs, outputDir=None):
   baseDir = getBaseDir()
-  distDir = outputDir or getDistDir('ios')
+  distDir = outputDir or getFinalDistDir(args)
   if args.sharedlib:
     frameworkDir = '%s/CartoMobileSDK.framework' % distDir
   else:
@@ -191,7 +194,7 @@ def buildIOSXCFramework(args, baseArchs, outputDir=None):
     platform, arch = getPlatformArch(baseArch)
     groupedPlatformArchs[platform] = groupedPlatformArchs.get(platform, []) + [baseArch]
   baseDir = getBaseDir()
-  distDir = outputDir or getDistDir('ios')
+  distDir = outputDir or getFinalDistDir(args)
   shutil.rmtree(distDir, True)
   makedirs(distDir)
 
@@ -214,7 +217,7 @@ def buildIOSXCFramework(args, baseArchs, outputDir=None):
 
 def buildIOSCocoapod(args, buildpackage):
   baseDir = getBaseDir()
-  distDir = getDistDir('ios')
+  distDir = getFinalDistDir(args)
   version = args.buildversion
   distName = 'sdk4-ios-%s%s.zip' % (("metal-" if args.metalangle else ""), version)
   frameworkName = 'CartoMobileSDK%s' % ("-Metal" if args.metalangle else "")
