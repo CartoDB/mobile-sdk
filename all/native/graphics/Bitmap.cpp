@@ -101,7 +101,7 @@ namespace carto {
     }
     
     Bitmap::Bitmap(const unsigned char* pixelData, unsigned int width, unsigned int height,
-                           ColorFormat::ColorFormat colorFormat, unsigned int bytesPerRow) :
+                           ColorFormat::ColorFormat colorFormat, int bytesPerRow) :
         _width(0),
         _height(0),
         _bytesPerPixel(0),
