@@ -85,7 +85,7 @@ namespace carto {
         }
         std::shared_ptr<Bitmap> bitmap;
         try {
-            bitmap = std::make_shared<Bitmap>(uncompressedData, bitmapInfo.width, bitmapInfo.height, colorFormat, bitmapInfo.width * bytesPerPixel);
+            bitmap = std::make_shared<Bitmap>(uncompressedData, bitmapInfo.width, bitmapInfo.height, colorFormat, bitmapInfo.stride);
         }
         catch (const std::exception& ex) {
             Log::Errorf("BitmapUtils::CreateBitmapFromAndroidBitmap: Failed to create bitmap: %s", ex.what());
