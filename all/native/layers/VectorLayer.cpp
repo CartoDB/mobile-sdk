@@ -273,7 +273,7 @@ namespace carto {
 
         if (const std::shared_ptr<Label>& label = std::dynamic_pointer_cast<Label>(element)) {
             if (!label->getDrawData() || label->getDrawData()->isOffset() || label->getDrawData()->getProjectionSurface() != projectionSurface) {
-                label->setDrawData(std::make_shared<LabelDrawData>(*label, *label->getStyle(), *_dataSource->getProjection(), projectionSurface, _lastCullState->getViewState()));
+                label->setDrawData(std::make_shared<LabelDrawData>(*label, *label->getStyle(), *_dataSource->getProjection(), projectionSurface, viewState));
             }
             _billboardRenderer->addElement(label);
         } else if (const std::shared_ptr<Line>& line = std::dynamic_pointer_cast<Line>(element)) {
@@ -314,7 +314,7 @@ namespace carto {
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
             if (!popup->getDrawData() || popup->getDrawData()->isOffset() || popup->getDrawData()->getProjectionSurface() != projectionSurface) {
                 if (auto options = getOptions()) {
-                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), projectionSurface, options, _lastCullState->getViewState()));
+                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), projectionSurface, options, viewState));
                 } else {
                     return;
                 }
