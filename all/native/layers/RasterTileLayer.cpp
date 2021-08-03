@@ -193,6 +193,9 @@ namespace carto {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
+            // Reset cullstate. This will force recalculation of visible tiles, which is important if data extent has changed.
+            _lastCullState.reset();
+
             // Invalidate current tasks
             for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
                 task->invalidate();
