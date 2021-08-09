@@ -11,7 +11,6 @@ namespace carto {
     ClickHandlerWorker::ClickHandlerWorker(const std::shared_ptr<Options>& options) :
         _running(false),
         _clickMode(NO_CLICK),
-        _clickTypeDetection(false),
         _startTime(),
         _pointersDown(0),
         _pointer1Down(0, 0),
@@ -51,10 +50,9 @@ namespace carto {
             return;
         }
     
-        _clickTypeDetection = _options->isClickTypeDetection();
         _startTime = std::chrono::steady_clock::now();
     
-        _clickMode = LONG_CLICK;
+        _clickMode = (_options->isClickTypeDetection() ? LONG_CLICK : NORMAL_CLICK);
     
         _pointersDown = 0;
     
@@ -106,7 +104,7 @@ namespace carto {
         _pointer1Moved = screenPos;
     
         float dpi = _options->getDPI();
-        if (_clickMode == LONG_CLICK) {
+        if (_clickMode == NORMAL_CLICK || _clickMode == LONG_CLICK) {
             if (_pointer1MovedSum / dpi >= MOVING_TOLERANCE_INCHES) {
                 _chosen = true;
                 _canceled = true;
@@ -126,8 +124,10 @@ namespace carto {
         }
     
         _pointersDown--;
-    
-        if (_clickMode == LONG_CLICK) {
+
+        if (_clickMode == NORMAL_CLICK) {
+            _chosen = true;
+        } else if (_clickMode == LONG_CLICK) {
             _clickMode = DOUBLE_CLICK;
         } else if (_clickMode == DUAL_CLICK) {
             if (_pointersDown == 0) {
@@ -147,7 +147,10 @@ namespace carto {
         _pointer2Down = screenPos;
         _pointer2Moved = _pointer2Down;
         _pointer2MovedSum = 0;
-    
+
+        if (_clickMode == NORMAL_CLICK) {
+            return;
+        }
         _clickMode = DUAL_CLICK;
         auto deltaTime = std::chrono::steady_clock::now() - _startTime;
         if (deltaTime > DUAL_CLICK_BEGIN_DURATION) {
@@ -228,25 +231,27 @@ namespace carto {
                         clickMode = _clickMode;
                         break;
                     }
-                    
+
                     auto deltaTime = std::chrono::steady_clock::now() - _startTime;
                     switch (_clickMode) {
                     case NO_CLICK:
                         _chosen = true;
                         break;
+                    case NORMAL_CLICK:
+                        break;
                     case LONG_CLICK:
-                        if (!_clickTypeDetection || deltaTime >= LONG_CLICK_MIN_DURATION) {
+                        if (deltaTime >= LONG_CLICK_MIN_DURATION) {
                             _chosen = true;
                         }
                         break;
                     case DOUBLE_CLICK:
-                        if (!_clickTypeDetection || deltaTime >= DOUBLE_CLICK_MAX_DURATION) {
+                        if (deltaTime >= DOUBLE_CLICK_MAX_DURATION) {
                             _chosen = true;
                             _canceled = true;
                         }
                         break;
                     case DUAL_CLICK:
-                        if (!_clickTypeDetection || deltaTime >= DUAL_CLICK_END_DURATION) {
+                        if (deltaTime >= DUAL_CLICK_END_DURATION) {
                             _chosen = true;
                             _canceled = true;
                         }
@@ -258,6 +263,9 @@ namespace carto {
             
             switch (clickMode) {
             case NO_CLICK:
+                break;
+            case NORMAL_CLICK:
+                afterNormalClick();
                 break;
             case LONG_CLICK:
                 afterLongClick();
@@ -279,6 +287,26 @@ namespace carto {
         }
     }
 
+    void ClickHandlerWorker::afterNormalClick() {
+        std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock();
+        if (!touchHandler) {
+            return;
+        }
+        
+        std::unique_lock<std::mutex> lock(_mutex);
+        bool canceled = _canceled;
+        ScreenPos pointer1Down = _pointer1Down;
+        ScreenPos pointer1Moved = _pointer1Moved;
+        lock.unlock();
+
+        if (canceled) {
+            touchHandler->startSinglePointer(pointer1Moved);
+            return;
+        }
+
+        touchHandler->click(pointer1Down);
+    }
+    
     void ClickHandlerWorker::afterLongClick() {
         std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock();
         if (!touchHandler) {
@@ -287,17 +315,10 @@ namespace carto {
         
         std::unique_lock<std::mutex> lock(_mutex);
         bool canceled = _canceled;
-        bool clickTypeDetection = _clickTypeDetection;
         ScreenPos pointer1Down = _pointer1Down;
         ScreenPos pointer1Moved = _pointer1Moved;
         lock.unlock();
 
-        if (!clickTypeDetection) {
-            touchHandler->startSinglePointer(pointer1Moved);
-            touchHandler->click(pointer1Down);
-            return;
-        }
-    
         if (canceled) {
             touchHandler->startSinglePointer(pointer1Moved);
             return;
