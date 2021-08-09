@@ -158,12 +158,12 @@ namespace carto {
     
         /**
          * Returns the click type detection state.
-         * @return True if click type detecton is enabled.
+         * @return True if click type detection is enabled.
          */
         bool isClickTypeDetection() const;
         /**
          * Sets the state of the click type detection flag. If set to true clicks are categorized as normal clicks, double clicks,
-         * long clicks and dual clicks. The click type resolving take about 400ms, so for applications that do not 
+         * long clicks and dual clicks. The click type resolving takes about 400ms, so for applications that do not 
          * require this functionality, it can be turned off. The default is true.
          * @param enabled The new state of the click type detection flag.
          */
@@ -277,12 +277,12 @@ namespace carto {
         void setTiltGestureReversed(bool reversed);
 
         /**
-         * Returns the state of zoom gestures. Zoom gestures allow to use double click and dual click to zoom in/out of the map.
+         * Returns the state of zoom gestures. 
          * @return True if zoom gestures are enabled. False otherwise.
          */
         bool isZoomGestures() const;
         /**
-         * Sets the zoom gestures flag. By default, zoom gestures are not enabled.
+         * Sets the zoom gestures flag. Zoom gestures allow to use double click and dual click to zoom in/out of the map. By default, zoom gestures are not enabled. Note that zoom gestures require that click detection mode is enabled.
          * @param enabled True if zoom gestured should be enabled, false otherwise.
          */
         void setZoomGestures(bool enabled);
