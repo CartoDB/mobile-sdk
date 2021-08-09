@@ -53,23 +53,18 @@ namespace carto {
             return std::shared_ptr<Bitmap>();
         }
 
-        unsigned int bytesPerPixel = 0;
         ColorFormat::ColorFormat colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
         switch (bitmapInfo.format) {
         case ANDROID_BITMAP_FORMAT_A_8:
-            bytesPerPixel = 1;
             colorFormat = ColorFormat::COLOR_FORMAT_GRAYSCALE;
             break;
         case ANDROID_BITMAP_FORMAT_RGB_565:
-            bytesPerPixel = 2;
             colorFormat = ColorFormat::COLOR_FORMAT_RGB_565;
             break;
         case ANDROID_BITMAP_FORMAT_RGBA_4444:
-            bytesPerPixel = 2;
             colorFormat = ColorFormat::COLOR_FORMAT_RGBA_4444;
             break;
         case ANDROID_BITMAP_FORMAT_RGBA_8888:
-            bytesPerPixel = 4;
             colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
             break;
         case ANDROID_BITMAP_FORMAT_NONE:
@@ -79,7 +74,7 @@ namespace carto {
         }
 
         unsigned char* uncompressedData = nullptr;
-        if (AndroidBitmap_lockPixels(jenv, androidBitmap, reinterpret_cast<void **>(&uncompressedData)) != ANDROID_BITMAP_RESULT_SUCCESS) {
+        if (AndroidBitmap_lockPixels(jenv, androidBitmap, reinterpret_cast<void**>(&uncompressedData)) != ANDROID_BITMAP_RESULT_SUCCESS) {
             Log::Error("BitmapUtils::CreateBitmapFromAndroidBitmap: Failed to lock bitmap pixels");
             return std::shared_ptr<Bitmap>();
         }
@@ -125,7 +120,7 @@ namespace carto {
             AndroidBitmapInfo bitmapInfo;
             AndroidBitmap_getInfo(jenv, javaBitmap, &bitmapInfo);
             unsigned char* destData = nullptr;
-            if (AndroidBitmap_lockPixels(jenv, javaBitmap, reinterpret_cast<void **>(&destData)) != ANDROID_BITMAP_RESULT_SUCCESS) {
+            if (AndroidBitmap_lockPixels(jenv, javaBitmap, reinterpret_cast<void**>(&destData)) != ANDROID_BITMAP_RESULT_SUCCESS) {
                 Log::Error("BitmapUtils::CreateBitmapFromAndroidBitmap: Failed to lock bitmap pixels");
                 return NULL;
             }
