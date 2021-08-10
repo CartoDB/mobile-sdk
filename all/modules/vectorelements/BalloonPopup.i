@@ -3,7 +3,7 @@
 
 %module BalloonPopup
 
-!proxy_imports(carto::BalloonPopup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, styles.BalloonPopupStyle, ui.ClickType, vectorelements.BalloonPopupButton, vectorelements.BalloonPopupEventListener, vectorelements.Popup)
+!proxy_imports(carto::BalloonPopup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, styles.BalloonPopupStyle, ui.ClickInfo, ui.ClickType, vectorelements.BalloonPopupButton, vectorelements.BalloonPopupEventListener, vectorelements.Popup)
 
 %{
 #include "vectorelements/BalloonPopup.h"

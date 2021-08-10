@@ -109,6 +109,7 @@
 #import "NTRendererCaptureListener.h"
 
 #import "ui/MapView.h"
+#import "NTClickInfo.h"
 #import "NTMapClickInfo.h"
 #import "NTMapInteractionInfo.h"
 #import "NTMapEventListener.h"
