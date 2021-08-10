@@ -10,7 +10,7 @@
 #include "core/MapPos.h"
 #include "core/MapTile.h"
 #include "graphics/Color.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 
 #include <memory>
 #include <string>
@@ -24,15 +24,15 @@ namespace carto {
     class RasterTileClickInfo {
     public:
         /**
-         * Constructs a RasterTileClickInfo object from a click position, tile information and clicked feature.
-         * @param clickType The click type (SINGLE, DUAL, etc)
+         * Constructs a RasterTileClickInfo object from a click info, tile information and clicked feature.
+         * @param clickInfo The click info
          * @param clickPos The click position in the coordinate system of the data source.
          * @param mapTile The clicked tile id.
          * @param nearestColor The color of the nearest pixel to the click position.
          * @param interpolatedColor The interpolated color at the click position.
          * @param layer The layer of the raster tile on which the click was performed.
          */
-        RasterTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapTile& mapTile, const Color& nearestColor, const Color& interpolatedColor, const std::shared_ptr<Layer>& layer);
+        RasterTileClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const MapTile& mapTile, const Color& nearestColor, const Color& interpolatedColor, const std::shared_ptr<Layer>& layer);
         virtual ~RasterTileClickInfo();
     
         /**
@@ -40,6 +40,12 @@ namespace carto {
          * @return The type of the click performed.
          */
         ClickType::ClickType getClickType() const;
+
+        /**
+         * Returns the click info.
+         * @return The attributes of the click.
+         */
+        const ClickInfo& getClickInfo() const;
 
         /**
          * Returns the click position.
@@ -72,7 +78,7 @@ namespace carto {
         std::shared_ptr<Layer> getLayer() const;
     
     private:
-        ClickType::ClickType _clickType;
+        ClickInfo _clickInfo;
         MapPos _clickPos;
         MapTile _mapTile;
     

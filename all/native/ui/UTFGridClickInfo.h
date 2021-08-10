@@ -9,7 +9,7 @@
 
 #include "core/MapPos.h"
 #include "core/Variant.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 
 #include <memory>
 #include <string>
@@ -25,13 +25,13 @@ namespace carto {
     class UTFGridClickInfo {
     public:
         /**
-         * Constructs an UTFGridClickInfo object from a click position and grid element metadata.
-         * @param clickType The click type (SINGLE, DUAL, etc)
+         * Constructs an UTFGridClickInfo object from a click info, click position and grid element metadata.
+         * @param clickInfo The click info
          * @param clickPos The click position in the coordinate system of the data source.
          * @param elementInfo The info tag of the element that was clicked.
          * @param layer The layer on which the click was performed.
          */
-        UTFGridClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const Variant& elementInfo, const std::shared_ptr<Layer>& layer);
+        UTFGridClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const Variant& elementInfo, const std::shared_ptr<Layer>& layer);
         virtual ~UTFGridClickInfo();
     
         /**
@@ -39,6 +39,12 @@ namespace carto {
          * @return The type of the click performed.
          */
         ClickType::ClickType getClickType() const;
+
+        /**
+         * Returns the click info.
+         * @return The attributes of the click.
+         */
+        const ClickInfo& getClickInfo() const;
 
         /**
          * Returns the click position.
@@ -59,7 +65,7 @@ namespace carto {
         std::shared_ptr<Layer> getLayer() const;
     
     private:
-        ClickType::ClickType _clickType;
+        ClickInfo _clickInfo;
         MapPos _clickPos;
 
         Variant _elementInfo;

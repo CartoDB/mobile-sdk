@@ -535,7 +535,7 @@ namespace carto {
         _prevScreenPos2 = screenPos2;
     }
     
-    void TouchHandler::click(const ScreenPos& screenPos) {
+    void TouchHandler::click(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -545,10 +545,11 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopTilt();
         _mapRenderer->getAnimationHandler().stopZoom();
         
-        handleClick(ClickType::CLICK_TYPE_SINGLE, screenPos);
+        ClickInfo clickInfo(ClickType::CLICK_TYPE_SINGLE, static_cast<float>(duration.count()) / 1000.0f);
+        handleClick(clickInfo, screenPos);
     }
     
-    void TouchHandler::longClick(const ScreenPos& screenPos) {
+    void TouchHandler::longClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
         startSinglePointer(screenPos);
         
         if (!_options->isUserInput()) {
@@ -560,10 +561,11 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopTilt();
         _mapRenderer->getAnimationHandler().stopZoom();
     
-        handleClick(ClickType::CLICK_TYPE_LONG, screenPos);
+        ClickInfo clickInfo(ClickType::CLICK_TYPE_LONG, static_cast<float>(duration.count()) / 1000.0f);
+        handleClick(clickInfo, screenPos);
     }
     
-    void TouchHandler::doubleClick(const ScreenPos& screenPos) {
+    void TouchHandler::doubleClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -579,11 +581,12 @@ namespace carto {
             _prevScreenPos1 = screenPos;
             _gestureMode = SINGLE_POINTER_ZOOM;
         } else {
-            handleClick(ClickType::CLICK_TYPE_DOUBLE, screenPos);
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_DOUBLE, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos);
         }
     }
     
-    void TouchHandler::dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2) {
+    void TouchHandler::dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const std::chrono::milliseconds& duration) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -606,7 +609,8 @@ namespace carto {
             }
         } else {
             ScreenPos centreScreenPos((screenPos1.getX() + screenPos2.getX()) / 2, (screenPos1.getY() + screenPos2.getY()) / 2);
-            handleClick(ClickType::CLICK_TYPE_DUAL, centreScreenPos);
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_DUAL, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, centreScreenPos);
         }
     }
     
@@ -628,7 +632,7 @@ namespace carto {
         return viewState.getProjectionSurface()->calculateMapPos(pos);
     }
 
-    void TouchHandler::handleClick(ClickType::ClickType clickType, const ScreenPos& screenPos) {
+    void TouchHandler::handleClick(const ClickInfo& clickInfo, const ScreenPos& screenPos) {
         ViewState viewState = _mapRenderer->getViewState();
         if (!isValidScreenPosition(screenPos, viewState)) {
             return;
@@ -645,7 +649,7 @@ namespace carto {
 
         // Process the results
         for (const RayIntersectedElement& intersectedElement : results) {
-            if (intersectedElement.getLayer()->processClick(clickType, intersectedElement, viewState)) {
+            if (intersectedElement.getLayer()->processClick(clickInfo, intersectedElement, viewState)) {
                 return;
             }
         }
@@ -654,7 +658,7 @@ namespace carto {
         DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
 
         if (mapEventListener) {
-            mapEventListener->onMapClicked(std::make_shared<MapClickInfo>(clickType, _options->getBaseProjection()->fromInternal(mapPos)));
+            mapEventListener->onMapClicked(std::make_shared<MapClickInfo>(clickInfo, _options->getBaseProjection()->fromInternal(mapPos)));
         }
     }
 

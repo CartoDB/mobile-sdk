@@ -2,10 +2,10 @@
 
 namespace carto {
 
-    VectorTileClickInfo::VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos,
+    VectorTileClickInfo::VectorTileClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const MapPos& featureClickPos,
                                              const std::shared_ptr<VectorTileFeature>& feature,
                                              const std::shared_ptr<Layer>& layer) :
-        _clickType(clickType),
+        _clickInfo(clickInfo),
         _clickPos(clickPos),
         _featureClickPos(featureClickPos),
         _feature(feature),
@@ -17,9 +17,13 @@ namespace carto {
     }
 
     ClickType::ClickType VectorTileClickInfo::getClickType() const {
-        return _clickType;
+        return _clickInfo.getClickType();
     }
     
+    const ClickInfo& VectorTileClickInfo::getClickInfo() const {
+        return _clickInfo;
+    }
+
     const MapPos& VectorTileClickInfo::getClickPos() const {
         return _clickPos;
     }

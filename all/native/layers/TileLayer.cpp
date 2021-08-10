@@ -425,7 +425,7 @@ namespace carto {
         }
     }
 
-    bool TileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+    bool TileLayer::processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
         if (!projectionSurface) {
             return false;
@@ -436,12 +436,12 @@ namespace carto {
         if (utfGridEventListener) {
             if (auto elementInfo = intersectedElement.getElement<Variant>()) {
                 MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
-                auto clickInfo = std::make_shared<UTFGridClickInfo>(clickType, hitPos, *elementInfo, intersectedElement.getLayer());
-                return utfGridEventListener->onUTFGridClicked(clickInfo);
+                auto utfClickInfo = std::make_shared<UTFGridClickInfo>(clickInfo, hitPos, *elementInfo, intersectedElement.getLayer());
+                return utfGridEventListener->onUTFGridClicked(utfClickInfo);
             }
         }
 
-        return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
+        return clickInfo.getClickType() == ClickType::CLICK_TYPE_SINGLE || clickInfo.getClickType() == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
     }
 
     void TileLayer::calculateVisibleTiles(const std::shared_ptr<CullState>& cullState) {

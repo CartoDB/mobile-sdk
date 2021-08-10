@@ -8,7 +8,7 @@
 #define _CARTO_MAPCLICKINFO_H_
 
 #include "core/MapPos.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 
 namespace carto {
 
@@ -19,11 +19,11 @@ namespace carto {
     class MapClickInfo {
     public:
         /**
-         * Constructs a MapClickInfo object from a click type and a click position.
-         * @param clickType The click type.
+         * Constructs a MapClickInfo object from a click info and a click position.
+         * @param clickInfo The click info.
          * @param clickPos The click position in the coordinate system of the base projection.
          */
-        MapClickInfo(ClickType::ClickType clickType, const MapPos& clickPos);
+        MapClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos);
         virtual ~MapClickInfo();
     
         /**
@@ -33,13 +33,19 @@ namespace carto {
         ClickType::ClickType getClickType() const;
 
         /**
+         * Returns the click info.
+         * @return The attributes of the click.
+         */
+        const ClickInfo& getClickInfo() const;
+
+        /**
          * Returns the click position.
          * @return The click position in the coordinate system of the base projection.
          */
         const MapPos& getClickPos() const;
     
     private:
-        ClickType::ClickType _clickType;
+        ClickInfo _clickInfo;
 
         MapPos _clickPos;
     };

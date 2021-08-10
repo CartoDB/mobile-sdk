@@ -20,7 +20,7 @@
 %import "core/Variant.i"
 %import "graphics/ViewState.i"
 %import "renderers/components/CullState.i"
-%import "ui/ClickType.i"
+%import "ui/ClickInfo.i"
 
 !polymorphic_shared_ptr(carto::Layer, layers.Layer)
 !value_type(std::vector<std::shared_ptr<carto::Layer> >, layers.LayerVector)

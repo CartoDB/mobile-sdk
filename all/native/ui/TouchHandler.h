@@ -55,10 +55,10 @@ namespace carto {
         void onTouchEvent(int action, const ScreenPos& screenPos1, const ScreenPos& screenPos2);
         void onWheelEvent(int delta, const ScreenPos& screenPos);
     
-        void click(const ScreenPos& screenPos);
-        void longClick(const ScreenPos& screenPos);
-        void doubleClick(const ScreenPos& screenPos);
-        void dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2);
+        void click(const ScreenPos& screenPos, const std::chrono::milliseconds& duration);
+        void longClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration);
+        void doubleClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration);
+        void dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const std::chrono::milliseconds& duration);
         void startSinglePointer(const ScreenPos& screenPos);
         void startDualPointer(const ScreenPos& screenPos1, const ScreenPos& screenPos2);
 
@@ -114,7 +114,7 @@ namespace carto {
         bool isValidScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
         MapPos mapScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
 
-        void handleClick(ClickType::ClickType clickType, const ScreenPos& screenPos);
+        void handleClick(const ClickInfo& clickInfo, const ScreenPos& screenPos);
     
         static const float GUESS_MAX_DELTA_Y_INCHES;
         static const float GUESS_MIN_SWIPE_LENGTH_SAME_INCHES;

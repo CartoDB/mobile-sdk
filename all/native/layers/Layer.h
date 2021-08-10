@@ -11,7 +11,7 @@
 #include "core/MapRange.h"
 #include "core/Variant.h"
 #include "renderers/components/CullState.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 
 #include <atomic>
 #include <memory>
@@ -189,7 +189,7 @@ namespace carto {
         virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
         
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const = 0;
-        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const = 0;
+        virtual bool processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const = 0;
     
         virtual void registerDataSourceListener() = 0;
         virtual void unregisterDataSourceListener() = 0;

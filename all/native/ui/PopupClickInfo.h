@@ -9,7 +9,7 @@
 
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 #include "vectorelements/Popup.h"
 
 #include <memory>
@@ -23,13 +23,13 @@ namespace carto {
     class PopupClickInfo {
     public:
         /**
-         * Constructs a PopupClickInfo object from a click position and a vector element.
-         * @param clickType The click type (SINGLE, DUAL, etc)
+         * Constructs a PopupClickInfo object from a click info, click position and a vector element.
+         * @param clickInfo The click info
          * @param clickPos The click position in the coordinate system of the data source.
          * @param elementClickPos The 2D click position on the popup.
          * @param popup The popup on which the click was performed.
          */
-        PopupClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos, const std::shared_ptr<Popup>& popup);
+        PopupClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const ScreenPos& elementClickPos, const std::shared_ptr<Popup>& popup);
         virtual ~PopupClickInfo();
     
         /**
@@ -37,6 +37,12 @@ namespace carto {
          * @return The type of the click performed.
          */
         ClickType::ClickType getClickType() const;
+
+        /**
+         * Returns the click info.
+         * @return The attributes of the click.
+         */
+        const ClickInfo& getClickInfo() const;
 
         /**
          * Returns the click position.
@@ -57,7 +63,7 @@ namespace carto {
         std::shared_ptr<Popup> getPopup() const;
 
     private:
-        ClickType::ClickType _clickType;
+        ClickInfo _clickInfo;
         MapPos _clickPos;
         ScreenPos _elementClickPos;
         std::shared_ptr<Popup> _popup;

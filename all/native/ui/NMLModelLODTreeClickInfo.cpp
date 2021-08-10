@@ -4,10 +4,10 @@
 
 namespace carto {
 
-    NMLModelLODTreeClickInfo::NMLModelLODTreeClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& elementClickPos,
+    NMLModelLODTreeClickInfo::NMLModelLODTreeClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const MapPos& elementClickPos,
                                                    const std::map<std::string, std::string>& metaData,
                                                    const std::shared_ptr<Layer>& layer) :
-        _clickType(clickType),
+        _clickInfo(clickInfo),
         _clickPos(clickPos),
         _elementClickPos(elementClickPos),
         _metaData(metaData),
@@ -19,7 +19,11 @@ namespace carto {
     }
 
     ClickType::ClickType NMLModelLODTreeClickInfo::getClickType() const {
-        return _clickType;
+        return _clickInfo.getClickType();
+    }
+    
+    const ClickInfo& NMLModelLODTreeClickInfo::getClickInfo() const {
+        return _clickInfo;
     }
     
     const MapPos& NMLModelLODTreeClickInfo::getClickPos() const {

@@ -143,7 +143,8 @@ namespace carto {
 
         // Send click events
         for (const RayIntersectedElement& intersectedElement : results) {
-            if (intersectedElement.getLayer()->processClick(clickType, intersectedElement, viewState)) {
+            ClickInfo clickInfo(clickType, 0);
+            if (intersectedElement.getLayer()->processClick(clickInfo, intersectedElement, viewState)) {
                 return;
             }
         }

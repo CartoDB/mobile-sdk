@@ -149,7 +149,7 @@ namespace carto {
         _nmlModelLODTreeRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
     }
 
-    bool NMLModelLODTreeLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+    bool NMLModelLODTreeLayer::processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
         if (!projectionSurface) {
             return false;
@@ -161,12 +161,12 @@ namespace carto {
             if (auto element = intersectedElement.getElement<NMLModelLODTree::Proxy>()) {
                 MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
                 MapPos elementPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getElementPos()));
-                auto clickInfo = std::make_shared<NMLModelLODTreeClickInfo>(clickType, hitPos, elementPos, element->metaData, intersectedElement.getLayer());
-                return nmlModelLODTreeEventListener->onNMLModelLODTreeClicked(clickInfo);
+                auto nmlClickInfo = std::make_shared<NMLModelLODTreeClickInfo>(clickInfo, hitPos, elementPos, element->metaData, intersectedElement.getLayer());
+                return nmlModelLODTreeEventListener->onNMLModelLODTreeClicked(nmlClickInfo);
             }
         }
 
-        return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
+        return clickInfo.getClickType() == ClickType::CLICK_TYPE_SINGLE || clickInfo.getClickType() == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
     }
     
     void NMLModelLODTreeLayer::registerDataSourceListener() {

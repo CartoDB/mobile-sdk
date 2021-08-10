@@ -304,7 +304,8 @@ namespace carto {
             return;
         }
 
-        touchHandler->click(pointer1Down);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
+        touchHandler->click(pointer1Down, duration);
     }
     
     void ClickHandlerWorker::afterLongClick() {
@@ -324,7 +325,8 @@ namespace carto {
             return;
         }
 
-        touchHandler->longClick(pointer1Down);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
+        touchHandler->longClick(pointer1Down, duration);
     }
     
     void ClickHandlerWorker::afterDoubleClick() {
@@ -338,12 +340,13 @@ namespace carto {
         ScreenPos pointer1Down = _pointer1Down;
         lock.unlock();
         
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
         if (canceled) {
-            touchHandler->click(pointer1Down);
+            touchHandler->click(pointer1Down, duration);
             return;
         }
 
-        touchHandler->doubleClick(pointer1Down);
+        touchHandler->doubleClick(pointer1Down, duration);
     }
     
     void ClickHandlerWorker::afterDualClick() {
@@ -370,7 +373,8 @@ namespace carto {
             return;
         }
 
-        touchHandler->dualClick(pointer1Down, pointer2Down);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
+        touchHandler->dualClick(pointer1Down, pointer2Down, duration);
     }
         
     const std::chrono::milliseconds ClickHandlerWorker::LONG_CLICK_MIN_DURATION = std::chrono::milliseconds(400);

@@ -194,7 +194,7 @@ namespace carto {
         _polygon3DRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
     }
 
-    bool VectorLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+    bool VectorLayer::processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
         if (!projectionSurface) {
             return false;
@@ -216,7 +216,7 @@ namespace carto {
                         float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft) * bitmap->getHeight());
 
                         MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
-                        if (popup->processClick(clickType, hitPos, ScreenPos(x, y))) {
+                        if (popup->processClick(clickInfo, hitPos, ScreenPos(x, y))) {
                             return true;
                         }
                     }
@@ -228,12 +228,12 @@ namespace carto {
             if (vectorElementEventListener) {
                 MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
                 MapPos elementPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getElementPos()));
-                auto vectorElementClickInfo = std::make_shared<VectorElementClickInfo>(clickType, hitPos, elementPos, element, intersectedElement.getLayer());
+                auto vectorElementClickInfo = std::make_shared<VectorElementClickInfo>(clickInfo, hitPos, elementPos, element, intersectedElement.getLayer());
                 return vectorElementEventListener->onVectorElementClicked(vectorElementClickInfo);
             }
         }
 
-        return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
+        return clickInfo.getClickType() == ClickType::CLICK_TYPE_SINGLE || clickInfo.getClickType() == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
     }
     
     void VectorLayer::refreshElement(const std::shared_ptr<VectorElement>& element, bool remove) {

@@ -10,7 +10,7 @@
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
 #include "core/MapPos.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 
 #include <memory>
 #include <map>
@@ -26,14 +26,14 @@ namespace carto {
     class NMLModelLODTreeClickInfo {
     public:
         /**
-         * Constructs a NMLModelLODTreeClickInfo object from a click position and a element data.
-         * @param clickType The click type (SINGLE, DUAL, etc)
+         * Constructs a NMLModelLODTreeClickInfo object from a click info and a element data.
+         * @param clickInfo The click info
          * @param clickPos The click position in the coordinate system of the data source.
          * @param elementClickPos The click position in the coordinate system of the data source that corresponds to element point.
          * @param metaData The element meta data at the click position.
          * @param layer The layer of the vector element on which the click was performed.
          */
-        NMLModelLODTreeClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& elementClickPos, const std::map<std::string, std::string>& metaData, const std::shared_ptr<Layer>& layer);
+        NMLModelLODTreeClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const MapPos& elementClickPos, const std::map<std::string, std::string>& metaData, const std::shared_ptr<Layer>& layer);
         virtual ~NMLModelLODTreeClickInfo();
     
         /**
@@ -41,6 +41,12 @@ namespace carto {
          * @return The type of the click performed.
          */
         ClickType::ClickType getClickType() const;
+
+        /**
+         * Returns the click info.
+         * @return The attributes of the click.
+         */
+        const ClickInfo& getClickInfo() const;
 
         /**
          * Returns the click position.
@@ -67,7 +73,7 @@ namespace carto {
         std::shared_ptr<Layer> getLayer() const;
     
     private:
-        ClickType::ClickType _clickType;
+        ClickInfo _clickInfo;
         MapPos _clickPos;
         MapPos _elementClickPos;
     

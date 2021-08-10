@@ -9,7 +9,7 @@
 
 #include "core/MapPos.h"
 #include "core/MapTile.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 #include "geometry/VectorTileFeature.h"
 
 #include <memory>
@@ -24,14 +24,14 @@ namespace carto {
     class VectorTileClickInfo {
     public:
         /**
-         * Constructs a VectorTileClickInfo object from a click position, tile information and clicked feature.
-         * @param clickType The click type (SINGLE, DUAL, etc)
+         * Constructs a VectorTileClickInfo object from a click info, click position, tile information and clicked feature.
+         * @param clickInfo The click info.
          * @param clickPos The click position in the coordinate system of the data source.
          * @param featureClickPos The click position in the coordinate system of the data source that corresponds to feature point.
          * @param feature The clicked vector tile feature.
          * @param layer The layer on which the click was performed.
          */
-        VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos, const std::shared_ptr<VectorTileFeature>& feature, const std::shared_ptr<Layer>& layer);
+        VectorTileClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const MapPos& featureClickPos, const std::shared_ptr<VectorTileFeature>& feature, const std::shared_ptr<Layer>& layer);
         virtual ~VectorTileClickInfo();
     
         /**
@@ -39,6 +39,12 @@ namespace carto {
          * @return The type of the click performed.
          */
         ClickType::ClickType getClickType() const;
+
+        /**
+         * Returns the click info.
+         * @return The attributes of the click.
+         */
+        const ClickInfo& getClickInfo() const;
 
         /**
          * Returns the click position.
@@ -87,7 +93,7 @@ namespace carto {
         std::shared_ptr<Layer> getLayer() const;
     
     private:
-        ClickType::ClickType _clickType;
+        ClickInfo _clickInfo;
         MapPos _clickPos;
         MapPos _featureClickPos;
         std::shared_ptr<VectorTileFeature> _feature;
