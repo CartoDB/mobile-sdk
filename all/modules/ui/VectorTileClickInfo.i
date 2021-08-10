@@ -3,7 +3,7 @@
 
 %module VectorTileClickInfo
 
-!proxy_imports(carto::VectorTileClickInfo, core.MapPos, core.MapTile, geometry.VectorTileFeature, layers.Layer, ui.ClickInfo, ui.ClickType)
+!proxy_imports(carto::VectorTileClickInfo, core.MapPos, core.MapTile, geometry.VectorTileFeature, layers.Layer, ui.ClickInfo)
 
 %{
 #include "ui/VectorTileClickInfo.h"

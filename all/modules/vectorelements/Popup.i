@@ -3,7 +3,8 @@
 
 %module Popup
 
-!proxy_imports(carto::Popup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, geometry.PointGeometry, styles.PopupStyle, ui.ClickInfo, ui.ClickType, vectorelements.Billboard)
+!proxy_imports(carto::Popup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, geometry.PointGeometry, styles.PopupStyle, ui.ClickInfo, vectorelements.Billboard)
+!java_imports(carto::Popup, com.carto.ui.ClickType)
 
 %{
 #include "vectorelements/Popup.h"

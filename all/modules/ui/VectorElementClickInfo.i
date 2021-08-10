@@ -3,7 +3,7 @@
 
 %module VectorElementClickInfo
 
-!proxy_imports(carto::VectorElementClickInfo, core.MapPos, vectorelements.VectorElement, layers.Layer, ui.ClickInfo, ui.ClickType)
+!proxy_imports(carto::VectorElementClickInfo, core.MapPos, vectorelements.VectorElement, layers.Layer, ui.ClickInfo)
 
 %{
 #include "ui/VectorElementClickInfo.h"

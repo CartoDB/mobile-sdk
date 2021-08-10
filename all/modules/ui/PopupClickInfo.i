@@ -3,7 +3,7 @@
 
 %module PopupClickInfo
 
-!proxy_imports(carto::PopupClickInfo, core.MapPos, core.ScreenPos, vectorelements.Popup, ui.ClickInfo, ui.ClickType)
+!proxy_imports(carto::PopupClickInfo, core.MapPos, core.ScreenPos, vectorelements.Popup, ui.ClickInfo)
 
 %{
 #include "ui/PopupClickInfo.h"

@@ -14,6 +14,7 @@
 
 !enum(carto::ClickType::ClickType)
 !value_type(carto::ClickInfo, ui.ClickInfo)
+
 %attribute(carto::ClickInfo, carto::ClickType::ClickType, ClickType, getClickType)
 %attribute(carto::ClickInfo, float, Duration, getDuration)
 !custom_equals(carto::ClickInfo);

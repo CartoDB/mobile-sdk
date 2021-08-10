@@ -3,7 +3,7 @@
 
 %module BalloonPopupButtonClickInfo
 
-!proxy_imports(carto::BalloonPopupButtonClickInfo, ui.ClickInfo, ui.ClickType, vectorelements.BalloonPopupButton, vectorelements.VectorElement)
+!proxy_imports(carto::BalloonPopupButtonClickInfo, ui.ClickInfo, vectorelements.BalloonPopupButton, vectorelements.VectorElement)
 
 %{
 #include "ui/BalloonPopupButtonClickInfo.h"

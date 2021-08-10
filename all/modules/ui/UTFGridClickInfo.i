@@ -3,7 +3,7 @@
 
 %module UTFGridClickInfo
 
-!proxy_imports(carto::UTFGridClickInfo, core.MapPos, core.Variant, layers.Layer, ui.ClickInfo, ui.ClickType)
+!proxy_imports(carto::UTFGridClickInfo, core.MapPos, core.Variant, layers.Layer, ui.ClickInfo)
 
 %{
 #include "ui/UTFGridClickInfo.h"

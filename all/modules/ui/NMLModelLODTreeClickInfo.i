@@ -5,7 +5,7 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-!proxy_imports(carto::NMLModelLODTreeClickInfo, core.MapPos, core.StringMap, layers.Layer, ui.ClickInfo, ui.ClickType)
+!proxy_imports(carto::NMLModelLODTreeClickInfo, core.MapPos, core.StringMap, layers.Layer, ui.ClickInfo)
 
 %{
 #include "ui/NMLModelLODTreeClickInfo.h"

@@ -3,7 +3,7 @@
 
 %module MapClickInfo
 
-!proxy_imports(carto::MapClickInfo, core.MapPos, ui.ClickInfo, ui.ClickType)
+!proxy_imports(carto::MapClickInfo, core.MapPos, ui.ClickInfo)
 
 %{
 #include "ui/MapClickInfo.h"

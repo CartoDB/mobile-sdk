@@ -3,7 +3,7 @@
 
 %module RasterTileClickInfo
 
-!proxy_imports(carto::RasterTileClickInfo, core.MapPos, core.MapTile, graphics.Color, layers.Layer, ui.ClickInfo, ui.ClickType)
+!proxy_imports(carto::RasterTileClickInfo, core.MapPos, core.MapTile, graphics.Color, layers.Layer, ui.ClickInfo)
 
 %{
 #include "ui/RasterTileClickInfo.h"
