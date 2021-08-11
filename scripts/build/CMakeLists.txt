@@ -20,7 +20,7 @@ elseif(NOT SHARED_LIBRARY)
 endif()
 
 # C++ compiler flags
-add_definitions(${SDK_CPP_DEFINES} "-DBOOST_ALL_NO_LIB")
+add_definitions("${SDK_CPP_DEFINES}" "-DBOOST_ALL_NO_LIB")
 
 if(CMAKE_BUILD_TYPE MATCHES "Release|RELEASE")
   add_definitions("-DNDEBUG")
@@ -41,7 +41,7 @@ endif(WIN32)
 if(APPLE AND (NOT IOS))
   execute_process(COMMAND "xcodebuild" "-version" "-sdk" "macosx" "Path" OUTPUT_VARIABLE OSX_SDK_PATH ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  add_compile_options("-target" "${SDK_IOS_ARCH}-apple-ios-13.0-macabi" "-iframework" "-isysroot" "${OSX_SDK_PATH}" "${OSX_SDK_PATH}/System/iOSSupport/System/Library/Frameworks" "-isystem" "${OSX_SDK_PATH}/System/iOSSupport/usr/include")
+  add_compile_options("-target" "${SDK_IOS_ARCH}-apple-ios-13.0-macabi" "-iframework" "${OSX_SDK_PATH}/System/iOSSupport/System/Library/Frameworks")
   add_compile_options("-miphoneos-version-min=13.0")
 
   set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-maccatalyst")
