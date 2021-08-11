@@ -4,11 +4,11 @@ project(carto_mobile_sdk)
 # General options
 option(SINGLE_LIBRARY "Compile as single library" OFF)
 
-if(IOS)
+if(APPLE)
   option(INCLUDE_OBJC "Include ObjC code on iOS" OFF)
   option(ENABLE_BITCODE "Enable bitcode support on iOS" ON)
   option(SHARED_LIBRARY "Build as shared library on iOS" OFF)
-endif(IOS)
+endif()
 
 # General platform-specific flags
 if(WIN32 OR ANDROID)
@@ -20,7 +20,7 @@ elseif(NOT SHARED_LIBRARY)
 endif()
 
 # C++ compiler flags
-add_definitions("${SDK_CPP_DEFINES}" "-DBOOST_ALL_NO_LIB")
+add_definitions(${SDK_CPP_DEFINES} "-DBOOST_ALL_NO_LIB")
 
 if(CMAKE_BUILD_TYPE MATCHES "Release|RELEASE")
   add_definitions("-DNDEBUG")
@@ -38,7 +38,16 @@ if(WIN32)
   set(CMAKE_VS_WINRT_EXTENSIONS ON)
 endif(WIN32)
 
-if(IOS)
+if(APPLE AND (NOT IOS))
+  execute_process(COMMAND "xcodebuild" "-version" "-sdk" "macosx" "Path" OUTPUT_VARIABLE OSX_SDK_PATH ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  add_compile_options("-target" "${SDK_IOS_ARCH}-apple-ios-13.0-macabi" "-iframework" "-isysroot" "${OSX_SDK_PATH}" "${OSX_SDK_PATH}/System/iOSSupport/System/Library/Frameworks" "-isystem" "${OSX_SDK_PATH}/System/iOSSupport/usr/include")
+  add_compile_options("-miphoneos-version-min=13.0")
+
+  set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-maccatalyst")
+endif()
+
+if(APPLE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-arc -fmodules -fvisibility=hidden")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc -fmodules -stdlib=libc++ -std=c++17 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden -fno-aligned-allocation")
   set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os")
@@ -69,7 +78,7 @@ if(IOS)
     set(CMAKE_XCODE_ATTRIBUTE_STRIP_STYLE "non-global")
     set(CMAKE_XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE YES)
   endif()
-endif(IOS)
+endif(APPLE)
 
 if(ANDROID)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
@@ -88,14 +97,14 @@ set(SDK_EXTERNAL_LIBS_DIR "${SDK_BASE_DIR}/libs-external")
 # Make common libraries available to all subprojects
 include_directories("${SDK_EXTERNAL_LIBS_DIR}/boost")
 
-if(IOS)
+if(APPLE)
   include_directories("${SDK_BASE_DIR}/ios/stdlib")
   if(SDK_CPP_DEFINES MATCHES ".*_CARTO_USE_METALANGLE.*")
     include_directories("${SDK_EXTERNAL_LIBS_DIR}/angle-metal/include")
   else()
     include_directories("${SDK_BASE_DIR}/ios/glwrapper")
   endif()
-endif(IOS)
+endif(APPLE)
 
 if(WIN32)
   include_directories("${SDK_EXTERNAL_LIBS_DIR}/angle-uwp/include" "${SDK_EXTERNAL_LIBS_DIR}/zlib/config" "${SDK_EXTERNAL_LIBS_DIR}/zlib/zlib")
@@ -109,9 +118,9 @@ if(WIN32)
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "zlib")
 endif(WIN32)
 
-if(NOT (WIN32 OR IOS OR ANDROID))
+if(NOT (WIN32 OR APPLE OR ANDROID))
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "pion")
-endif(NOT (WIN32 OR IOS OR ANDROID))
+endif()
 
 if(INCLUDE_VALHALLA)
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "date" "protobuf" "valhalla")
@@ -132,7 +141,7 @@ if(SINGLE_LIBRARY)
   foreach(SDK_SUBPROJECT IN ITEMS ${SDK_SUBPROJECTS})
     set(SUBPROJECT_FLAGS "${${SDK_SUBPROJECT}_FLAGS}")
     if(CMAKE_BUILD_TYPE MATCHES "Release|RELEASE")
-      if(ANDROID OR IOS)
+      if(ANDROID OR APPLE)
         if(SDK_SUBPROJECT MATCHES "^(vt|mapnikvt|cartocss|freetype|tess2|zlib|brotli)$")
           set(SUBPROJECT_FLAGS ${SUBPROJECT_FLAGS} "-O2")
         else()
@@ -161,7 +170,7 @@ file(GLOB SDK_SRC_FILES
 )
 set_source_files_properties("${SDK_SRC_DIR}/utils/PlatformUtils.cpp" PROPERTIES COMPILE_OPTIONS "-D_CARTO_MOBILE_SDK_PLATFORM=\"${SDK_PLATFORM}\";-D_CARTO_MOBILE_SDK_VERSION=\"${SDK_VERSION}\"")
 
-if(WIN32 OR IOS OR ANDROID)
+if(WIN32 OR APPLE OR ANDROID)
   list(REMOVE_ITEM SDK_SRC_FILES "${SDK_SRC_DIR}/network/HTTPClientPionImpl.cpp")
 endif()
 
@@ -175,7 +184,7 @@ if(ANDROID)
     "${SDK_BASE_DIR}/android/native/*/*/*.h"
   )
   set(SDK_SRC_FILES "${SDK_SRC_FILES}" "${SDK_ANDROID_SRC_FILES}")
-elseif(IOS)
+elseif(APPLE)
   if(INCLUDE_OBJC)
     file(GLOB SDK_OBJC_SRC_FILES
       "${SDK_BASE_DIR}/ios/objc/*/*.cpp"
@@ -230,7 +239,7 @@ endforeach()
 
 if(ANDROID)
   include_directories("${SDK_BASE_DIR}/android/native")
-elseif(IOS)
+elseif(APPLE)
   include_directories("${SDK_BASE_DIR}/ios/native")
   if(INCLUDE_OBJC)
     include_directories("${SDK_BASE_DIR}/generated/ios-objc/proxies")
@@ -257,7 +266,7 @@ add_library(carto_mobile_sdk ${SDK_LIBRARY_TYPE} ${SDK_SRC_FILES} ${SDK_OBJECTS}
 
 if(ANDROID)
   target_link_libraries(carto_mobile_sdk EGL GLESv2 z log android jnigraphics)
-elseif(IOS)
+elseif(APPLE)
   target_link_libraries(carto_mobile_sdk "-framework Foundation" "-framework CoreGraphics" "-framework CoreText" "-framework CFNetwork" "-framework UIKit")
   if(SDK_CPP_DEFINES MATCHES ".*_CARTO_USE_METALANGLE.*")
     target_link_libraries(carto_mobile_sdk "${SDK_EXTERNAL_LIBS_DIR}/angle-metal/${SDK_IOS_ARCH}/libangle.a")

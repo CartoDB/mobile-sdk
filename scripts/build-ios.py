@@ -7,12 +7,14 @@ import argparse
 import string
 from build.sdk_build_utils import *
 
-IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator']
+IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator', 'x86_64-maccatalyst', 'arm64-maccatalyst']
 
 def getFinalDistDir(args):
   return getDistDir('ios-metal' if args.metalangle else 'ios')
 
 def getPlatformArch(baseArch):
+  if baseArch.endswith('-maccatalyst'):
+    return 'MACCATALYST', baseArch[:-12]
   if baseArch.endswith('-simulator'):
     return 'SIMULATOR', baseArch[:-10]
   return ('OS' if baseArch.startswith('arm') else 'SIMULATOR'), baseArch
@@ -108,15 +110,15 @@ def buildIOSLib(args, baseArch, outputDir=None):
 
   if not cmake(args, buildDir, options + [
     '-G', 'Xcode',
-    '-DCMAKE_SYSTEM_NAME=iOS',
+    '-DCMAKE_SYSTEM_NAME=%s' % ('Darwin' if platform == 'MACCATALYST' else 'iOS'),
     '-DWRAPPER_DIR=%s' % ('%s/generated/ios-objc/proxies' % baseDir),
     '-DINCLUDE_OBJC:BOOL=ON',
     '-DSINGLE_LIBRARY:BOOL=ON',
     '-DENABLE_BITCODE:BOOL=%s' % ('OFF' if args.stripbitcode else 'ON'),
     '-DSHARED_LIBRARY:BOOL=%s' % ('ON' if args.sharedlib else 'OFF'),
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
-    '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
-    '-DCMAKE_OSX_DEPLOYMENT_TARGET=9.0',
+    '-DCMAKE_OSX_SYSROOT=%s' % ('macosx' if platform == 'MACCATALYST' else 'iphone%s' % platform.lower()),
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('11.3' if platform == 'MACCATALYST' else '9.0'),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_DEV_TEAM='%s'" % (args.devteam if args.devteam else ""),
@@ -145,7 +147,10 @@ def buildIOSFramework(args, baseArchs, outputDir=None):
   libFilePaths = []
   for baseArch in baseArchs:
     platform, arch = getPlatformArch(baseArch)
-    libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, ('iphone%s' % platform.lower()), 'dylib' if args.sharedlib else 'a')
+    if platform == 'MACCATALYST':
+      libFilePath = "%s/%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'dylib' if args.sharedlib else 'a')
+    else:
+      libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, ('iphone%s' % platform.lower()), 'dylib' if args.sharedlib else 'a')
     if args.metalangle and not args.sharedlib:
       mergedLibFilePath = '%s_merged.%s' % tuple(libFilePath.rsplit('.', 1))
       angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, baseArch)
@@ -273,10 +278,14 @@ args = parser.parse_args()
 if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
   if not args.buildxcframework:
-    args.iosarch = filter(lambda arch:not arch.endswith('-simulator'), args.iosarch)
+    args.iosarch = filter(lambda arch: not (arch.endswith('-simulator') or arch.endswith('-maccatalyst')), args.iosarch)
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 if args.metalangle:
   args.defines += ';' + '_CARTO_USE_METALANGLE'
+else:
+  if filter(lambda arch: arch.endswith('-maccatalyst'), args.iosarch):
+    print('Mac Catalyst builds are only supported with MetalANGLE')
+    sys.exit(-1)
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 
 args.devteam = os.environ.get('IOS_DEV_TEAM', None)
