@@ -1,3 +1,27 @@
+CARTO Mobile SDK 4.4.0RC1
+-------------------
+
+### New features:
+
+* Metal build of iOS framework now supports Mac Catalyst apps
+* Added ClickInfo class, to store click related information (click type, duration)
+
+
+### Changes, fixes:
+
+* Re-implemented 'click type detection disabled' mode, click events are now triggered when finger is lifted
+* Classes like MapEventListener, VectorElementClickInfo now contain ClickInfo instance for additional click attributes
+* Added support for decoding properitary Apple 'PNG' files
+* Fixed decoding of specific bitmap formats when using CreateBitmapFromUIImage on iOS
+* Fixed Android bitmap decoding when non-standard stride sizes are used
+* Fixed tile layer refreshing issue when data source bounds changed
+* Fixed old view state being used when adding labels to the vector layer
+* Updated built-in style asset, tweaked displaying of multilingual names
+* Updated MetalANGLE library to the latest stable version, tweaked build settings to produce smaller binaries
+* Updated font rendering libraries, tesselation library to the latest stable version
+* Various minor optimizations
+
+
 CARTO Mobile SDK 4.4.0
 -------------------
 
