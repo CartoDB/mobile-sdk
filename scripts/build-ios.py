@@ -279,6 +279,8 @@ if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
   if not args.buildxcframework:
     args.iosarch = filter(lambda arch: not (arch.endswith('-simulator') or arch.endswith('-maccatalyst')), args.iosarch)
+  if not args.metalangle:
+    args.iosarch = filter(lambda arch: not arch.endswith('-maccatalyst'), args.iosarch)
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 if args.metalangle:
   args.defines += ';' + '_CARTO_USE_METALANGLE'
