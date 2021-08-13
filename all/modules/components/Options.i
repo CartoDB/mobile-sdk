@@ -35,6 +35,8 @@
 %attribute(carto::Options, bool, Rotatable, isRotatable, setRotatable)
 %attribute(carto::Options, bool, UserInput, isUserInput, setUserInput)
 %attribute(carto::Options, bool, ClickTypeDetection, isClickTypeDetection, setClickTypeDetection)
+%attribute(carto::Options, bool, DoubleClickDetection, isDoubleClickDetection, setDoubleClickDetection)
+%attribute(carto::Options, float, LongClickDuration, getLongClickDuration, setLongClickDuration)
 %attribute(carto::Options, bool, KineticPan, isKineticPan, setKineticPan)
 %attribute(carto::Options, bool, KineticRotation, isKineticRotation, setKineticRotation)
 %attribute(carto::Options, bool, SeamlessPanning, isSeamlessPanning, setSeamlessPanning)

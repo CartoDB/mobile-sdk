@@ -163,11 +163,34 @@ namespace carto {
         bool isClickTypeDetection() const;
         /**
          * Sets the state of the click type detection flag. If set to true clicks are categorized as normal clicks, double clicks,
-         * long clicks and dual clicks. The click type resolving takes about 400ms, so for applications that do not 
-         * require this functionality, it can be turned off. The default is true.
+         * long clicks and dual clicks. The default is true.
          * @param enabled The new state of the click type detection flag.
          */
         void setClickTypeDetection(bool enabled);
+    
+        /**
+         * Returns the double click detection state.
+         * @return True if double click detection is enabled.
+         */
+        bool isDoubleClickDetection() const;
+        /**
+         * Sets the state of the double click detection flag. If set to true clicks, then double clicks are detected separately from normal clicks. are categorized as normal clicks, double clicks,
+         * The click type resolving takes about 400ms, so for applications that do not 
+         * require this functionality, it can be turned off. The default is true.
+         * @param enabled The new state of the double click detection flag.
+         */
+        void setDoubleClickDetection(bool enabled);
+
+        /**
+         * Returns the long click duration in seconds.
+         * @return The long click duration in seconds.
+         */
+        float getLongClickDuration() const;
+        /**
+         * Sets the long click duration in seconds. The default is value is 0.4 (400ms).
+         * @param duration The new duration for the long click in seconds.
+         */
+        void setLongClickDuration(float duration);
     
         /**
          * Returns the tile size used for drawing map tiles.
@@ -282,7 +305,8 @@ namespace carto {
          */
         bool isZoomGestures() const;
         /**
-         * Sets the zoom gestures flag. Zoom gestures allow to use double click and dual click to zoom in/out of the map. By default, zoom gestures are not enabled. Note that zoom gestures require that click detection mode is enabled.
+         * Sets the zoom gestures flag. Zoom gestures allow to use double click and dual click to zoom in/out of the map.
+         * By default, zoom gestures are not enabled. Note that zoom gestures require that click detection mode is enabled and also that double click detection is enabled.
          * @param enabled True if zoom gestured should be enabled, false otherwise.
          */
         void setZoomGestures(bool enabled);
@@ -575,6 +599,7 @@ namespace carto {
         static std::shared_ptr<Bitmap> GetExpiredWatermarkBitmap();
 
     private:
+        static const float DEFAULT_LONG_CLICK_DURATION;
         static const Color DEFAULT_CLEAR_COLOR;
         static const Color DEFAULT_SKY_COLOR;
         static const Color DEFAULT_BACKGROUND_COLOR;
@@ -591,6 +616,8 @@ namespace carto {
         RenderProjectionMode::RenderProjectionMode _renderProjectionMode;
     
         bool _clickTypeDetection;
+        bool _doubleClickDetection;
+        float _longClickDuration;
     
         int _tileDrawSize;
     

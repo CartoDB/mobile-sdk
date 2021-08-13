@@ -44,9 +44,8 @@ namespace carto {
         void operator()();
         
     private:
-        enum ClickMode { NO_CLICK, NORMAL_CLICK, LONG_CLICK, DOUBLE_CLICK, DUAL_CLICK };
+        enum ClickMode { NO_CLICK, LONG_CLICK, DOUBLE_CLICK, DUAL_CLICK };
         
-        static const std::chrono::milliseconds LONG_CLICK_MIN_DURATION;
         static const std::chrono::milliseconds DUAL_CLICK_BEGIN_DURATION;
         static const std::chrono::milliseconds DUAL_CLICK_END_DURATION;
         static const std::chrono::milliseconds DOUBLE_CLICK_MAX_DURATION;
@@ -56,7 +55,6 @@ namespace carto {
         
         void run();
         
-        void afterNormalClick();
         void afterLongClick();
         void afterDoubleClick();
         void afterDualClick();
@@ -64,9 +62,11 @@ namespace carto {
         bool _running;
     
         ClickMode _clickMode;
-    
+        bool _clickTypeDetection;
+        bool _doubleClickDetection;
+
         std::chrono::steady_clock::time_point _startTime;
-    
+
         int _pointersDown;
     
         ScreenPos _pointer1Down;

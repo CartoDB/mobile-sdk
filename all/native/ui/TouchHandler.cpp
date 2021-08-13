@@ -550,8 +550,6 @@ namespace carto {
     }
     
     void TouchHandler::longClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
-        startSinglePointer(screenPos);
-        
         if (!_options->isUserInput()) {
             return;
         }
@@ -560,9 +558,16 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopRotation();
         _mapRenderer->getAnimationHandler().stopTilt();
         _mapRenderer->getAnimationHandler().stopZoom();
-    
-        ClickInfo clickInfo(ClickType::CLICK_TYPE_LONG, static_cast<float>(duration.count()) / 1000.0f);
-        handleClick(clickInfo, screenPos);
+
+        auto longClickDuration = std::chrono::milliseconds(static_cast<int>(_options->getLongClickDuration() * 1000.0f));
+        if (_options->isClickTypeDetection() && duration >= longClickDuration) {
+            startSinglePointer(screenPos);
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_LONG, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos);
+        } else {
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_SINGLE, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos);
+        }
     }
     
     void TouchHandler::doubleClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
@@ -580,8 +585,11 @@ namespace carto {
             _swipe1 = cglib::vec2<float>(0, 0);
             _prevScreenPos1 = screenPos;
             _gestureMode = SINGLE_POINTER_ZOOM;
-        } else {
+        } else if (_options->isClickTypeDetection()) {
             ClickInfo clickInfo(ClickType::CLICK_TYPE_DOUBLE, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos);
+        } else {
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_SINGLE, static_cast<float>(duration.count()) / 1000.0f);
             handleClick(clickInfo, screenPos);
         }
     }
@@ -607,10 +615,13 @@ namespace carto {
             if (mapEventListener) {
                 mapEventListener->onMapInteraction(std::make_shared<MapInteractionInfo>(false, true, false, false));
             }
-        } else {
+        } else if (_options->isClickTypeDetection()) {
             ScreenPos centreScreenPos((screenPos1.getX() + screenPos2.getX()) / 2, (screenPos1.getY() + screenPos2.getY()) / 2);
             ClickInfo clickInfo(ClickType::CLICK_TYPE_DUAL, static_cast<float>(duration.count()) / 1000.0f);
             handleClick(clickInfo, centreScreenPos);
+        } else {
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_SINGLE, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos1);
         }
     }
     

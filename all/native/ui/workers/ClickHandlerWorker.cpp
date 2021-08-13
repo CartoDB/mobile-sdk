@@ -11,6 +11,8 @@ namespace carto {
     ClickHandlerWorker::ClickHandlerWorker(const std::shared_ptr<Options>& options) :
         _running(false),
         _clickMode(NO_CLICK),
+        _clickTypeDetection(true),
+        _doubleClickDetection(true),
         _startTime(),
         _pointersDown(0),
         _pointer1Down(0, 0),
@@ -52,7 +54,9 @@ namespace carto {
     
         _startTime = std::chrono::steady_clock::now();
     
-        _clickMode = (_options->isClickTypeDetection() ? LONG_CLICK : NORMAL_CLICK);
+        _clickMode = LONG_CLICK;
+        _clickTypeDetection = _options->isClickTypeDetection();
+        _doubleClickDetection = _options->isDoubleClickDetection();
     
         _pointersDown = 0;
     
@@ -104,13 +108,13 @@ namespace carto {
         _pointer1Moved = screenPos;
     
         float dpi = _options->getDPI();
-        if (_clickMode == NORMAL_CLICK || _clickMode == LONG_CLICK) {
+        if (_clickMode == LONG_CLICK) {
             if (_pointer1MovedSum / dpi >= MOVING_TOLERANCE_INCHES) {
                 _chosen = true;
                 _canceled = true;
             }
         } else if (_clickMode == DUAL_CLICK) {
-            if (_pointer1MovedSum / dpi >= MOVING_TOLERANCE_INCHES && _pointersDown == 2) {
+            if (_pointer1MovedSum / dpi >= MOVING_TOLERANCE_INCHES && _pointersDown >= 2) {
                 _chosen = true;
                 _canceled = true;
             }
@@ -125,10 +129,12 @@ namespace carto {
     
         _pointersDown--;
 
-        if (_clickMode == NORMAL_CLICK) {
-            _chosen = true;
-        } else if (_clickMode == LONG_CLICK) {
-            _clickMode = DOUBLE_CLICK;
+        if (_clickMode == LONG_CLICK) {
+            if (_clickTypeDetection && _doubleClickDetection) {
+                _clickMode = DOUBLE_CLICK;
+            } else {
+                _chosen = true;
+            }
         } else if (_clickMode == DUAL_CLICK) {
             if (_pointersDown == 0) {
                 _chosen = true;
@@ -148,9 +154,6 @@ namespace carto {
         _pointer2Moved = _pointer2Down;
         _pointer2MovedSum = 0;
 
-        if (_clickMode == NORMAL_CLICK) {
-            return;
-        }
         _clickMode = DUAL_CLICK;
         auto deltaTime = std::chrono::steady_clock::now() - _startTime;
         if (deltaTime > DUAL_CLICK_BEGIN_DURATION) {
@@ -233,25 +236,24 @@ namespace carto {
                     }
 
                     auto deltaTime = std::chrono::steady_clock::now() - _startTime;
+                    auto longClickDuration = std::chrono::milliseconds(static_cast<int>(_options->getLongClickDuration() * 1000.0f));
                     switch (_clickMode) {
                     case NO_CLICK:
                         _chosen = true;
                         break;
-                    case NORMAL_CLICK:
-                        break;
                     case LONG_CLICK:
-                        if (deltaTime >= LONG_CLICK_MIN_DURATION) {
+                        if (_clickTypeDetection && deltaTime >= longClickDuration) {
                             _chosen = true;
                         }
                         break;
                     case DOUBLE_CLICK:
-                        if (deltaTime >= DOUBLE_CLICK_MAX_DURATION) {
+                        if (_clickTypeDetection && deltaTime >= DOUBLE_CLICK_MAX_DURATION) {
                             _chosen = true;
                             _canceled = true;
                         }
                         break;
                     case DUAL_CLICK:
-                        if (deltaTime >= DUAL_CLICK_END_DURATION) {
+                        if (_clickTypeDetection && deltaTime >= DUAL_CLICK_END_DURATION) {
                             _chosen = true;
                             _canceled = true;
                         }
@@ -263,9 +265,6 @@ namespace carto {
             
             switch (clickMode) {
             case NO_CLICK:
-                break;
-            case NORMAL_CLICK:
-                afterNormalClick();
                 break;
             case LONG_CLICK:
                 afterLongClick();
@@ -287,27 +286,6 @@ namespace carto {
         }
     }
 
-    void ClickHandlerWorker::afterNormalClick() {
-        std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock();
-        if (!touchHandler) {
-            return;
-        }
-        
-        std::unique_lock<std::mutex> lock(_mutex);
-        bool canceled = _canceled;
-        ScreenPos pointer1Down = _pointer1Down;
-        ScreenPos pointer1Moved = _pointer1Moved;
-        lock.unlock();
-
-        if (canceled) {
-            touchHandler->startSinglePointer(pointer1Moved);
-            return;
-        }
-
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
-        touchHandler->click(pointer1Down, duration);
-    }
-    
     void ClickHandlerWorker::afterLongClick() {
         std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock();
         if (!touchHandler) {
@@ -318,6 +296,7 @@ namespace carto {
         bool canceled = _canceled;
         ScreenPos pointer1Down = _pointer1Down;
         ScreenPos pointer1Moved = _pointer1Moved;
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
         lock.unlock();
 
         if (canceled) {
@@ -325,7 +304,6 @@ namespace carto {
             return;
         }
 
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
         touchHandler->longClick(pointer1Down, duration);
     }
     
@@ -338,15 +316,14 @@ namespace carto {
         std::unique_lock<std::mutex> lock(_mutex);
         bool canceled = _canceled;
         ScreenPos pointer1Down = _pointer1Down;
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
         lock.unlock();
         
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
         if (canceled) {
             touchHandler->click(pointer1Down, duration);
-            return;
+        } else {
+            touchHandler->doubleClick(pointer1Down, duration);
         }
-
-        touchHandler->doubleClick(pointer1Down, duration);
     }
     
     void ClickHandlerWorker::afterDualClick() {
@@ -362,6 +339,7 @@ namespace carto {
         ScreenPos pointer2Down = _pointer2Down;
         ScreenPos pointer1Moved = _pointer1Moved;
         ScreenPos pointer2Moved = _pointer2Moved;
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
         lock.unlock();
         
         if (canceled) {
@@ -373,11 +351,9 @@ namespace carto {
             return;
         }
 
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - _startTime);
         touchHandler->dualClick(pointer1Down, pointer2Down, duration);
     }
         
-    const std::chrono::milliseconds ClickHandlerWorker::LONG_CLICK_MIN_DURATION = std::chrono::milliseconds(400);
     const std::chrono::milliseconds ClickHandlerWorker::DUAL_CLICK_BEGIN_DURATION = std::chrono::milliseconds(100);
     const std::chrono::milliseconds ClickHandlerWorker::DUAL_CLICK_END_DURATION = std::chrono::milliseconds(300);
     const std::chrono::milliseconds ClickHandlerWorker::DOUBLE_CLICK_MAX_DURATION = std::chrono::milliseconds(400);
