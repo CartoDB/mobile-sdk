@@ -1,4 +1,4 @@
-CARTO Mobile SDK 4.4.0RC1
+CARTO Mobile SDK 4.4.1RC1
 -------------------
 
 ### New features:

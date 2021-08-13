@@ -14,7 +14,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     buildDir = '../../build/android-aar'
@@ -47,6 +47,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    packagingOptions {
+        doNotStrip "*/*/libcarto_mobile_sdk.so"
     }
 }
 
