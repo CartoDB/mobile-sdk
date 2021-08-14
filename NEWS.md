@@ -5,11 +5,14 @@ CARTO Mobile SDK 4.4.1RC1
 
 * Metal build of iOS framework now supports Mac Catalyst apps
 * Added ClickInfo class, to store click related information (click type, duration)
+* New mode for reducing click event latency when double click handling is not required
 
 
 ### Changes, fixes:
 
 * Re-implemented 'click type detection disabled' mode, click events are now triggered when finger is lifted
+* Added setDoubleClickDetection, isDoubleClickDetection methods to Options class to allow reducing click handling latency
+* Added setLongClickDuration, getLongDuration methods to Options class to allow configuring long click detection duration
 * Classes like MapEventListener, VectorElementClickInfo now contain ClickInfo instance for additional click attributes
 * Added support for decoding properitary Apple 'PNG' files
 * Fixed decoding of specific bitmap formats when using CreateBitmapFromUIImage on iOS
