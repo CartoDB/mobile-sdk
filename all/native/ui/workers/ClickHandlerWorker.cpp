@@ -237,6 +237,7 @@ namespace carto {
 
                     auto deltaTime = std::chrono::steady_clock::now() - _startTime;
                     auto longClickDuration = std::chrono::milliseconds(static_cast<int>(_options->getLongClickDuration() * 1000.0f));
+                    auto doubleClickMaxDuration = std::chrono::milliseconds(static_cast<int>(_options->getDoubleClickMaxDuration() * 1000.0f));
                     switch (_clickMode) {
                     case NO_CLICK:
                         _chosen = true;
@@ -247,7 +248,7 @@ namespace carto {
                         }
                         break;
                     case DOUBLE_CLICK:
-                        if (_clickTypeDetection && deltaTime >= DOUBLE_CLICK_MAX_DURATION) {
+                        if (_clickTypeDetection && deltaTime >= doubleClickMaxDuration) {
                             _chosen = true;
                             _canceled = true;
                         }
@@ -356,7 +357,6 @@ namespace carto {
         
     const std::chrono::milliseconds ClickHandlerWorker::DUAL_CLICK_BEGIN_DURATION = std::chrono::milliseconds(100);
     const std::chrono::milliseconds ClickHandlerWorker::DUAL_CLICK_END_DURATION = std::chrono::milliseconds(300);
-    const std::chrono::milliseconds ClickHandlerWorker::DOUBLE_CLICK_MAX_DURATION = std::chrono::milliseconds(400);
         
     const float ClickHandlerWorker::DOUBLE_CLICK_TOLERANCE_INCHES = 1.3f;
     const float ClickHandlerWorker::MOVING_TOLERANCE_INCHES = 0.2f;

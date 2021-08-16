@@ -191,6 +191,17 @@ namespace carto {
          * @param duration The new duration for the long click in seconds.
          */
         void setLongClickDuration(float duration);
+
+        /**
+         * Returns the double click max duration in seconds.
+         * @return The double click maxin seconds.
+         */
+        float getDoubleClickMaxDuration() const;
+        /**
+         * Sets the double click max in seconds. The default is value is 0.4 (400ms).
+         * @param duration The new value for the double click max duration detection in seconds.
+         */
+        void setDoubleClickMaxDuration(float duration);
     
         /**
          * Returns the tile size used for drawing map tiles.
@@ -600,6 +611,7 @@ namespace carto {
 
     private:
         static const float DEFAULT_LONG_CLICK_DURATION;
+        static const float DEFAULT_DOUBLE_CLICK_MAX_DURATION;
         static const Color DEFAULT_CLEAR_COLOR;
         static const Color DEFAULT_SKY_COLOR;
         static const Color DEFAULT_BACKGROUND_COLOR;
@@ -618,6 +630,7 @@ namespace carto {
         bool _clickTypeDetection;
         bool _doubleClickDetection;
         float _longClickDuration;
+        float _doubleClickMaxDuration;
     
         int _tileDrawSize;
     
