@@ -14,7 +14,7 @@ CARTO Mobile SDK 4.4.1RC1
 * Added setDoubleClickDetection, isDoubleClickDetection methods to Options class to allow reducing click handling latency
 * Added setLongClickDuration, getLongDuration methods to Options class to allow configuring long click detection duration
 * Classes like MapEventListener, VectorElementClickInfo now contain ClickInfo instance for additional click attributes
-* Added support for decoding properitary Apple 'PNG' files
+* Added support for decoding proprietary Apple 'PNG' files
 * Fixed decoding of specific bitmap formats when using CreateBitmapFromUIImage on iOS
 * Fixed Android bitmap decoding when non-standard stride sizes are used
 * Fixed tile layer refreshing issue when data source bounds changed
