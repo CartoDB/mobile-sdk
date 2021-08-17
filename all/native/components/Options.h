@@ -175,7 +175,7 @@ namespace carto {
         bool isDoubleClickDetection() const;
         /**
          * Sets the state of the double click detection flag. If set to true clicks, then double clicks are detected separately from normal clicks. are categorized as normal clicks, double clicks,
-         * The click type resolving takes about 400ms, so for applications that do not 
+         * The click type resolving takes about 400ms (configurable via setDoubleClickMaxDuration), so for applications that do not 
          * require this functionality, it can be turned off. The default is true.
          * @param enabled The new state of the double click detection flag.
          */
@@ -194,7 +194,7 @@ namespace carto {
 
         /**
          * Returns the double click max duration in seconds.
-         * @return The double click maxin seconds.
+         * @return The double click max duration in seconds.
          */
         float getDoubleClickMaxDuration() const;
         /**

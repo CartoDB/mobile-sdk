@@ -48,7 +48,6 @@ namespace carto {
         
         static const std::chrono::milliseconds DUAL_CLICK_BEGIN_DURATION;
         static const std::chrono::milliseconds DUAL_CLICK_END_DURATION;
-        static const std::chrono::milliseconds DOUBLE_CLICK_MAX_DURATION;
         
         static const float DOUBLE_CLICK_TOLERANCE_INCHES;
         static const float MOVING_TOLERANCE_INCHES;
