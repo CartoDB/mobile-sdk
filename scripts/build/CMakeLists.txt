@@ -10,6 +10,12 @@ if(APPLE)
   option(SHARED_LIBRARY "Build as shared library on iOS" OFF)
 endif()
 
+# Directories
+set(SDK_BASE_DIR "${PROJECT_SOURCE_DIR}/../..")
+set(SDK_SRC_DIR "${SDK_BASE_DIR}/all/native")
+set(SDK_CARTO_LIBS_DIR "${SDK_BASE_DIR}/libs-carto" )
+set(SDK_EXTERNAL_LIBS_DIR "${SDK_BASE_DIR}/libs-external")
+
 # General platform-specific flags
 if(WIN32 OR ANDROID)
   set(SDK_LIBRARY_TYPE SHARED)
@@ -56,6 +62,10 @@ if(APPLE)
 
   set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
 
+  if(SDK_CPP_DEFINES MATCHES ".*_CARTO_USE_METALANGLE.*")
+    set(CMAKE_XCODE_ATTRIBUTE_PRELINK_LIBS "${SDK_EXTERNAL_LIBS_DIR}/angle-metal/${SDK_IOS_BASEARCH}/libangle.a")
+  endif()
+
   if(SDK_DEV_TEAM)
     set(CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${SDK_DEV_TEAM})
   endif()
@@ -87,12 +97,6 @@ if(ANDROID)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -flto=full -fomit-frame-pointer")
   set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -s -fuse-ld=lld -Wl,-plugin-opt=O3 -Wl,--gc-sections -Wl,-icf=all -Wl,-threads=4 -Wl,--as-needed -Wl,--version-script=${PROJECT_SOURCE_DIR}/../android/version-script")
 endif(ANDROID)
-
-# Directories
-set(SDK_BASE_DIR "${PROJECT_SOURCE_DIR}/../..")
-set(SDK_SRC_DIR "${SDK_BASE_DIR}/all/native")
-set(SDK_CARTO_LIBS_DIR "${SDK_BASE_DIR}/libs-carto" )
-set(SDK_EXTERNAL_LIBS_DIR "${SDK_BASE_DIR}/libs-external")
 
 # Make common libraries available to all subprojects
 include_directories("${SDK_EXTERNAL_LIBS_DIR}/boost")
@@ -269,7 +273,6 @@ if(ANDROID)
 elseif(APPLE)
   target_link_libraries(carto_mobile_sdk "-framework Foundation" "-framework CoreGraphics" "-framework CoreText" "-framework CFNetwork" "-framework UIKit")
   if(SDK_CPP_DEFINES MATCHES ".*_CARTO_USE_METALANGLE.*")
-    target_link_libraries(carto_mobile_sdk "${SDK_EXTERNAL_LIBS_DIR}/angle-metal/${SDK_IOS_ARCH}/libangle.a")
     target_link_libraries(carto_mobile_sdk "-weak_framework OpenGLES" "-weak_framework Metal" "-framework QuartzCore")
   else()
     target_link_libraries(carto_mobile_sdk "-framework OpenGLES" "-framework GLKit")

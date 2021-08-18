@@ -125,6 +125,7 @@ def buildIOSLib(args, baseArch, outputDir=None):
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='iOS'",
     "-DSDK_IOS_ARCH='%s'" % arch,
+    "-DSDK_IOS_BASEARCH='%s'" % baseArch,
     '%s/scripts/build' % baseDir
   ]):
     return False
@@ -151,14 +152,6 @@ def buildIOSFramework(args, baseArchs, outputDir=None):
       libFilePath = "%s/%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'dylib' if args.sharedlib else 'a')
     else:
       libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, ('iphone%s' % platform.lower()), 'dylib' if args.sharedlib else 'a')
-    if args.metalangle and not args.sharedlib:
-      mergedLibFilePath = '%s_merged.%s' % tuple(libFilePath.rsplit('.', 1))
-      angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, baseArch)
-      if not execute('libtool', baseDir,
-        '-static', '-o', mergedLibFilePath, libFilePath, angleLibFilePath
-      ):
-        return False
-      libFilePath = mergedLibFilePath
     libFilePaths.append(libFilePath)
 
   if not execute('lipo', baseDir,
