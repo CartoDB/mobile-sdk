@@ -82,6 +82,10 @@ namespace carto {
          */
         std::map<std::string, std::string> getMetaData() const;
         
+        virtual int getMinZoom() const;
+
+        virtual int getMaxZoom() const;
+
         virtual MapBounds getDataExtent() const;
 
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
@@ -89,10 +93,15 @@ namespace carto {
     private:
         static std::unique_ptr<sqlite3pp::database> OpenDatabase(const std::string& path);
 
+        bool loadZoomLevels(int& minZoom, int& maxZoom) const;
+        bool loadDataExtent(MapBounds& mapBounds) const;
+
         MBTilesScheme::MBTilesScheme _scheme;
         std::unique_ptr<sqlite3pp::database> _database;
+        mutable std::optional<int> _cachedMinZoom;
+        mutable std::optional<int> _cachedMaxZoom;
         mutable std::optional<MapBounds> _cachedDataExtent;
-        mutable std::mutex _mutex;
+        mutable std::recursive_mutex _mutex;
     };
     
 }
