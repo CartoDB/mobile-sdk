@@ -4,15 +4,16 @@ Pod::Spec.new do |s|
   s.name         = "$frameworkName"
   s.module_name  = "CartoMobileSDK"
   s.version      = "$version"
-  s.summary      = "CARTO Mobile SDK is an advanced MapView with 3D effects, offline maps and many more features"
+  s.summary      = "CARTO Mobile SDK is an advanced MapView with 3D effects, offline maps, routing, geocoding and many more features"
 
   s.description  = <<-DESC
                    Advanced MapView API
 
-                   * Offline map packages
+                   * Offline packages for maps, routing and geocoding
+                   * Fast vector tile rendering with CartoCSS styling
                    * 2.5D view - tilting, rotating, navigation view
                    * 3D models on map
-                   * Use your custom map data sources
+                   * Use your own custom map data sources
                    * Same API for iOS, Android, Xamarin, Universal Windows Platform
                    
                    By carto.com
