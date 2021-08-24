@@ -1,3 +1,23 @@
+CARTO Mobile SDK 4.4.1RC2
+-------------------
+
+### Changes, fixes:
+
+* Fixed excessive initialization times when MBTilesTileDataSource was used with databases not containing zoom level metainfo
+* Fixed potential memory leaks on iOS when network requests fail
+* Added 'setDoubleClickMaxDuration' and 'getDoubleClickMaxDuration' methods to Options class
+* Added 'extends' support to JSON project files, to reduce copy-paste declarations in map project files
+* Added support for CartoCSS 'line-offset', 'line-pattern-offset' attributes
+* Added support for CartoCSS 'text-wrap-character' and 'shield-wrap-character' attributes
+* Added the following color manipulation functions to CartoCSS: 'hsl', 'hsla', 'red', 'green', 'blue', 'alpha', 'hue', 'saturation', 'lightness'
+* Fixed handling of 'text-min-distance' and 'shield-min-distance' CartoCSS parameters
+* Improved label id generation for repeated labels, creating more stable label placements
+* Minor tweaks to built-in styles
+* Minor optimizations to iOS Metal build
+* Updated libjpeg, libwebp, freetype, harfbuzz, miniz to latest stable versions
+* Minor optimizations
+
+
 CARTO Mobile SDK 4.4.1RC1
 -------------------
 
