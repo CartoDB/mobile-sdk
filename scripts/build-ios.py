@@ -9,6 +9,9 @@ from build.sdk_build_utils import *
 
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator', 'x86_64-maccatalyst', 'arm64-maccatalyst']
 
+def getFinalBuildDir(target, arch=None):
+  return getBuildDir('%s-metal' % target, arch)
+
 def getFinalDistDir(args):
   return getDistDir('ios-metal' if args.metalangle else 'ios')
 
@@ -104,7 +107,7 @@ def buildIOSLib(args, baseArch, outputDir=None):
   platform, arch = getPlatformArch(baseArch)
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   baseDir = getBaseDir()
-  buildDir = outputDir or getBuildDir('ios', '%s-%s' % (platform, arch))
+  buildDir = outputDir or getFinalBuildDir('ios', '%s-%s' % (platform, arch))
   defines = ["-D%s" % define for define in args.defines.split(';') if define]
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
 
@@ -149,9 +152,9 @@ def buildIOSFramework(args, baseArchs, outputDir=None):
   for baseArch in baseArchs:
     platform, arch = getPlatformArch(baseArch)
     if platform == 'MACCATALYST':
-      libFilePath = "%s/%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'dylib' if args.sharedlib else 'a')
+      libFilePath = "%s/%s/libcarto_mobile_sdk.%s" % (getFinalBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'dylib' if args.sharedlib else 'a')
     else:
-      libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, ('iphone%s' % platform.lower()), 'dylib' if args.sharedlib else 'a')
+      libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getFinalBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, ('iphone%s' % platform.lower()), 'dylib' if args.sharedlib else 'a')
     libFilePaths.append(libFilePath)
 
   if not execute('lipo', baseDir,
@@ -198,7 +201,7 @@ def buildIOSXCFramework(args, baseArchs, outputDir=None):
 
   frameworkBuildDirs = []
   for platform, baseArchs in groupedPlatformArchs.items():
-    frameworkBuildDir = getBuildDir('ios-framework', '%s-%s' % (platform, '-'.join(baseArchs)))
+    frameworkBuildDir = getFinalBuildDir('ios-framework', '%s-%s' % (platform, '-'.join(baseArchs)))
     if not buildIOSFramework(args, baseArchs, frameworkBuildDir):
       return False
     frameworkBuildDirs.append(frameworkBuildDir)
