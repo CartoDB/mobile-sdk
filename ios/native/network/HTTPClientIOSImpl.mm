@@ -7,6 +7,7 @@
 @interface URLConnection : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
 
 -(id)init;
+-(void)cancel;
 -(void)deinit;
 -(NSError*)sendSynchronousRequest:(NSURLRequest*)request didReceiveResponse:(BOOL(^)(NSURLResponse*))responseHandler didReceiveData:(BOOL(^)(NSData*))dataHandler;
 
@@ -33,6 +34,10 @@
     self.responseHandlers = [[NSMutableDictionary alloc] init];
     self.dataHandlers = [[NSMutableDictionary alloc] init];
     return self;
+}
+
+-(void)cancel {
+    [self.session invalidateAndCancel];
 }
 
 -(void)deinit {
@@ -179,6 +184,7 @@ namespace carto {
         URLConnection* connection = [[URLConnection alloc] init];
         NSError* error = [connection sendSynchronousRequest:[mutableRequest copy] didReceiveResponse:handleResponse didReceiveData:handleData];
         if (error) {
+            [connection cancel];
             NSString* description = [error localizedDescription];
             throw NetworkException(std::string([description UTF8String]), request.url);
         }
