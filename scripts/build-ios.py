@@ -10,7 +10,7 @@ from build.sdk_build_utils import *
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator', 'x86_64-maccatalyst', 'arm64-maccatalyst']
 
 def getFinalBuildDir(target, arch=None):
-  return getBuildDir('%s-metal' % target, arch)
+  return getBuildDir(('%s-metal' % target) if args.metalangle else target, arch)
 
 def getFinalDistDir(args):
   return getDistDir('ios-metal' if args.metalangle else 'ios')
