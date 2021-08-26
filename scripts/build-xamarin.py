@@ -77,7 +77,7 @@ def buildIOSLib(args, arch):
     '-DENABLE_BITCODE:BOOL=OFF',
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
-    '-DCMAKE_OSX_DEPLOYMENT_TARGET=9.0',
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('10.0' if arch == 'i386' else '9.0'),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,

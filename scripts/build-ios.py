@@ -10,10 +10,10 @@ from build.sdk_build_utils import *
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator', 'x86_64-maccatalyst', 'arm64-maccatalyst']
 
 def getFinalBuildDir(target, arch=None):
-  return getBuildDir(('%s-metal' % target) if args.metalangle else target, arch)
+  return getBuildDir(('%s_metal' % target) if args.metalangle else target, arch)
 
 def getFinalDistDir(args):
-  return getDistDir('ios-metal' if args.metalangle else 'ios')
+  return getDistDir('ios_metal' if args.metalangle else 'ios')
 
 def getPlatformArch(baseArch):
   if baseArch.endswith('-maccatalyst'):
@@ -121,7 +121,7 @@ def buildIOSLib(args, baseArch, outputDir=None):
     '-DSHARED_LIBRARY:BOOL=%s' % ('ON' if args.sharedlib else 'OFF'),
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_OSX_SYSROOT=%s' % ('macosx' if platform == 'MACCATALYST' else 'iphone%s' % platform.lower()),
-    '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('11.3' if platform == 'MACCATALYST' else '9.0'),
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('11.3' if platform == 'MACCATALYST' else ('10.0' if arch == 'i386' else '9.0')),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_DEV_TEAM='%s'" % (args.devteam if args.devteam else ""),
