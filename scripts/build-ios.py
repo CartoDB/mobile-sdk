@@ -60,6 +60,8 @@ def buildModuleMap(filename, publicHeaders):
   with open(filename, 'w') as f:
     f.write('framework module CartoMobileSDK {\n')
     f.write('    umbrella header "CartoMobileSDK.h"\n')
+    f.write('    link "c++"\n')
+    f.write('    link "z"\n')
     for header in publicHeaders:
       f.write('    header "%s"\n' % header)
     f.write('    export *\n')
