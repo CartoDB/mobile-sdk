@@ -30,7 +30,7 @@ Pod::Spec.new do |s|
   s.author             = { "CARTO" => "https://www.carto.com" }
   s.social_media_url   = "https://twitter.com/carto"
 
-  s.platform     = :ios, "$iosversion"
+  s.platform     = :ios, "9.0"
 
   s.source       = { :http => "https://nutifront.s3.amazonaws.com/sdk_snapshots/$distName" }
 

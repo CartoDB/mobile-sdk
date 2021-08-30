@@ -27,6 +27,14 @@ def copyfile(source, target):
     return False
   return True
 
+def checksumSHA256(filename):
+  import hashlib
+  sha256_hash = hashlib.sha256()
+  with open(filename, 'rb') as f:
+    for block in iter(lambda: f.read(4096), b''):
+      sha256_hash.update(block)
+  return sha256_hash.hexdigest() 
+
 def makesymlink(dir, source, target):
   currentDir = os.getcwd()
   os.chdir(dir)
