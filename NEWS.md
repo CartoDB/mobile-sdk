@@ -1,3 +1,13 @@
+CARTO Mobile SDK 4.4.1
+-------------------
+
+### Changes, fixes:
+
+* Set minimum target to iOS 10 for i386 simulator target (due to thread_local not supported on iOS 9)
+* Added libc++, libz dependencies to modulemap of iOS framework
+* Updated build scripts to support building Swift Packages of the SDK
+
+
 CARTO Mobile SDK 4.4.1RC2
 -------------------
 
