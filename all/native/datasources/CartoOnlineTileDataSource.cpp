@@ -123,7 +123,10 @@ namespace carto {
         std::map<std::string, std::string> responseHeaders;
         std::string responseString;
         if (!NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, responseString, Log::IsShowDebug())) {
-            Log::Warnf("CartoOnlineTileDataSource: Failed to fetch tile source configuration"); // NOTE: we may have error messages, thus do not return from here
+            Log::Warnf("CartoOnlineTileDataSource: Failed to fetch tile source configuration");
+            if (responseString.empty()) { // NOTE: we may have error messages, thus do not return from here unless empty data
+                return false;
+            }
         }
 
         picojson::value config;
