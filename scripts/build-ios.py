@@ -119,7 +119,6 @@ def buildIOSLib(args, baseArch, outputDir=None):
     '-DWRAPPER_DIR=%s' % ('%s/generated/ios-objc/proxies' % baseDir),
     '-DINCLUDE_OBJC:BOOL=ON',
     '-DSINGLE_LIBRARY:BOOL=ON',
-    '-DENABLE_BITCODE:BOOL=%s' % ('OFF' if args.stripbitcode else 'ON'),
     '-DSHARED_LIBRARY:BOOL=%s' % ('ON' if args.sharedlib else 'OFF'),
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_OSX_SYSROOT=%s' % ('macosx' if platform == 'MACCATALYST' else 'iphone%s' % platform.lower()),
@@ -134,11 +133,14 @@ def buildIOSLib(args, baseArch, outputDir=None):
     '%s/scripts/build' % baseDir
   ]):
     return False
-  return cmake(args, buildDir, [
-    '--build', '.',
-    '--parallel', '4',
-    '--config', args.configuration
-  ])
+
+  bitcodeOptions = ['ENABLE_BITCODE=NO']
+  if not args.stripbitcode and baseArch in ('armv7', 'arm64'):
+    bitcodeOptions = ['ENABLE_BITCODE=YES', 'BITCODE_GENERATION_MODE=bitcode']
+  return execute('xcodebuild', buildDir,
+    '-project', 'carto_mobile_sdk.xcodeproj', '-arch', arch, '-configuration', args.configuration, 'archive',
+    *list(bitcodeOptions)
+  )
 
 def buildIOSFramework(args, baseArchs, outputDir=None):
   baseDir = getBaseDir()
@@ -208,9 +210,10 @@ def buildIOSXCFramework(args, baseArchs, outputDir=None):
       return False
     frameworkBuildDirs.append(frameworkBuildDir)
 
+  frameworkOptions = itertools.chain(*[['-framework', '%s/CartoMobileSDK.framework' % frameworkBuildDir] for frameworkBuildDir in frameworkBuildDirs])
   if not execute('xcodebuild', baseDir,
     '-create-xcframework', '-output', '%s/CartoMobileSDK.xcframework' % distDir,
-    *list(itertools.chain(*[['-framework', '%s/CartoMobileSDK.framework' % frameworkBuildDir] for frameworkBuildDir in frameworkBuildDirs]))
+    *list(frameworkOptions)
   ):
     return False
 
