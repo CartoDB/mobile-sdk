@@ -97,12 +97,12 @@ namespace carto {
         Billboard(const std::shared_ptr<Geometry>& geometry);
         Billboard(const MapPos& pos);
         
+        float _rotation;
+
     private:
         std::shared_ptr<Billboard> _baseBillboard;
         
         std::shared_ptr<BillboardDrawData> _drawData;
-    
-        float _rotation;
     };
     
 }

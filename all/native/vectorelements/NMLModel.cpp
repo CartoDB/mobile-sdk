@@ -72,7 +72,7 @@ namespace carto {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _rotationAxis = axis;
-            Billboard::setRotation(angle);
+            _rotation = angle;
         }
         notifyElementChanged();
     }
