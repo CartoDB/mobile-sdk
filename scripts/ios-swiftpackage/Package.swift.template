@@ -1,3 +1,5 @@
+// swift-tools-version:5.4.0
+
 import PackageDescription
 
 let package = Package(
@@ -11,13 +13,13 @@ let package = Package(
             targets: ["CartoMobileSDK"]
         )
     ],
+    dependencies: [
+    ],
     targets: [
         .binaryTarget(
             name: "CartoMobileSDK",
             url: "https://nutifront.s3.amazonaws.com/sdk_snapshots/$distName",
             checksum: "$checksum"
         )
-    ],
-    dependencies: [
     ]
 )
