@@ -37,6 +37,17 @@ namespace carto {
         virtual ~GeoJSONVectorTileDataSource();
 
         /**
+         * Returns the simplification tolerance in tile pixels.
+         * @return The simplification tolerance in tile pixels.
+         */
+        float getSimplifyTolerance() const;
+        /**
+         * Sets the simplification tolerance in tile pixels.
+         * @param tolerance The simplification tolerance in tile pixels. The default is 1.0. Use 0.0 to disable simplification.
+         */
+        void setSimplifyTolerance(float tolerance);
+
+        /**
          * Creates a new layer with specified name.
          * @param name The name for the layer.
          * @return The layer index of the created layer.
@@ -72,6 +83,7 @@ namespace carto {
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
     
     private:
+        float _simplifyTolerance;
         std::unique_ptr<mbvtbuilder::MBVTTileBuilder> _tileBuilder;
         mutable std::mutex _mutex;
     };
