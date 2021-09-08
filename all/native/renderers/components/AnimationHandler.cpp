@@ -81,13 +81,16 @@ namespace carto {
     void AnimationHandler::setRotationTarget(float rotationTarget, const MapPos* targetPos, float durationSeconds) {
         std::lock_guard<std::mutex> lock(_mutex);
         _rotationStarted = true;
-        _rotationTarget = fmod(rotationTarget, 360.0f);
+        _rotationTarget = std::fmod(rotationTarget, 360.0f);
         if (_rotationTarget > 180) {
             _rotationTarget -= 360;
         } else if (_rotationTarget < -180) {
             _rotationTarget += 360;
         }
-        _rotationTargetPos.reset(targetPos ? new MapPos(*targetPos) : nullptr);
+        _rotationTargetPos.reset();
+        if (targetPos) {
+            _rotationTargetPos = *targetPos;
+        }
         _rotationDurationSeconds = durationSeconds;
     }
         
@@ -112,7 +115,10 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _zoomStarted = true;
         _zoomTarget = zoomTarget;
-        _zoomTargetPos.reset(targetPos ? new MapPos(*targetPos) : nullptr);
+        _zoomTargetPos.reset();
+        if (targetPos) {
+            _zoomTargetPos = *targetPos;
+        }
         _zoomDurationSeconds = durationSeconds;
     }
         

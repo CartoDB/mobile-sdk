@@ -56,7 +56,7 @@ namespace carto {
         bool _rotationStarted;
         float _rotationDurationSeconds;
         float _rotationTarget;
-        std::unique_ptr<MapPos> _rotationTargetPos;
+        std::optional<MapPos> _rotationTargetPos;
     
         bool _tiltStarted;
         float _tiltDurationSeconds;
@@ -65,7 +65,7 @@ namespace carto {
         bool _zoomStarted;
         float _zoomDurationSeconds;
         float _zoomTarget;
-        std::unique_ptr<MapPos> _zoomTargetPos;
+        std::optional<MapPos> _zoomTargetPos;
     
         MapRenderer& _mapRenderer;
     
