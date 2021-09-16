@@ -182,11 +182,10 @@ namespace carto {
                 }
             }
 
-            auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
-                return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
-            };
+            std::shared_ptr<Geometry> geometry = std::visit(MVTGeometryConverter(tileBounds), *mvtGeometry);
 
-            return std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertMVTGeometry(convertFn, mvtGeometry), Variant(featureData));
+            auto feature = std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, geometry, Variant(featureData));
+            return feature;
         }
         catch (const std::exception& ex) {
             Log::Errorf("CartoVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
@@ -232,11 +231,9 @@ namespace carto {
                         }
                     }
 
-                    auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
-                        return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
-                    };
+                    std::shared_ptr<Geometry> geometry = std::visit(MVTGeometryConverter(tileBounds), *mvtGeometry);
 
-                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertMVTGeometry(convertFn, mvtGeometry), Variant(featureData));
+                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, geometry, Variant(featureData));
                     tileFeatures.push_back(feature);
                 }
             }
