@@ -34,8 +34,8 @@ namespace carto {
         explicit MVTGeometryConverter(const PointConversionFunc& convertFn) : _convertFunc(convertFn) { }
 
         explicit MVTGeometryConverter(const MapBounds& tileBounds) : _convertFunc([tileBounds](const cglib::vec2<float>& pos) {
-            return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0); }
-        ) { }
+            return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
+        }) { }
 
         std::shared_ptr<Geometry> operator() (const mvt::PointGeometry& mvtPoint) const {
             std::vector<MapPos> poses = convertPoints(mvtPoint.getVertices());
