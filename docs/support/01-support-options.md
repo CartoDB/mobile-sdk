@@ -2,8 +2,8 @@
 
 Feeling stuck? There are many ways to find help.
 
-* Ask a question on [GIS StackExchange](https://gis.stackexchange.com/questions/tagged/carto) using the `CARTO` tag.
-* [Report an issue](https://github.com/CartoDB/cartodb.js/issues) in Github.
+* [Report an issue](https://github.com/CartoDB/mobile-sdk/issues) in Github (for issues specific to CARTO Mobile SDK).
+* Ask a question on [GIS StackExchange](https://gis.stackexchange.com/questions/tagged/carto) using the `CARTO` tag (for general issues about CARTO platform).
 * Engine Plan customers have additional access to enterprise-level support through CARTO's support representatives.
 
 If you just want to describe an issue or share an idea, just <a class="typeform-share" href="https://cartohq.typeform.com/to/mH6RRl" data-mode="popup" target="_blank"> send your feedback</a>.
