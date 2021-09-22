@@ -36,7 +36,6 @@ def cmakeOptions = {
 
 android {
     compileSdkVersion 31
-    buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 15

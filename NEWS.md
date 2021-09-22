@@ -1,3 +1,31 @@
+CARTO Mobile SDK 4.4.2RC1
+-------------------
+
+### New features:
+
+* Added 'setSimplifyTolerance', 'getSimplifyTolerance' methods to 'GeoJSONVectorTileDataSource'
+* Added support for complex CartoCSS selectors ('when' selectors)
+* Added support for 'bevel', 'none' linejoin modes and 'square' linecap mode in CartoCSS.
+* Added 'marker-color' property to CartoCSS that can be applied to both file-based markers and built-in markers.
+
+### Changes, fixes:
+
+* Started using API 31 as compilation target on Android
+* Implemented better error reporting of undefined variables in CartoCSS translator
+* Fixed deadlock in NMLModel.setRotation(axis, angle) method caused by improper synchronization
+* Reimplemented 'setLayerFeatureCollection' method in 'GeoJSONVectorTileDataSource' to make it faster by skipping serialization/parsing steps.
+* Implemented switching to 'bevel' linejoin at sharp angles when using 'miter' linejoin
+* Fixed multiple issues with string escaping in parsers and generators in CartoCSS and MapnikVT library.
+* Fixed minor issues related to internal expression -> predicate conversion in MapnikVT library.
+* Fixed dash array generation for subpixel wide lines when rendering vector tiles
+* Revised feature id generation logic in 'GeoJSONVectorTileDataSource', SDK now uses feature id, if available or a deterministic auto id generation when not available.
+* Reduced default simplication tolerance for 'GeoJSONVectorTileDataSource', new default value should not generate visible simplification artifacts
+* Converted CartoCSS 'marker-opacity' property to a view-level parameter, so it can be dependent on 'view::zoom'.
+* Updated protobuf and harfbuzz libraries to the latest versions
+* Disabled Sqlite locking extensions on iOS and MacCatalyst builds
+* Minor optimizations
+
+
 CARTO Mobile SDK 4.4.1
 -------------------
 
