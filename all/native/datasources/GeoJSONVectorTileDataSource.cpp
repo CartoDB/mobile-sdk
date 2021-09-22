@@ -108,8 +108,8 @@ namespace carto {
         try {
             std::lock_guard<std::mutex> lock(_mutex);
             _tileBuilder->clearLayer(layerIndex);
-            for (int i = 0; i < featureCollection->getFeatureCount(); i++) {
-                const std::shared_ptr<Feature>& feature = featureCollection->getFeature(i);
+            for (int n = 0; n < featureCollection->getFeatureCount(); n++) {
+                const std::shared_ptr<Feature>& feature = featureCollection->getFeature(n);
                 const std::shared_ptr<Geometry>& geometry = feature->getGeometry();
                 picojson::value properties = feature->getProperties().toPicoJSON();
 
