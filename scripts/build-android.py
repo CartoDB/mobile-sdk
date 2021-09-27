@@ -6,6 +6,7 @@ import string
 from build.sdk_build_utils import *
 
 ANDROID_ABIS = ['armeabi-v7a', 'x86', 'arm64-v8a', 'x86_64']
+SDK_VERSION = "4.4.2"
 
 def javac(args, dir, *cmdArgs):
   return execute(args.javac, dir, *cmdArgs)

@@ -8,6 +8,7 @@ import string
 from build.sdk_build_utils import *
 
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator', 'x86_64-maccatalyst', 'arm64-maccatalyst']
+SDK_VERSION = "4.4.2"
 
 def getFinalBuildDir(target, arch=None):
   return getBuildDir(('%s_metal' % target) if args.metalangle else target, arch)
@@ -296,14 +297,14 @@ args = parser.parse_args()
 if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
   if not args.buildxcframework:
-    args.iosarch = filter(lambda arch: not (arch.endswith('-simulator') or arch.endswith('-maccatalyst')), args.iosarch)
+    args.iosarch = list(filter(lambda arch: not (arch.endswith('-simulator') or arch.endswith('-maccatalyst')), args.iosarch))
   if not args.metalangle:
-    args.iosarch = filter(lambda arch: not arch.endswith('-maccatalyst'), args.iosarch)
+    args.iosarch = list(filter(lambda arch: not arch.endswith('-maccatalyst'), args.iosarch))
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 if args.metalangle:
   args.defines += ';' + '_CARTO_USE_METALANGLE'
 else:
-  if filter(lambda arch: arch.endswith('-maccatalyst'), args.iosarch):
+  if list(filter(lambda arch: arch.endswith('-maccatalyst'), args.iosarch)):
     print('Mac Catalyst builds are only supported with MetalANGLE')
     sys.exit(-1)
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
