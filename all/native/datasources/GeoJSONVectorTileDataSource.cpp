@@ -144,7 +144,7 @@ namespace carto {
                     }
                     _tileBuilder->addMultiPolygon(layerIndex, std::move(polygons), std::move(properties));
                 } else {
-                    throw GenerateException("Unsupported geometry type");
+                    throw InvalidArgumentException("Unsupported geometry type in feature collection");
                 }
             }
         }
