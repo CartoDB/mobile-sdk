@@ -6,10 +6,22 @@ the [Releases](https://github.com/CartoDB/mobile-sdk/releases) section**
 Getting all the SDK dependencies resolved and waiting for the build to complete can be very time-consuming.
 
 ## Dependencies
-Use `git submodule` to resolve all source-level dependencies
+Use `git submodule` to resolve source-level dependencies:
 
 ```
 git submodule update --init --remote --recursive
+```
+
+Download and set up boost library:
+
+```
+curl -o boost_1_77_0.zip -L https://sourceforge.net/projects/boost/files/boost/1.77.0/boost_1_77_0.zip/download
+unzip boost_1_77_0.zip
+ln -s boost_1_77_0 libs-external/boost
+cd boost_1_77_0
+./bootstrap.sh
+./b2 headers
+cd ..
 ```
 
 Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig. Clone it and compile it using usual `./autogen.sh; ./configure; make` routine. Make sure build script refers to this one.
@@ -26,18 +38,6 @@ Universal Windows Platform build requires **Visual Studio 2019**.
 
 ## Building process
 Be patient - full build will take 1+ hours. You can speed it up by limiting architectures and platforms where it is built.
-
-Download and set up boost library:
-
-```
-curl -o boost_1_77_0.zip -L https://sourceforge.net/projects/boost/files/boost/1.77.0/boost_1_77_0.zip/download
-unzip boost_1_77_0.zip
-ln -s boost_1_77_0 libs-external/boost
-cd boost_1_77_0
-./bootstrap.sh
-./b2 headers
-cd ..
-```
 
 Go to 'scripts' library where the actual build scripts are located:
 
