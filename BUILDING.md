@@ -30,7 +30,7 @@ Be patient - full build will take 1+ hours. You can speed it up by limiting arch
 Download and set up boost library:
 
 ```
-curl https://boostorg.jfrog.io/native/main/release/1.77.0/source/boost_1_77_0.zip
+curl -o boost_1_77_0.zip -L https://sourceforge.net/projects/boost/files/boost/1.77.0/boost_1_77_0.zip/download
 unzip boost_1_77_0.zip
 ln -s boost_1_77_0 libs-external/boost
 cd boost_1_77_0

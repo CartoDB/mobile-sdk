@@ -1,3 +1,13 @@
+CARTO Mobile SDK 4.4.2
+-------------------
+
+### Changes, fixes:
+
+* Fixed style fallback version in 'CartoPackageManager' (when using 'startStyleDownload' method)
+* Changed exception type when encoutering unsupported geometry in 'GeoJSONVectorTileDataSource'
+* Minor iOS build script fixes
+
+
 CARTO Mobile SDK 4.4.2RC1
 -------------------
 
