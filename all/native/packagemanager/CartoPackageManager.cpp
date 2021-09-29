@@ -225,13 +225,13 @@ namespace carto {
 
     bool CartoPackageManager::updateStyle(const std::string& styleName) {
         std::shared_ptr<AssetPackage> currentAssetPackage = getStyleAssetPackage(styleName);
+        std::string schema = getSchema();
+        if (schema.empty()) {
+            schema = _source + "/v2"; // default schema, if missing
+        }
 
         std::shared_ptr<MemoryAssetPackage> newAssetPackage;
         try {
-            std::string schema = getSchema();
-            if (schema.empty()) {
-                schema = _source + "/v1"; // default schema, if missing
-            }
             CartoAssetPackageUpdater updater(schema, styleName);
             newAssetPackage = updater.update(currentAssetPackage);
         }

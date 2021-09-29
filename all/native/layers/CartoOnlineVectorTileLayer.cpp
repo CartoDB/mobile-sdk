@@ -63,12 +63,12 @@ namespace carto {
     void CartoOnlineVectorTileLayer::StyleUpdateTask::run() {
         std::string schema;
         std::string styleName = GetStyleName(_style);
-        std::shared_ptr<AssetPackage> styleAssetPackage;
+        std::shared_ptr<AssetPackage> currentAssetPackage;
         {
             if (auto layer = _layer.lock()) {
                 if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(layer->getTileDecoder())) {
                     if (auto compiledStyleSet = tileDecoder->getCompiledStyleSet()) {
-                        styleAssetPackage = compiledStyleSet->getAssetPackage();
+                        currentAssetPackage = compiledStyleSet->getAssetPackage();
                     }
                 }
 
@@ -81,20 +81,20 @@ namespace carto {
             schema = GetStyleSource(_style) + "/v2"; // default schema, if missing
         }
 
-        std::shared_ptr<MemoryAssetPackage> updatedStyleAssetPackage;
+        std::shared_ptr<MemoryAssetPackage> newAssetPackage;
         try {
             CartoAssetPackageUpdater updater(schema, styleName);
-            updatedStyleAssetPackage = updater.update(styleAssetPackage);
+            newAssetPackage = updater.update(currentAssetPackage);
         }
         catch (const std::exception& ex) {
             Log::Errorf("CartoOnlineVectorTileLayer::StyleUpdateTask: Error while updating style: %s", ex.what());
             return;
         }
 
-        if (updatedStyleAssetPackage && !updatedStyleAssetPackage->getLocalAssetNames().empty()) {
+        if (newAssetPackage && !newAssetPackage->getLocalAssetNames().empty()) {
             if (auto layer = _layer.lock()) {
                 if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(layer->getTileDecoder())) {
-                    tileDecoder->setCompiledStyleSet(std::make_shared<CompiledStyleSet>(updatedStyleAssetPackage, styleName));
+                    tileDecoder->setCompiledStyleSet(std::make_shared<CompiledStyleSet>(newAssetPackage, styleName));
                 }
             }
         }
