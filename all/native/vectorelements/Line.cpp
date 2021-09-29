@@ -9,6 +9,7 @@ namespace carto {
 
     Line::Line(const std::shared_ptr<LineGeometry>& geometry, const std::shared_ptr<LineStyle>& style) :
         VectorElement(geometry),
+        _drawData(),
         _style(style)
     {
         if (!geometry) {
@@ -21,6 +22,7 @@ namespace carto {
         
     Line::Line(std::vector<MapPos> poses, const std::shared_ptr<LineStyle>& style) :
         VectorElement(std::make_shared<LineGeometry>(std::move(poses))),
+        _drawData(),
         _style(style)
     {
         if (!style) {

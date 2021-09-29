@@ -8,6 +8,7 @@ namespace carto {
 
     Polygon3D::Polygon3D(const std::shared_ptr<PolygonGeometry>& geometry, const std::shared_ptr<Polygon3DStyle>& style, float height) :
         VectorElement(geometry),
+        _drawData(),
         _height(height),
         _style(style)
     {
@@ -21,6 +22,7 @@ namespace carto {
         
     Polygon3D::Polygon3D(std::vector<MapPos> poses, const std::shared_ptr<Polygon3DStyle>& style, float height) :
         VectorElement(std::make_shared<PolygonGeometry>(std::move(poses))),
+        _drawData(),
         _height(height),
         _style(style)
     {
@@ -32,6 +34,7 @@ namespace carto {
     Polygon3D::Polygon3D(std::vector<MapPos> poses, std::vector<std::vector<MapPos> > holes,
                          const std::shared_ptr<Polygon3DStyle>& style, float height) :
         VectorElement(std::make_shared<PolygonGeometry>(std::move(poses), std::move(holes))),
+        _drawData(),
         _height(height),
         _style(style)
     {

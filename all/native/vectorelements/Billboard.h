@@ -100,9 +100,9 @@ namespace carto {
         float _rotation;
 
     private:
-        std::shared_ptr<Billboard> _baseBillboard;
-        
         std::shared_ptr<BillboardDrawData> _drawData;
+
+        std::shared_ptr<Billboard> _baseBillboard;
     };
     
 }

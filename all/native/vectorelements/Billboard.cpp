@@ -102,6 +102,7 @@ namespace carto {
     Billboard::Billboard(const std::shared_ptr<Billboard>& baseBillboard) :
         VectorElement(std::shared_ptr<Geometry>()),
         _rotation(0),
+        _drawData(),
         _baseBillboard(baseBillboard)
     {
         if (!baseBillboard) {
@@ -112,6 +113,7 @@ namespace carto {
     Billboard::Billboard(const std::shared_ptr<Geometry>& geometry) :
         VectorElement(geometry),
         _rotation(0),
+        _drawData(),
         _baseBillboard()
     {
         if (!geometry) {
@@ -122,6 +124,7 @@ namespace carto {
     Billboard::Billboard(const MapPos& pos) :
         VectorElement(std::make_shared<PointGeometry>(pos)),
         _rotation(0),
+        _drawData(),
         _baseBillboard()
     {
     }
