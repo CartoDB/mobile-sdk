@@ -27,13 +27,16 @@ Universal Windows Platform build requires **Visual Studio 2019**.
 ## Building process
 Be patient - full build will take 1+ hours. You can speed it up by limiting architectures and platforms where it is built.
 
-Set up boost library:
+Download and set up boost library:
 
 ```
-cd libs-external/boost
+curl https://boostorg.jfrog.io/native/main/release/1.77.0/source/boost_1_77_0.zip
+unzip boost_1_77_0.zip
+ln -s boost_1_77_0 libs-external/boost
+cd boost_1_77_0
 ./bootstrap.sh
 ./b2 headers
-cd ../..
+cd ..
 ```
 
 Go to 'scripts' library where the actual build scripts are located:
