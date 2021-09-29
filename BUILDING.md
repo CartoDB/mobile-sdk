@@ -42,7 +42,7 @@ Be patient - full build will take 1+ hours. You can speed it up by limiting arch
 Go to 'scripts' library where the actual build scripts are located:
 
 ```
-cd mobile-sdk/scripts
+cd scripts
 ```
 
 ## Android build 
