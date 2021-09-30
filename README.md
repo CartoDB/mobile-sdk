@@ -19,7 +19,7 @@ CARTO Mobile SDK is an open, multi-platform framework for visualizing maps and p
 
 ## Requirements
 
-* iOS 9 or later on Apple iPhones and iPads
+* iOS 9 or later on Apple iPhones and iPads, macOS 10.15 or later for Mac Catalyst apps
 * Android 3.0 or later on all Android devices
 * Windows 10 Mobile or Windows 10 for Windows-based devices
 
