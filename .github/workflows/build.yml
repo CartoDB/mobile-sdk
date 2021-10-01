@@ -1,0 +1,102 @@
+name: Build CartoMobileSDK
+
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    strategy:
+      # max-parallel: 1
+      matrix:
+        variant: ['android', 'ios']
+    runs-on: macos-latest
+    name: CartoMobileSDK ${{ matrix.variant }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: fetch externals
+        run: |
+          git submodule update --init --remote --recursive
+
+      - name: Setup JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Setup Android SDK
+        if: matrix.variant == 'android'
+        uses: android-actions/setup-android@v2
+
+      - uses: nttld/setup-ndk@v1
+        if: matrix.variant == 'android'
+        id: setup-ndk
+        with:
+          ndk-version: r22
+
+      - name: prepare boost
+        run: |
+          cd libs-external/boost
+          ./bootstrap.sh
+          ./b2 headers
+
+      - name: Build swig
+        run: |
+          brew install autoconf automake libtool
+          git clone https://github.com/farfromrefug/mobile-swig.git
+          cd mobile-swig
+          wget https://github.com/PhilipHazel/pcre2/releases/download/pcre2-10.37/pcre2-10.37.tar.gz
+          ./Tools/pcre-build.sh
+          ./autogen.sh
+          ./configure
+          make
+
+      - name: Build swig-objc
+        if: matrix.variant != 'android'
+        run: |
+          cd scripts
+          python swigpp-objc.py --profile standard+valhalla --swig ../mobile-swig/swig 
+
+      - name: Build swig-java
+        if: matrix.variant == 'android'
+        run: |
+          cd scripts
+          python swigpp-java.py --profile standard --swig ../mobile-swig/swig
+      
+      - name: Get branch name
+        shell: bash
+        run: echo "VERSION_NAME=$(echo ${GITHUB_HEAD_REF} | tr / - | sed "s/^[a-zA-Z]*-//g" | sed "s/^$/4.4.2/")" >> $GITHUB_ENV
+
+      - name: Build CartoSDK
+        if: matrix.variant == 'android'
+        run: |
+          brew install gradle@6
+          cd scripts
+          python build-android.py --profile standard+valhalla --build-aar --build-version ${{ env.VERSION_NAME }} --configuration=Release --gradle /usr/local/opt/gradle@6/bin/gradle
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+      - name: Build CartoSDK
+        if: matrix.variant == 'ios'
+        run: |
+          cd scripts
+          python build-ios.py --profile standard+valhalla --build-cocoapod --build-version ${{ env.VERSION_NAME }} --build-xcframework
+
+      - name: Build CartoSDK
+        if: matrix.variant == 'ios-metal'
+        run: |
+          cd scripts
+          python build-ios.py --profile standard+valhalla --build-cocoapod --build-version ${{ env.VERSION_NAME }} --build-xcframework
+
+      - uses: actions/upload-artifact@v2
+        if: matrix.variant == 'android'
+        with:
+          name: CartoMobileSDK-android-{{env.VERSION_NAME}}.zip
+          path: |
+            dist/android/*.aar
+            dist/android/*.jar
+            dist/android/*.pom
+
+      - uses: actions/upload-artifact@v2
+        if: matrix.variant != 'android'
+        with:
+          name: CartoMobileSDK-ios-{{env.VERSION_NAME}}.zip
+          path: dist/ios/*.zip
