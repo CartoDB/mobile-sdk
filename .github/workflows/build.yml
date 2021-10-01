@@ -89,7 +89,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: matrix.variant == 'android'
         with:
-          name: CartoMobileSDK-android-{{env.VERSION_NAME}}.zip
+          name: CartoMobileSDK-android-${{env.VERSION_NAME}}.zip
           path: |
             dist/android/*.aar
             dist/android/*.jar
@@ -98,5 +98,5 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: matrix.variant != 'android'
         with:
-          name: CartoMobileSDK-ios-{{env.VERSION_NAME}}.zip
+          name: CartoMobileSDK-ios-${{env.VERSION_NAME}}.zip
           path: dist/ios/*.zip
