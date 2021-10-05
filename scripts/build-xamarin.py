@@ -61,6 +61,7 @@ def buildAndroidSO(args, abi):
   ])
 
 def buildIOSLib(args, arch):
+  baseArch = arch
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   platform = 'OS' if arch.startswith('arm') else 'SIMULATOR'
   baseDir = getBaseDir()
@@ -74,7 +75,7 @@ def buildIOSLib(args, arch):
     '-DWRAPPER_DIR=%s' % ('%s/generated/ios-csharp/wrappers' % baseDir),
     '-DINCLUDE_OBJC:BOOL=OFF',
     '-DSINGLE_LIBRARY:BOOL=ON',
-    '-DENABLE_BITCODE:BOOL=OFF',
+    '-DSHARED_LIBRARY:BOOL=OFF',
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
     '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('10.0' if arch == 'i386' else '9.0'),
@@ -82,14 +83,16 @@ def buildIOSLib(args, arch):
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Xamarin iOS'",
+    "-DSDK_IOS_ARCH='%s'" % arch,
+    "-DSDK_IOS_BASEARCH='%s'" % baseArch,
     '%s/scripts/build' % baseDir
   ]):
     return False
-  return cmake(args, buildDir, [
-    '--build', '.',
-    '--parallel', '4',
-    '--config', args.configuration
-  ])
+  bitcodeOptions = ['ENABLE_BITCODE=NO']
+  return execute('xcodebuild', buildDir,
+    '-project', 'carto_mobile_sdk.xcodeproj', '-arch', arch, '-configuration', args.configuration, 'archive',
+    *list(bitcodeOptions)
+  )
 
 def buildIOSFatLib(args, archs):
   platformArchs = [('OS' if arch.startswith('arm') else 'SIMULATOR', arch) for arch in archs]
