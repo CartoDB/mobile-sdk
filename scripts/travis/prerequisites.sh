@@ -9,8 +9,9 @@ echo '---- Downloading and setting up boost ----'
 curl -o boost_1_77_0.zip -L https://sourceforge.net/projects/boost/files/boost/1.77.0/boost_1_77_0.zip/download
 rm -rf boost_1_77_0
 unzip boost_1_77_0.zip
-ln -s boost_1_77_0 libs-external/boost
-cd boost_1_77_0
+cd libs-external
+ln -s ../boost_1_77_0 boost
+cd ../boost_1_77_0
 ./bootstrap.sh
 ./b2 headers
 cd ..
