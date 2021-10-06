@@ -19,7 +19,7 @@ Use `git submodule` to resolve source-level dependencies:
 git submodule update --init --remote --recursive
 ```
 
-Download and set up boost library:
+Download and set up 'boost' library:
 
 ```
 curl -o boost_1_77_0.zip -L https://sourceforge.net/projects/boost/files/boost/1.77.0/boost_1_77_0.zip/download
@@ -44,6 +44,12 @@ iOS build requires **XCode 12** or later.
 
 Universal Windows Platform build requires **Visual Studio 2019**.
 
+## SDK profiles
+CARTO Mobile SDK can be compiled with different features. The feature set is defined by **profiles**,
+which are defined in 'scripts/build/sdk_profiles.json' file. Different profiles can be combined, for
+example the official SDK builds are currently compiled with 'valhalla+nmlmodellodtree' profiles. The
+following instructions use 'standard' profile as an example.
+
 ## Building process
 Be patient - full build will take 1+ hours. You can speed it up by limiting architectures and platforms where it is built.
 
@@ -52,12 +58,6 @@ Go to 'scripts' library where the actual build scripts are located:
 ```
 cd scripts
 ```
-
-## SDK profiles
-CARTO Mobile SDK can be compiled with different features. The feature set is defined by **profiles**,
-which are defined in 'scripts/build/sdk_profiles.json' file. Different profiles can be combined, for
-example the official SDK builds are currently compiled with 'valhalla+nmlmodellodtree' profiles. The
-following instructions use 'standard' profile as an example.
 
 ## Android build 
 ```
