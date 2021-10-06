@@ -6,6 +6,13 @@ the [Releases](https://github.com/CartoDB/mobile-sdk/releases) section**
 Getting all the SDK dependencies resolved and waiting for the build to complete can be very time-consuming.
 
 ## Dependencies
+The following instructions assume **Linux** or **MacOS** operating system. For Windows-based builds we
+recommend first installing **Windows Subsystem for Linux (WSL)**. Once installed, the following
+instructions can be used on Windows also. Otherwise minor changes are needed, like using 
+`mklink /D` instead of `ln -s` in the following instructions.
+
+We assume command-line versions of **git**, **unzip** and **curl** are already installed.
+
 Use `git submodule` to resolve source-level dependencies:
 
 ```
@@ -45,6 +52,12 @@ Go to 'scripts' library where the actual build scripts are located:
 ```
 cd scripts
 ```
+
+## SDK profiles
+CARTO Mobile SDK can be compiled with different features. The feature set is defined by **profiles**,
+which are defined in 'scripts/build/sdk_profiles.json' file. Different profiles can be combined, for
+example the official SDK builds are currently compiled with 'valhalla+nmlmodellodtree' profiles. The
+following instructions use 'standard' profile as an example.
 
 ## Android build 
 ```
