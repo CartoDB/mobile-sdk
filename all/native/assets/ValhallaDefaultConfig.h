@@ -198,8 +198,8 @@ static const char valhalla_default_config[] = R"({
       "max_time_contour": 120
     },
     "max_alternates": 2,
-    "max_avoid_locations": 50,
-    "max_avoid_polygons_length": 10000,
+    "max_exclude_locations": 50,
+    "max_exclude_polygons_length": 10000,
     "max_radius": 200,
     "max_reachability": 100,
     "max_timedep_distance": 500000,
@@ -232,6 +232,9 @@ static const char valhalla_default_config[] = R"({
     "skadi": {
       "max_shape": 750000,
       "min_resample": 10.0
+    },
+    "status": {
+      "allow_verbose": false
     },
     "taxi": {
       "max_distance": 5000000.0,
