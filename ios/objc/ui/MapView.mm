@@ -69,10 +69,13 @@ static const int NATIVE_NO_COORDINATE = -1;
 
     _active = YES;
 
-    _scale = 1;
+    _scale = [[UIScreen mainScreen] scale];
+    // In case of MetalANGLE build, use the original scale value
+#ifndef _CARTO_USE_METALANGLE
     if ([[UIScreen mainScreen] respondsToSelector:@selector(nativeScale)]) {
         _scale = [[UIScreen mainScreen] nativeScale];
     }
+#endif
 
     _baseMapView = [[NTBaseMapView alloc] init];
     _nativeMapView = [_baseMapView getCptr];
