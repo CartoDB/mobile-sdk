@@ -1,3 +1,15 @@
+CARTO Mobile SDK 4.4.3RC1
+-------------------
+
+### Changes, fixes:
+
+* Fixed critical coordinate scaling issue in iOS Metal build (occurs only with iPhone 6 Plus, iPhone 7 Plus and iPhone 8 Plus devices)
+* Fixed regression in 'GeoJSONVectorTileDataSource' which caused parsing failure with features with non-object properties
+* Optimized parsing of complex CartoCSS styles, improving performance by 20-40% for complex styles
+* Optimized loading of compiled 'Mapnik' styles by using symbolizer cache, improving performance by up to 50% for complex styles
+* Updated internal Valhalla, sqlite, harfbuzz, botan and protobuf libraries to latest stable versions
+
+
 CARTO Mobile SDK 4.4.2
 -------------------
 
