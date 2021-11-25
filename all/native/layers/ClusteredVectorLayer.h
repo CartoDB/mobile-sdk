@@ -137,7 +137,7 @@ namespace carto {
         float _dpiScale;
         std::shared_ptr<std::vector<Cluster> > _clusters;
         std::shared_ptr<ProjectionSurface> _projectionSurface;
-        int _singletonClusterCount;
+        std::size_t _singletonClusterCount;
         int _rootClusterIdx;
         std::vector<int> _renderClusterIdxs;
         bool _refreshRootCluster;
