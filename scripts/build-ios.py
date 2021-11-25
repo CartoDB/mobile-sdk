@@ -137,8 +137,9 @@ def buildIOSLib(args, baseArch, outputDir=None):
   bitcodeOptions = ['ENABLE_BITCODE=NO']
   if not args.stripbitcode and baseArch in ('armv7', 'arm64'):
     bitcodeOptions = ['ENABLE_BITCODE=YES', 'BITCODE_GENERATION_MODE=bitcode']
+  buildMode = ('archive' if args.configuration == 'Release' else 'build')
   return execute('xcodebuild', buildDir,
-    '-project', 'carto_mobile_sdk.xcodeproj', '-arch', arch, '-configuration', args.configuration, 'archive',
+    '-project', 'carto_mobile_sdk.xcodeproj', '-arch', arch, '-configuration', args.configuration, buildMode,
     *list(bitcodeOptions)
   )
 
