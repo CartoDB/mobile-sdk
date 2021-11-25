@@ -186,47 +186,46 @@ namespace carto {
             return;
         }
 
+        // Create singleton clusters
         auto clusters = std::make_shared<std::vector<Cluster> >();
         clusters->reserve(vectorElements.size() * 2);
-        int singletonClusterCount = 0;
+        std::vector<int> clusterIdxs;
+        clusterIdxs.reserve(vectorElements.size());
+        for (const std::shared_ptr<VectorElement>& element : vectorElements) {
+            int clusterIdx = createSingletonCluster(element, *clusters, *projectionSurface);
+            if (clusterIdx != -1) {
+                clusterIdxs.push_back(clusterIdx);
+            }
+        }
+        int singletonClusterCount = static_cast<int>(clusters->size());
+
+        // Check if we must recalculate clustering
+        {
+            std::lock_guard<std::mutex> lock(_clusterMutex);
+
+            if (_singletonClusterCount == singletonClusterCount) {
+                bool changed = false;
+                for (int i = 0; i < singletonClusterCount; i++) {
+                    if ((*_clusters)[i].vectorElement != (*clusters)[i].vectorElement ||
+                        (*_clusters)[i].staticPos != (*clusters)[i].staticPos)
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+                if (!changed) {
+                    // Reset cluster elements as styles/attributes may have changed
+                    for (Cluster& cluster : *_clusters) {
+                        cluster.clusterElement.reset();
+                    }
+                    return;
+                }
+            }
+        }
+
+        // Rebuild clusters, by doing bottom-up merging into a single cluster
         int rootClusterIdx = -1;
-        if (!vectorElements.empty()) {
-            // Create singleton clusters
-            std::vector<int> clusterIdxs;
-            clusterIdxs.reserve(vectorElements.size());
-            for (const std::shared_ptr<VectorElement>& element : vectorElements) {
-                int clusterIdx = createSingletonCluster(element, *clusters, *projectionSurface);
-                if (clusterIdx != -1) {
-                    clusterIdxs.push_back(clusterIdx);
-                }
-            }
-            singletonClusterCount = static_cast<int>(clusters->size());
-
-            // Check if we must recalculate clustering
-            {
-                std::lock_guard<std::mutex> lock(_clusterMutex);
-
-                if (_singletonClusterCount == singletonClusterCount) {
-                    bool changed = false;
-                    for (int i = 0; i < singletonClusterCount; i++) {
-                        if ((*_clusters)[i].vectorElement != (*clusters)[i].vectorElement ||
-                            (*_clusters)[i].staticPos != (*clusters)[i].staticPos)
-                        {
-                            changed = true;
-                            break;
-                        }
-                    }
-                    if (!changed) {
-                        // Reset cluster elements as styles/attributes may have changed
-                        for (Cluster& cluster : *_clusters) {
-                            cluster.clusterElement.reset();
-                        }
-                        return;
-                    }
-                }
-            }
-
-            // Rebuild clusters, by doing bottom-up merging into a single cluster
+        if (!clusters->empty()) {
             rootClusterIdx = mergeClusters(clusterIdxs.begin(), clusterIdxs.end(), *clusters, *projectionSurface, 1).front();
         }
 
