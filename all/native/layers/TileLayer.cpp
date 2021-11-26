@@ -168,7 +168,7 @@ namespace carto {
         
     void TileLayer::DataSourceListener::onTilesChanged(bool removeTiles) {
         if (std::shared_ptr<TileLayer> layer = _layer.lock()) {
-            layer->tilesChanged(removeTiles);
+            layer->updateTiles(removeTiles);
         } else {
             Log::Error("TileLayer::DataSourceListener: Lost connection to layer");
         }
@@ -179,6 +179,7 @@ namespace carto {
         _dataSource(dataSource),
         _dataSourceListener(),
         _tileRenderer(std::make_shared<TileRenderer>()),
+        _tileCullState(),
         _fetchingTileTasks(),
         _calculatingTiles(false),
         _refreshedTiles(false),
@@ -260,13 +261,17 @@ namespace carto {
         if (!isVisible() || !getVisibleZoomRange().inRange(cullState->getViewState().getZoom()) || getOpacity() <= 0) {
             _calculatingTiles = false;
 
-            refreshDrawData(cullState);
+            refreshDrawData(cullState, true);
             return;
         }
-        
-        if (!_lastCullState || _frameNr != _lastFrameNr || cullState->getViewState().getModelviewProjectionMat() != _lastCullState->getViewState().getModelviewProjectionMat()) {
+
+        // Check if tiles need to be recalculated
+        bool recalculateTiles = (!_tileCullState || _frameNr != _lastFrameNr || cullState->getViewState().getModelviewProjectionMat() != _tileCullState->getViewState().getModelviewProjectionMat());
+        if (recalculateTiles) {
             // If the view has changed calculate new visible tiles, otherwise use the old ones
             calculateVisibleTiles(cullState);
+
+            _tileCullState = cullState;
         }
     
         // Find replacements for visible tiles, create fetch list
@@ -340,7 +345,32 @@ namespace carto {
         _calculatingTiles = false;
         _refreshedTiles = true;
         
-        refreshDrawData(cullState);
+        refreshDrawData(cullState, recalculateTiles);
+    }
+
+    void TileLayer::updateTiles(bool removeTiles) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+            // Reset cullstate. This will force recalculation of visible tiles, which is important if data extent has changed.
+            _tileCullState.reset();
+
+            // Invalidate current tasks
+            for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
+                task->invalidate();
+                task->cancel();
+            }
+
+            // Flush caches
+            if (removeTiles) {
+                clearTiles(false);
+                clearTiles(true);
+            } else {
+                invalidateTiles(false);
+                clearTiles(true);
+            }
+        }
+        refresh();
     }
 
     void TileLayer::updateTileLoadListener() {

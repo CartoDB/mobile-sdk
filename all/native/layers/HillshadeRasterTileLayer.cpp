@@ -36,7 +36,7 @@ namespace carto {
 
     void HillshadeRasterTileLayer::setContrast(float contrast) {
         _contrast.store(std::min(1.0f, std::max(0.0f, contrast)));
-        tilesChanged(false);
+        updateTiles(false);
     }
 
     float HillshadeRasterTileLayer::getHeightScale() const {
@@ -45,7 +45,7 @@ namespace carto {
 
     void HillshadeRasterTileLayer::setHeightScale(float heightScale) {
         _heightScale.store(heightScale);
-        tilesChanged(false);
+        updateTiles(false);
     }
 
     Color HillshadeRasterTileLayer::getShadowColor() const {

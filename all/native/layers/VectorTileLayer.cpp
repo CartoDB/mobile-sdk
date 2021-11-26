@@ -124,7 +124,7 @@ namespace carto {
         _vectorTileEventListener.set(eventListener);
         _tileRenderer->setInteractionMode(eventListener.get() ? true : false);
         if (eventListener && !oldEventListener) {
-            tilesChanged(false); // we must reload the tiles, we do not keep full element information if this is not required
+            updateTiles(false); // we must reload the tiles, we do not keep full element information if this is not required
         }
     }
     
@@ -193,29 +193,13 @@ namespace carto {
         }
     }
 
-    void VectorTileLayer::tilesChanged(bool removeTiles) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-            // Reset cullstate. This will force recalculation of visible tiles, which is important if data extent has changed.
-            _lastCullState.reset();
-
-            // Invalidate current tasks
-            for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
-                task->invalidate();
-                task->cancel();
-            }
-
-            // Flush caches
-            if (removeTiles) {
-                _visibleCache.clear();
-                _preloadingCache.clear();
-            } else {
-                _visibleCache.invalidate_all(std::chrono::steady_clock::now());
-                _preloadingCache.clear();
-            }
+    void VectorTileLayer::invalidateTiles(bool preloadingTiles) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (preloadingTiles) {
+            _preloadingCache.invalidate_all(std::chrono::steady_clock::now());
+        } else {
+            _visibleCache.invalidate_all(std::chrono::steady_clock::now());
         }
-        refresh();
     }
 
     std::shared_ptr<VectorTileDecoder::TileMap> VectorTileLayer::getTileMap(long long tileId) const {
@@ -272,34 +256,30 @@ namespace carto {
         }
     }
     
-    void VectorTileLayer::refreshDrawData(const std::shared_ptr<CullState>& cullState) {
-        // Move tiles between caches
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
+    void VectorTileLayer::refreshDrawData(const std::shared_ptr<CullState>& cullState, bool tilesChanged) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-            // Get all tiles currently in the visible cache
-            std::unordered_set<long long> lastVisibleCacheTiles = _visibleCache.keys();
-            
-            // Remember unused tiles from the visible cache
-            for (const std::shared_ptr<TileDrawData>& drawData : _tempDrawDatas) {
-                if (!drawData->isPreloadingTile()) {
-                    long long tileId = drawData->getTileId();
-                    lastVisibleCacheTiles.erase(tileId);
+        // Get all tiles currently in the visible cache
+        std::unordered_set<long long> lastVisibleCacheTiles = _visibleCache.keys();
+        
+        // Remember unused tiles from the visible cache
+        for (const std::shared_ptr<TileDrawData>& drawData : _tempDrawDatas) {
+            if (!drawData->isPreloadingTile()) {
+                long long tileId = drawData->getTileId();
+                lastVisibleCacheTiles.erase(tileId);
 
-                    if (!_visibleCache.exists(tileId) && _preloadingCache.exists(tileId)) {
-                        _preloadingCache.move(tileId, _visibleCache);
-                    }
+                if (!_visibleCache.exists(tileId) && _preloadingCache.exists(tileId)) {
+                    _preloadingCache.move(tileId, _visibleCache);
                 }
-            }
-            
-            // Move all unused tiles from visible cache to preloading cache
-            for (long long tileId : lastVisibleCacheTiles) {
-                _visibleCache.move(tileId, _preloadingCache);
             }
         }
         
+        // Move all unused tiles from visible cache to preloading cache
+        for (long long tileId : lastVisibleCacheTiles) {
+            _visibleCache.move(tileId, _preloadingCache);
+        }
+        
         // Update renderer if needed, run culler
-        bool tilesChanged = false;
         if (!(isSynchronizedRefresh() && _fetchingTileTasks.getVisibleCount() > 0)) {
             std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
 
@@ -322,28 +302,19 @@ namespace carto {
             }
         }
     
-        bool updateLabels = tilesChanged;
-        if (!_lastCullState || cullState->getViewState().getModelviewProjectionMat() != _lastCullState->getViewState().getModelviewProjectionMat()) {
-            updateLabels = true;
-        }
-    
         if (auto mapRenderer = getMapRenderer()) {
-            if (updateLabels) {
-                mapRenderer->vtLabelsChanged(shared_from_this(), false);
-            }
             if (tilesChanged) {
+                mapRenderer->vtLabelsChanged(shared_from_this(), false);
                 mapRenderer->requestRedraw();
             }
         }
-    
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleTileIds.clear();
-            for (const std::shared_ptr<TileDrawData>& drawData : _tempDrawDatas) {
-                _visibleTileIds.push_back(drawData->getTileId());
-            }
-            _tempDrawDatas.clear();
+
+        // Update visible tile ids, clear temporary draw data list
+        _visibleTileIds.clear();
+        for (const std::shared_ptr<TileDrawData>& drawData : _tempDrawDatas) {
+            _visibleTileIds.push_back(drawData->getTileId());
         }
+        _tempDrawDatas.clear();
     }
     
     int VectorTileLayer::getMinZoom() const {
@@ -528,7 +499,7 @@ namespace carto {
         
     void VectorTileLayer::TileDecoderListener::onDecoderChanged() {
         if (std::shared_ptr<VectorTileLayer> layer = _layer.lock()) {
-            layer->tilesChanged(false);
+            layer->updateTiles(false);
         } else {
             Log::Error("VectorTileLayer::TileDecoderListener: Lost connection to layer");
         }

@@ -241,13 +241,14 @@ namespace carto {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-            if (!_lastCullState) {
+            std::shared_ptr<CullState> lastCullState = getLastCullState();
+            if (!lastCullState) {
                 return;
             }
             
-            billboardsChanged = syncRendererElement(element, _lastCullState->getViewState(), remove);
+            billboardsChanged = syncRendererElement(element, lastCullState->getViewState(), remove);
             
-            if (!isVisible() || !getVisibleZoomRange().inRange(_lastCullState->getViewState().getZoom()) || getOpacity() <= 0) {
+            if (!isVisible() || !getVisibleZoomRange().inRange(lastCullState->getViewState().getZoom()) || getOpacity() <= 0) {
                 return;
             }
         }
@@ -532,16 +533,17 @@ namespace carto {
         // Renderer access needs to be synchronized, this method may be called from multiple threads at the same time
         bool billboardsChanged = false;
         {
-            std::shared_ptr<CullState> lastCullState;
+            std::shared_ptr<CullState> cullState;
             {
                 std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                if (layer->isVisible() && layer->_lastCullState && layer->getVisibleZoomRange().inRange(layer->_lastCullState->getViewState().getZoom())) {
-                    lastCullState = layer->_lastCullState;
+                std::shared_ptr<CullState> lastCullState = layer->getLastCullState();
+                if (layer->isVisible() && lastCullState && layer->getVisibleZoomRange().inRange(lastCullState->getViewState().getZoom())) {
+                    cullState = lastCullState;
                 }
             }
-            if (lastCullState) {
+            if (cullState) {
                 try {
-                    billboardsChanged = loadElements(layer, lastCullState);
+                    billboardsChanged = loadElements(layer, cullState);
                 }
                 catch (const std::exception& ex) {
                     Log::Errorf("VectorLayer::FetchTask: Exception while loading elements: %s", ex.what());

@@ -163,13 +163,13 @@ namespace carto {
         virtual bool prefetchTile(long long tileId, bool preloadingTile);
         virtual void fetchTile(long long tileId, const MapTile& mapTile, bool preloadingTile, int priorityDelta);
         virtual void clearTiles(bool preloadingTiles);
-        virtual void tilesChanged(bool removeTiles);
+        virtual void invalidateTiles(bool preloadingTiles);
 
         virtual std::shared_ptr<VectorTileDecoder::TileMap> getTileMap(long long tileId) const;
         virtual std::shared_ptr<vt::Tile> getPoleTile(int y) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
-        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
+        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState, bool tilesChanged);
     
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;

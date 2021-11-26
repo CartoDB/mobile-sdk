@@ -131,7 +131,7 @@ namespace carto {
     }
 
     bool ClusteredVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
-        if (!isVisible() || !_lastCullState || !getVisibleZoomRange().inRange(viewState.getZoom()) || getOpacity() <= 0) {
+        if (!isVisible() || !getLastCullState() || !getVisibleZoomRange().inRange(viewState.getZoom()) || getOpacity() <= 0) {
             return false;
         }
 
@@ -142,8 +142,9 @@ namespace carto {
     void ClusteredVectorLayer::refreshElement(const std::shared_ptr<VectorElement>& element, bool remove) {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_lastCullState) {
-                syncRendererElement(element, _lastCullState->getViewState(), remove);
+            std::shared_ptr<CullState> lastCullState = getLastCullState();
+            if (lastCullState) {
+                syncRendererElement(element, lastCullState->getViewState(), remove);
             }
         }
         refresh();

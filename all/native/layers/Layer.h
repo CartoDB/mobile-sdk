@@ -197,8 +197,6 @@ namespace carto {
         std::shared_ptr<CancelableThreadPool> _envelopeThreadPool;
         std::shared_ptr<CancelableThreadPool> _tileThreadPool;
         
-        std::shared_ptr<CullState> _lastCullState;
-       
         mutable std::recursive_mutex _mutex;
 
     private:
@@ -216,6 +214,8 @@ namespace carto {
 
         std::map<std::string, Variant> _metaData;
 
+        std::shared_ptr<CullState> _lastCullState;
+       
         std::weak_ptr<Options> _options;
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<TouchHandler> _touchHandler;

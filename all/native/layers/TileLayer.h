@@ -343,6 +343,8 @@ namespace carto {
 
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
 
+        virtual void updateTiles(bool removeTiles);
+
         virtual void updateTileLoadListener();
 
         virtual long long getTileId(const MapTile& tile) const = 0;
@@ -351,10 +353,10 @@ namespace carto {
         virtual bool prefetchTile(long long tileId, bool preloadingTile) = 0;
         virtual void fetchTile(long long tileId, const MapTile& mapTile, bool preloadingTile, int priorityDelta) = 0;
         virtual void clearTiles(bool preloadingTiles) = 0;
-        virtual void tilesChanged(bool removeTiles) = 0;
+        virtual void invalidateTiles(bool preloadingTiles) = 0;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) = 0;
-        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState) = 0;
+        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState, bool tilesChanged) = 0;
         
         virtual int getMinZoom() const = 0;
         virtual int getMaxZoom() const = 0;
@@ -373,6 +375,8 @@ namespace carto {
 
         std::shared_ptr<TileRenderer> _tileRenderer;
     
+        std::shared_ptr<CullState> _tileCullState;
+
         FetchingTileTasks _fetchingTileTasks;
         
     private:
