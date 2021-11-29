@@ -20,6 +20,8 @@ allprojects {
     buildDir = '../../build/android-aar'
 }
 
+apply plugin: 'signing'
+apply plugin: 'maven-publish'
 apply plugin: 'com.android.library'
 apply plugin: 'io.github.gradle-nexus.publish-plugin'
 
@@ -54,16 +56,30 @@ android {
     }
 }
 
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    destinationDir = file("../../dist/android/javadoc")
+    title = null
+    options.noTimestamp(false)
+    options.addStringOption("title", "CARTO Mobile SDK")
+    options.addStringOption("doclet", "com.google.doclava.Doclava")
+    options.addStringOption("docletpath", "../javadoc/doclava-1.0.6.jar")
+    failOnError false
+}
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.source
     archiveClassifier = "sources"
 }
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from tasks.javadoc.destinationDir
+    archiveClassifier = "javadoc"
+}
+
 artifacts {
-    archives sourcesJar
+    archives sourcesJar, javadocJar
 }
 
 group = 'com.carto'
@@ -78,6 +94,7 @@ afterEvaluate {
                 version = System.getProperty('build-version')
                 from(components.release)
                 artifact sourcesJar
+                artifact javadocJar
                 pom {
                     name = "CARTO Mobile SDK"
                     description = "CARTO Mobile Maps SDK for Android"
