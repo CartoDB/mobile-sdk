@@ -122,7 +122,7 @@ namespace carto {
     {
     }
         
-    void PackageManagerGeocodingService::PackageManagerListener::onPackagesChanged() {
+    void PackageManagerGeocodingService::PackageManagerListener::onPackagesChanged(PackageChangeType changeType) {
         std::lock_guard<std::mutex> lock(_service._mutex);
         _service._cachedPackageDatabaseMap.clear();
         _service._cachedGeocoder.reset();
