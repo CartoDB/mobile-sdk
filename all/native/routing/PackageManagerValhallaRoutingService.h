@@ -57,27 +57,11 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:
-        class PackageManagerListener : public PackageManager::OnChangeListener {
-        public:
-            explicit PackageManagerListener(PackageManagerValhallaRoutingService& service);
-                
-            virtual void onPackagesChanged();
-            virtual void onStylesChanged();
-
-        private:
-            PackageManagerValhallaRoutingService& _service;
-        };
-
         const std::shared_ptr<PackageManager> _packageManager;
         std::string _profile;
         Variant _configuration;
 
-        mutable std::vector<std::shared_ptr<sqlite3pp::database> > _cachedPackageDatabases;
-
         mutable std::mutex _mutex;
-
-    private:
-        std::shared_ptr<PackageManagerListener> _packageManagerListener;
     };
     
 }

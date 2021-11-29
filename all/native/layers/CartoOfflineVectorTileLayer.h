@@ -44,7 +44,7 @@ namespace carto {
         public:
             explicit PackageManagerListener(CartoOfflineVectorTileLayer& layer);
                 
-            virtual void onPackagesChanged();
+            virtual void onPackagesChanged(PackageChangeType changeType);
             virtual void onStylesChanged();
                 
         private:

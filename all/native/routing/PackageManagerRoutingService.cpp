@@ -103,7 +103,7 @@ namespace carto {
     {
     }
         
-    void PackageManagerRoutingService::PackageManagerListener::onPackagesChanged() {
+    void PackageManagerRoutingService::PackageManagerListener::onPackagesChanged(PackageChangeType changeType) {
         std::lock_guard<std::mutex> lock(_service._mutex);
         _service._cachedPackageFileMap.clear();
         _service._cachedRouteFinder.reset();

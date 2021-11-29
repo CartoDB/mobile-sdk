@@ -72,8 +72,15 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        std::lock_guard<std::mutex> lock(_mutex);
-        return ValhallaRoutingProxy::MatchRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, _profile, _configuration, request);
+        std::string profile;
+        Variant configuration;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+
+            profile = _profile;
+            configuration = _configuration;
+        }
+        return ValhallaRoutingProxy::MatchRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, profile, configuration, request);
     }
 
     std::shared_ptr<RoutingResult> ValhallaOfflineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
@@ -81,8 +88,16 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        std::lock_guard<std::mutex> lock(_mutex);
-        return ValhallaRoutingProxy::CalculateRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, _profile, _configuration, request);
+        std::string profile;
+        Variant configuration;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+
+            profile = _profile;
+            configuration = _configuration;
+        }
+
+        return ValhallaRoutingProxy::CalculateRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, profile, configuration, request);
     }
 
 }

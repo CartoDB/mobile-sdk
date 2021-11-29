@@ -18,20 +18,14 @@ namespace carto {
         _packageManager(packageManager),
         _profile("pedestrian"),
         _configuration(ValhallaRoutingProxy::GetDefaultConfiguration()),
-        _cachedPackageDatabases(),
         _mutex()
     {
         if (!packageManager) {
             throw NullArgumentException("Null packageManager");
         }
-
-        _packageManagerListener = std::make_shared<PackageManagerListener>(*this);
-        _packageManager->registerOnChangeListener(_packageManagerListener);
     }
 
     PackageManagerValhallaRoutingService::~PackageManagerValhallaRoutingService() {
-        _packageManager->unregisterOnChangeListener(_packageManagerListener);
-        _packageManagerListener.reset();
     }
 
     Variant PackageManagerValhallaRoutingService::getConfigurationParameter(const std::string& param) const {
@@ -92,13 +86,16 @@ namespace carto {
                 }
             }
 
-            // Now check if we have already a cached route finder for the files. If not, create new instance.
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (packageDatabases != _cachedPackageDatabases) {
-                _cachedPackageDatabases = packageDatabases;
+            // Copy routing parameters
+            std::string profile;
+            Variant configuration;
+            {
+                std::lock_guard<std::mutex> lock(_mutex);
+                profile = _profile;
+                configuration = _configuration;
             }
 
-            result = ValhallaRoutingProxy::MatchRoute(_cachedPackageDatabases, _profile, _configuration, request);
+            result = ValhallaRoutingProxy::MatchRoute(packageDatabases, profile, configuration, request);
         });
 
         return result;
@@ -122,30 +119,19 @@ namespace carto {
                 }
             }
 
-            // Now check if we have already a cached route finder for the files. If not, create new instance.
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (packageDatabases != _cachedPackageDatabases) {
-                _cachedPackageDatabases = packageDatabases;
+            // Copy routing parameters
+            std::string profile;
+            Variant configuration;
+            {
+                std::lock_guard<std::mutex> lock(_mutex);
+                profile = _profile;
+                configuration = _configuration;
             }
 
-            result = ValhallaRoutingProxy::CalculateRoute(_cachedPackageDatabases, _profile, _configuration, request);
+            result = ValhallaRoutingProxy::CalculateRoute(packageDatabases, profile, configuration, request);
         });
 
         return result;
-    }
-            
-    PackageManagerValhallaRoutingService::PackageManagerListener::PackageManagerListener(PackageManagerValhallaRoutingService& service) :
-        _service(service)
-    {
-    }
-        
-    void PackageManagerValhallaRoutingService::PackageManagerListener::onPackagesChanged() {
-        std::lock_guard<std::mutex> lock(_service._mutex);
-        _service._cachedPackageDatabases.clear();
-    }
-
-    void PackageManagerValhallaRoutingService::PackageManagerListener::onStylesChanged() {
-        // Impossible
     }
 
 }

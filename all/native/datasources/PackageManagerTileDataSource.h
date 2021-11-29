@@ -45,7 +45,7 @@ namespace carto {
         public:
             explicit PackageManagerListener(PackageManagerTileDataSource& dataSource);
                 
-            virtual void onPackagesChanged();
+            virtual void onPackagesChanged(PackageChangeType changeType);
             virtual void onStylesChanged();
 
         private:

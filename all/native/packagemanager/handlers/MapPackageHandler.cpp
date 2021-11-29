@@ -26,66 +26,7 @@ namespace carto {
     }
 
     MapPackageHandler::~MapPackageHandler() {
-    }
-
-    bool MapPackageHandler::openDatabase() {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-        if (_packageDb) {
-            return true;
-        }
-
-        try {
-            // Open package database
-            _packageDb = std::make_unique<sqlite3pp::database>();
-            if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
-                Log::Errorf("MapPackageHandler::openDatabase: Failed to open database %s", _fileName.c_str());
-                _packageDb.reset();
-                return false;
-            }
-            _packageDb->execute("PRAGMA temp_store=MEMORY");
-            _packageDb->execute("PRAGMA cache_size=256");
-
-            // Create new sqlite decryption function. First check if the database is crypted.
-            std::string encKey = _serverEncKey;
-            bool encrypted = CheckDbEncryption(*_packageDb, _serverEncKey + _localEncKey); // NOTE: this is a hack - though tiles are actually encrypted with server key only, with check that local key is included in the hash also
-            _decryptFunc = std::make_unique<sqlite3pp::ext::function>(*_packageDb);
-            _decryptFunc->create("tile_decrypt", [encrypted, encKey](sqlite3pp::ext::context& ctx) {
-                const unsigned char* encData = reinterpret_cast<const unsigned char*>(ctx.get<const void*>(0));
-                std::size_t encSize = ctx.args_bytes(0);
-                int zoom = ctx.get<int>(1);
-                int x = ctx.get<int>(2);
-                int y = ctx.get<int>(3);
-                std::vector<unsigned char> encVector(encData, encData + encSize);
-                if (encrypted) {
-                    EncryptDecryptTile(encVector, zoom, x, y, encKey, false);
-                }
-                ctx.result(encVector.empty() ? nullptr : &encVector[0], static_cast<int>(encVector.size()), false);
-            }, 4);
-
-            // Try to load shared dictionary
-            _sharedDictionary.reset();
-            sqlite3pp::query query(*_packageDb, "SELECT value FROM metadata WHERE name='shared_zlib_dict'");
-            for (auto qit = query.begin(); qit != query.end(); qit++) {
-                const unsigned char* dataPtr = reinterpret_cast<const unsigned char*>(qit->get<const void*>(0));
-                std::size_t dataSize = qit->column_bytes(0);
-                _sharedDictionary = std::make_unique<BinaryData>(dataPtr, dataSize);
-            }
-            return true;
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("MapPackageHandler::openDatabase: Exception %s", ex.what());
-            _packageDb.reset();
-            return false;
-        }
-    }
-
-    void MapPackageHandler::closeDatabase() {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-        _packageDb.reset();
-        _decryptFunc.reset();
-        _sharedDictionary.reset();
+        closeDatabase();
     }
 
     std::shared_ptr<BinaryData> MapPackageHandler::loadTile(const MapTile& mapTile) {
@@ -157,6 +98,66 @@ namespace carto {
             tiles.push_back(tile);
         }
         return std::make_shared<PackageTileMask>(tiles, maxZoomLevel);
+    }
+
+    bool MapPackageHandler::openDatabase() {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        if (_packageDb) {
+            return true;
+        }
+
+        try {
+            // Open package database
+            _packageDb = std::make_unique<sqlite3pp::database>();
+            if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+                Log::Errorf("MapPackageHandler::openDatabase: Failed to open database %s", _fileName.c_str());
+                _packageDb.reset();
+                return false;
+            }
+            _packageDb->execute("PRAGMA temp_store=MEMORY");
+            _packageDb->execute("PRAGMA cache_size=256");
+
+            // Create new sqlite decryption function. First check if the database is crypted.
+            std::string encKey = _serverEncKey;
+            bool encrypted = CheckDbEncryption(*_packageDb, _serverEncKey + _localEncKey); // NOTE: this is a hack - though tiles are actually encrypted with server key only, with check that local key is included in the hash also
+            _decryptFunc = std::make_unique<sqlite3pp::ext::function>(*_packageDb);
+            _decryptFunc->create("tile_decrypt", [encrypted, encKey](sqlite3pp::ext::context& ctx) {
+                const unsigned char* encData = reinterpret_cast<const unsigned char*>(ctx.get<const void*>(0));
+                std::size_t encSize = ctx.args_bytes(0);
+                int zoom = ctx.get<int>(1);
+                int x = ctx.get<int>(2);
+                int y = ctx.get<int>(3);
+                std::vector<unsigned char> encVector(encData, encData + encSize);
+                if (encrypted) {
+                    EncryptDecryptTile(encVector, zoom, x, y, encKey, false);
+                }
+                ctx.result(encVector.empty() ? nullptr : &encVector[0], static_cast<int>(encVector.size()), false);
+            }, 4);
+
+            // Try to load shared dictionary
+            _sharedDictionary.reset();
+            sqlite3pp::query query(*_packageDb, "SELECT value FROM metadata WHERE name='shared_zlib_dict'");
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
+                const unsigned char* dataPtr = reinterpret_cast<const unsigned char*>(qit->get<const void*>(0));
+                std::size_t dataSize = qit->column_bytes(0);
+                _sharedDictionary = std::make_unique<BinaryData>(dataPtr, dataSize);
+            }
+            return true;
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("MapPackageHandler::openDatabase: Exception %s", ex.what());
+            _packageDb.reset();
+            return false;
+        }
+    }
+
+    void MapPackageHandler::closeDatabase() {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        _packageDb.reset();
+        _decryptFunc.reset();
+        _sharedDictionary.reset();
     }
 
     bool MapPackageHandler::CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey) {

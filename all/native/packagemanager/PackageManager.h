@@ -55,12 +55,22 @@ namespace carto {
          */
         class OnChangeListener {
         public:
+            /**
+             * Describes the change type.
+             */
+            enum PackageChangeType {
+                PACKAGES_UPDATED,
+                PACKAGES_ADDED,
+                PACKAGES_DELETED
+            };
+
             virtual ~OnChangeListener() { }
 
             /**
              * Called when a package has been added, removed or updated.
+             * @param type The type of changes.
              */
-            virtual void onPackagesChanged() = 0;
+            virtual void onPackagesChanged(PackageChangeType changeType) = 0;
 
             /**
              * Called when a style has been updated.
@@ -247,7 +257,7 @@ namespace carto {
 
         virtual bool updateStyle(const std::string& styleName);
         
-        void notifyPackagesChanged();
+        void notifyPackagesChanged(OnChangeListener::PackageChangeType changeType);
         void notifyStylesChanged();
 
     private:
