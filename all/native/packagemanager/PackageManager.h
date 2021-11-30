@@ -25,6 +25,7 @@
 #include <vector>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <condition_variable>
 #include <thread>
 
@@ -375,6 +376,8 @@ namespace carto {
 
         mutable std::shared_ptr<std::vector<std::shared_ptr<PackageInfo> > > _serverPackageCache;
         mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> > _packageHandlerCache;
+
+        mutable std::shared_mutex _packageFileMutex; // guards all package file accesses
 
         mutable std::recursive_mutex _mutex; // guards all state
     };

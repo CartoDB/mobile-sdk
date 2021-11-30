@@ -66,6 +66,7 @@ namespace carto {
         _packageManagerListener(),
         _serverPackageCache(),
         _packageHandlerCache(),
+        _packageFileMutex(),
         _mutex()
     {
         if (_packageListURL.empty()) {
@@ -93,6 +94,7 @@ namespace carto {
         try {
             _localDb = std::make_shared<sqlite3pp::database>(createLocalFilePath(packageDbFileName).c_str());
             InitializeDb(*_localDb, _serverEncKey + _localEncKey);
+            syncLocalPackages();
         }
         catch (const std::exception& ex) {
             Log::Errorf("PackageManager: Error while constructing PackageManager: %s, trying to remove", ex.what());
@@ -107,8 +109,6 @@ namespace carto {
                 throw FileException("Failed to create/open package manager database", packageDbFileName);
             }
         }
-
-        syncLocalPackages();
     }
 
     PackageManager::~PackageManager() {
@@ -339,21 +339,25 @@ namespace carto {
     }
 
     void PackageManager::accessLocalPackages(const std::function<void(const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >&)>& callback) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::shared_lock<std::shared_mutex> packageLock(_packageFileMutex);
 
-        // Create instances to all open files
+        // Find all package handlers
         std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> > packageHandlerMap;
-        for (const std::shared_ptr<PackageInfo>& packageInfo : _localPackages) {
-            auto it = _packageHandlerCache.find(packageInfo);
-            if (it == _packageHandlerCache.end()) {
-                std::string fileName = createLocalFilePath(createPackageFileName(packageInfo->getPackageId(), packageInfo->getPackageType(), packageInfo->getVersion()));
-                auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageInfo->getPackageType(), fileName);
-                if (!handler) {
-                    continue;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+            for (const std::shared_ptr<PackageInfo>& packageInfo : _localPackages) {
+                auto it = _packageHandlerCache.find(packageInfo);
+                if (it == _packageHandlerCache.end()) {
+                    std::string fileName = createLocalFilePath(createPackageFileName(packageInfo->getPackageId(), packageInfo->getPackageType(), packageInfo->getVersion()));
+                    auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageInfo->getPackageType(), fileName);
+                    if (!handler) {
+                        continue;
+                    }
+                    it = _packageHandlerCache.insert(std::make_pair(packageInfo, handler)).first;
                 }
-                it = _packageHandlerCache.insert(std::make_pair(packageInfo, handler)).first;
+                packageHandlerMap[packageInfo] = it->second;
             }
-            packageHandlerMap[packageInfo] = it->second;
         }
 
         // Use the callback
@@ -741,7 +745,7 @@ namespace carto {
         // Test if the data is gzipped, in that case inflate
         std::vector<unsigned char> packageListDataTemp;
         if (zlib::inflate_gzip(packageListData.data(), packageListData.size(), packageListDataTemp)) {
-            std::swap(packageListData, packageListDataTemp);
+            packageListData = std::move(packageListDataTemp);
         }
 
         // Create JSON string
@@ -1114,48 +1118,37 @@ namespace carto {
     }
 
     void PackageManager::syncLocalPackages() {
-        if (!_localDb) {
-            return;
-        }
-
-        try {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-            // Find all valid packages
-            std::vector<std::shared_ptr<PackageInfo> > packages;
-            sqlite3pp::query query(*_localDb, "SELECT package_id, package_type, version, size, server_url, tile_mask, metainfo FROM packages WHERE valid=1 ORDER BY id ASC");
-            for (auto qit = query.begin(); qit != query.end(); qit++) {
-                std::shared_ptr<PackageTileMask> tileMask;
-                if (strlen(qit->get<const char*>(5)) != 0) {
-                    tileMask = DecodeTileMask(qit->get<const char*>(5));
-                }
-                std::shared_ptr<PackageMetaInfo> metaInfo;
-                if (strlen(qit->get<const char*>(6)) != 0) {
-                    rapidjson::Document metaInfoDoc;
-                    if (metaInfoDoc.Parse<rapidjson::kParseDefaultFlags>(qit->get<const char*>(6)).HasParseError()) {
-                        throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Error while parsing meta info");
-                    }
-                    metaInfo = createPackageMetaInfo(metaInfoDoc);
-                }
-                auto packageInfo = std::make_shared<PackageInfo>(
-                    qit->get<const char*>(0),
-                    static_cast<PackageType::PackageType>(qit->get<int>(1)),
-                    qit->get<int>(2),
-                    qit->get<std::uint64_t>(3),
-                    qit->get<const char*>(4),
-                    tileMask,
-                    metaInfo
-                    );
-                packages.push_back(packageInfo);
+        // Find all valid packages
+        std::vector<std::shared_ptr<PackageInfo> > packages;
+        sqlite3pp::query query(*_localDb, "SELECT package_id, package_type, version, size, server_url, tile_mask, metainfo FROM packages WHERE valid=1 ORDER BY id ASC");
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
+            std::shared_ptr<PackageTileMask> tileMask;
+            if (strlen(qit->get<const char*>(5)) != 0) {
+                tileMask = DecodeTileMask(qit->get<const char*>(5));
             }
+            std::shared_ptr<PackageMetaInfo> metaInfo;
+            if (strlen(qit->get<const char*>(6)) != 0) {
+                rapidjson::Document metaInfoDoc;
+                if (metaInfoDoc.Parse<rapidjson::kParseDefaultFlags>(qit->get<const char*>(6)).HasParseError()) {
+                    throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Error while parsing meta info");
+                }
+                metaInfo = createPackageMetaInfo(metaInfoDoc);
+            }
+            auto packageInfo = std::make_shared<PackageInfo>(
+                qit->get<const char*>(0),
+                static_cast<PackageType::PackageType>(qit->get<int>(1)),
+                qit->get<int>(2),
+                qit->get<std::uint64_t>(3),
+                qit->get<const char*>(4),
+                tileMask,
+                metaInfo
+            );
+            packages.push_back(packageInfo);
+        }
 
-            // Update packages, sync caches
-            std::swap(_localPackages, packages);
-            _packageHandlerCache.clear();
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("PackageManager::syncLocalPackages: %s", ex.what());
-        }
+        // Update packages, sync caches
+        _localPackages = std::move(packages);
+        _packageHandlerCache.clear();
     }
 
     void PackageManager::importLocalPackage(int id, int taskId, const std::string& packageId, PackageType::PackageType packageType, const std::string& packageFileName) {
@@ -1166,7 +1159,7 @@ namespace carto {
 
         // Mark downloaded package as valid and older packages as invalid.
         std::vector<int> otherPackageIds;
-        {
+        try {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             sqlite3pp::command command2(*_localDb, "UPDATE packages SET valid=(id=:id) WHERE package_id=:package_id");
             command2.bind(":id", id);
@@ -1180,10 +1173,16 @@ namespace carto {
                 int otherId = qit->get<int>(0);
                 otherPackageIds.push_back(otherId);
             }
+
+            // Sync
+            syncLocalPackages();
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManager::importLocalPackage: %s", ex.what());
+            return;
         }
 
-        // Sync
-        syncLocalPackages();
+        // Notify listeners
         notifyPackagesChanged(OnChangeListener::PACKAGES_ADDED);
 
         // Delete older invalid packages
@@ -1193,9 +1192,11 @@ namespace carto {
     }
 
     void PackageManager::deleteLocalPackage(int id) {
+        std::unique_lock<std::shared_mutex> packageLock(_packageFileMutex);
+
         std::string packageFileName;
         PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
-        {
+        try {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
             // Get package file name
@@ -1216,18 +1217,22 @@ namespace carto {
             sqlite3pp::command command(*_localDb, "DELETE FROM packages WHERE id=:id");
             command.bind(":id", id);
             command.execute();
+
+            // Sync
+            syncLocalPackages();
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManager::deleteLocalPackage: %s", ex.what());
+            return;
         }
 
-        // Sync
-        syncLocalPackages();
+        // Notify packages were deleted
         notifyPackagesChanged(OnChangeListener::PACKAGES_DELETED);
 
-        // Invoke handler callback
+        // Invoke handler callback, delete file
         if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageType, packageFileName)) {
             handler->onDeletePackage();
         }
-
-        // Delete file
         utf8_filesystem::unlink(packageFileName.c_str());
     }
 
@@ -1680,6 +1685,7 @@ namespace carto {
     }
 
     const int PackageManager::DEFAULT_TILEMASK_ZOOMLEVEL = 14;
+
 }
 
 #endif
