@@ -52,7 +52,7 @@ namespace carto {
     {
     }
         
-    void CartoOfflineVectorTileLayer::PackageManagerListener::onPackagesChanged() {
+    void CartoOfflineVectorTileLayer::PackageManagerListener::onPackagesChanged(PackageChangeType changeType) {
         // NOTE: already handled by PackageManagerTileDataSource
     }
     

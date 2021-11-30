@@ -179,7 +179,6 @@ namespace carto {
         _dataSource(dataSource),
         _dataSourceListener(),
         _tileRenderer(std::make_shared<TileRenderer>()),
-        _tileCullState(),
         _fetchingTileTasks(),
         _calculatingTiles(false),
         _refreshedTiles(false),
@@ -197,6 +196,7 @@ namespace carto {
         _visibleTiles(),
         _preloadingTiles(),
         _utfGridTiles(),
+        _tileCullState(),
         _glResourceManager(),
         _projectionSurface()
     {

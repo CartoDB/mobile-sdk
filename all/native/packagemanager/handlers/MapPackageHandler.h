@@ -29,8 +29,6 @@ namespace carto {
         MapPackageHandler(const std::string& fileName, const std::string& serverEncKey, const std::string& localEncKey);
         virtual ~MapPackageHandler();
 
-        bool openDatabase();
-        void closeDatabase();
         std::shared_ptr<BinaryData> loadTile(const MapTile& mapTile);
 
         virtual void onImportPackage();
@@ -39,6 +37,9 @@ namespace carto {
         virtual std::shared_ptr<PackageTileMask> calculateTileMask() const;
 
     private:
+        bool openDatabase();
+        void closeDatabase();
+
         static bool CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey);
         static void UpdateDbEncryption(sqlite3pp::database& db, const std::string& encKey);
 

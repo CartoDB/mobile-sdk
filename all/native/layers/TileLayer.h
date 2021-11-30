@@ -375,8 +375,6 @@ namespace carto {
 
         std::shared_ptr<TileRenderer> _tileRenderer;
     
-        std::shared_ptr<CullState> _tileCullState;
-
         FetchingTileTasks _fetchingTileTasks;
         
     private:
@@ -430,6 +428,7 @@ namespace carto {
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
+        std::shared_ptr<CullState> _tileCullState;
 
         std::weak_ptr<GLResourceManager> _glResourceManager;
         std::weak_ptr<ProjectionSurface> _projectionSurface;

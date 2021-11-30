@@ -92,7 +92,7 @@ namespace carto {
     {
     }
         
-    void PackageManagerReverseGeocodingService::PackageManagerListener::onPackagesChanged() {
+    void PackageManagerReverseGeocodingService::PackageManagerListener::onPackagesChanged(PackageChangeType changeType) {
         std::lock_guard<std::mutex> lock(_service._mutex);
         _service._cachedPackageDatabaseMap.clear();
         _service._cachedRevGeocoder.reset();

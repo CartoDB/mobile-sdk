@@ -25,6 +25,7 @@
 #include <vector>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <condition_variable>
 #include <thread>
 
@@ -55,12 +56,22 @@ namespace carto {
          */
         class OnChangeListener {
         public:
+            /**
+             * Describes the change type.
+             */
+            enum PackageChangeType {
+                PACKAGES_UPDATED,
+                PACKAGES_ADDED,
+                PACKAGES_DELETED
+            };
+
             virtual ~OnChangeListener() { }
 
             /**
              * Called when a package has been added, removed or updated.
+             * @param type The type of changes.
              */
-            virtual void onPackagesChanged() = 0;
+            virtual void onPackagesChanged(PackageChangeType changeType) = 0;
 
             /**
              * Called when a style has been updated.
@@ -247,7 +258,7 @@ namespace carto {
 
         virtual bool updateStyle(const std::string& styleName);
         
-        void notifyPackagesChanged();
+        void notifyPackagesChanged(OnChangeListener::PackageChangeType changeType);
         void notifyStylesChanged();
 
     private:
@@ -365,6 +376,8 @@ namespace carto {
 
         mutable std::shared_ptr<std::vector<std::shared_ptr<PackageInfo> > > _serverPackageCache;
         mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> > _packageHandlerCache;
+
+        mutable std::mutex _packageFileMutex; // guards all package file accesses
 
         mutable std::recursive_mutex _mutex; // guards all state
     };
