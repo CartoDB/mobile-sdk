@@ -1,3 +1,18 @@
+CARTO Mobile SDK 4.4.3RC2
+-------------------
+
+### Changes, fixes:
+
+* Fixed 'TileLayer' not properly recalculating tiles when visibility changes, causing layer to remain hidden.
+* Fixed deadlock in 'ClusteredVectorLayer' when its data source is non-empty with all elements being hidden
+* Fixed stale tiles remaining in caches when offline packages were removed
+* Fixed subtle synchronization issues in 'PackageManager'
+* Added support for parallel requests to 'ValhallaOfflineRoutingService'
+* Added javadoc to published Android artifacts to Maven central
+* Minor fixes to iOS build script
+* Updated internal libjpeg-turbo, harfbuzz libraries to latest stable versions
+
+
 CARTO Mobile SDK 4.4.3RC1
 -------------------
 
