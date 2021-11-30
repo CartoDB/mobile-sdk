@@ -274,7 +274,7 @@ def buildIOSPackage(args, buildCocoapod, buildSwiftPackage):
     print('pod trunk push\n')
   if buildSwiftPackage:
     spmPackageName = "mobile-sdk-ios-metal-swift-package" if args.metalangle else "mobile-sdk-ios-swift-package"
-    print('rm -rf %s\ngit clone git@github.com:nutiteq/%s\ncp Package.swift %s\ncd %s\ngit add Package.swift\ngit commit -m "Version %s" && git tag %s\ngit push origin --follow-tags\n' % (spmPackageName, spmPackageName, spmPackageName, spmPackageName, version, version))
+    print('rm -rf %s\ngit clone git@github.com:nutiteq/%s\ncp Package.swift %s\ncd %s\ngit add Package.swift\ngit commit -m "Version %s" && git tag %s\ngit push origin && git push origin --tags\n' % (spmPackageName, spmPackageName, spmPackageName, spmPackageName, version, version))
   return True
 
 parser = argparse.ArgumentParser()
