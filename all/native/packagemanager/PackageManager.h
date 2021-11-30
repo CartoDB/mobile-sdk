@@ -29,6 +29,8 @@
 #include <condition_variable>
 #include <thread>
 
+#include <boost/thread/shared_mutex.hpp>
+
 namespace sqlite3pp {
     class database;
     namespace ext {
@@ -377,7 +379,7 @@ namespace carto {
         mutable std::shared_ptr<std::vector<std::shared_ptr<PackageInfo> > > _serverPackageCache;
         mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> > _packageHandlerCache;
 
-        mutable std::shared_mutex _packageFileMutex; // guards all package file accesses
+        mutable boost::shared_mutex _packageFileMutex; // guards all package file accesses
 
         mutable std::recursive_mutex _mutex; // guards all state
     };
