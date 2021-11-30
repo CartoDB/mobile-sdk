@@ -19,7 +19,6 @@
 #include <time.h>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/thread/locks.hpp>
 
 #include <stdext/utf8_filesystem.h>
 #include <stdext/zlib.h>
@@ -340,7 +339,8 @@ namespace carto {
     }
 
     void PackageManager::accessLocalPackages(const std::function<void(const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >&)>& callback) const {
-        boost::shared_lock<boost::shared_mutex> packageLock(_packageFileMutex);
+        // NOTE: should use shared_lock here, but iOS 9 does not support it
+        std::unique_lock<std::mutex> packageLock(_packageFileMutex);
 
         // Find all package handlers
         std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> > packageHandlerMap;
@@ -1193,8 +1193,9 @@ namespace carto {
     }
 
     void PackageManager::deleteLocalPackage(int id) {
-        boost::unique_lock<boost::shared_mutex> packageLock(_packageFileMutex);
+        std::unique_lock<std::mutex> packageLock(_packageFileMutex);
 
+        // Find package info and if successful, remove the package
         std::string packageFileName;
         PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
         try {
