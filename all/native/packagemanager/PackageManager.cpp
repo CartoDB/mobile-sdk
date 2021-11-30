@@ -19,6 +19,7 @@
 #include <time.h>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/thread/locks.hpp>
 
 #include <stdext/utf8_filesystem.h>
 #include <stdext/zlib.h>
@@ -339,7 +340,7 @@ namespace carto {
     }
 
     void PackageManager::accessLocalPackages(const std::function<void(const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >&)>& callback) const {
-        std::shared_lock<std::shared_mutex> packageLock(_packageFileMutex);
+        boost::shared_lock<boost::shared_mutex> packageLock(_packageFileMutex);
 
         // Find all package handlers
         std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> > packageHandlerMap;
@@ -1192,7 +1193,7 @@ namespace carto {
     }
 
     void PackageManager::deleteLocalPackage(int id) {
-        std::unique_lock<std::shared_mutex> packageLock(_packageFileMutex);
+        boost::unique_lock<boost::shared_mutex> packageLock(_packageFileMutex);
 
         std::string packageFileName;
         PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
