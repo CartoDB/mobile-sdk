@@ -37,7 +37,7 @@ def detectAndroidJavaAPI(args):
   for name in os.listdir('%s/platforms' % args.androidsdkpath):
     if name.startswith('android-'):
       api = int(name[8:])
-      if api >= 11:
+      if api >= 14:
         apiJava = min(apiJava or api, api)
   return apiJava
 
@@ -103,8 +103,7 @@ def buildAndroidJAR(args):
     '-g:vars',
     '-source', '1.7',
     '-target', '1.7',
-    '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
-    '-classpath', '%s/platforms/android-%d/android.jar' % (args.androidsdkpath, apiJava),
+    '-bootclasspath', '%s/platforms/android-%d/android.jar' % (args.androidsdkpath, apiJava),
     '-d', buildDir,
     *javaFiles
   ):
