@@ -141,7 +141,7 @@ def buildAndroidAAR(args):
   distDir = getDistDir('android')
   version = args.buildversion
 
-  with open('%s/scripts/android-aar/carto-mobile-sdk.pom.template' % baseDir, 'r') as f:
+  with open('%s/scripts/android/carto-mobile-sdk.pom.template' % baseDir, 'r') as f:
     pomFile = string.Template(f.read()).safe_substitute({
       'baseDir': baseDir,
       'buildDir': buildDir,
@@ -166,7 +166,7 @@ def buildAndroidAAR(args):
     return False
 
   if not gradle(args, '%s/scripts' % baseDir,
-    '-p', 'android-aar',
+    '-p', 'android',
     '--project-cache-dir', buildDir,
     '--gradle-user-home', '%s/gradle' % buildDir,
     'assembleRelease'
@@ -179,8 +179,8 @@ def buildAndroidAAR(args):
      copyfile(pomFileName, '%s/carto-mobile-sdk-%s.pom' % (distDir, version)) and \
      copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) and \
      copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)):
-    zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print("Output available in:\n%s\n\nTo publish, use:\ngradle -p android-aar publishReleasePublicationToSonatypeRepository -Dbuild-version=%s\nThen log in to https://s01.oss.sonatype.org, 'Close' and then 'Release'.\n" % (distDir, version))
+    zip(args, '%s/scripts/android/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
+    print("Output available in:\n%s\n\nTo publish, use:\ngradle -p android publishReleasePublicationToSonatypeRepository -Dbuild-version=%s\nThen log in to https://s01.oss.sonatype.org, 'Close' and then 'Release'.\n" % (distDir, version))
     return True
   return False
 
