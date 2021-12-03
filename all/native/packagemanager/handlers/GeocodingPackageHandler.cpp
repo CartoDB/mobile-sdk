@@ -28,8 +28,8 @@ namespace carto {
             try {
                 // Open package database
                 _packageDb = std::make_shared<sqlite3pp::database>();
-                if (_packageDb->connect_v2(_uncompressedFileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) { // try locally uncompressed package first
-                    if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) { // assume that the package was not gzipped, so use original file
+                if (_packageDb->connect_v2(_uncompressedFileName.c_str(), SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) != SQLITE_OK) { // try locally uncompressed package first
+                    if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) != SQLITE_OK) { // assume that the package was not gzipped, so use original file
                         Log::Errorf("GeocodingPackageHandler::getDatabase: Can not connect to database %s", _fileName.c_str());
                         _packageDb.reset();
                     }

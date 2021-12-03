@@ -18,7 +18,7 @@ namespace carto {
         _configuration(ValhallaRoutingProxy::GetDefaultConfiguration()),
         _mutex()
     {
-        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) != SQLITE_OK) {
             throw FileException("Failed to open routing database", path);
         }
         _database->execute("PRAGMA temp_store=MEMORY");
