@@ -26,7 +26,7 @@ namespace carto {
             try {
                 // Open package database
                 _packageDb = std::make_unique<sqlite3pp::database>();
-                if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+                if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) != SQLITE_OK) {
                     Log::Errorf("ValhallaRoutingPackageHandler::getDatabase: Could not open database %s", _fileName.c_str());
                     _packageDb.reset();
                 }

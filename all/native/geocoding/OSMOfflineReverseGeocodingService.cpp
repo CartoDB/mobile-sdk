@@ -14,7 +14,7 @@ namespace carto {
         _revGeocoder()
     {
         auto database = std::make_shared<sqlite3pp::database>();
-        if (database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+        if (database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) != SQLITE_OK) {
             throw FileException("Failed to open geocoding database", path);
         }
         database->execute("PRAGMA temp_store=MEMORY");

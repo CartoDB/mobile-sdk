@@ -38,7 +38,7 @@ Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating l
 
 **CMake 3.14 or later** is required by build scripts
 
-Android build requires **Android SDK** and **Android NDK r21** or later.
+Android build requires **Android SDK**, **JDK 10** or newer and **Android NDK r22** or newer.
 
 iOS build requires **XCode 12** or later.
 
