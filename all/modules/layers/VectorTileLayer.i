@@ -11,6 +11,7 @@
 #include <memory>
 %}
 
+%include <std_string.i>
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
@@ -28,6 +29,8 @@
 %attribute(carto::VectorTileLayer, float, ClickRadius, getClickRadius, setClickRadius)
 %attribute(carto::VectorTileLayer, float, LayerBlendingSpeed, getLayerBlendingSpeed, setLayerBlendingSpeed)
 %attribute(carto::VectorTileLayer, float, LabelBlendingSpeed, getLabelBlendingSpeed, setLabelBlendingSpeed)
+%attributestring(carto::VectorTileLayer, std::string, RendererLayerFilter, getRendererLayerFilter, setRendererLayerFilter)
+%attributestring(carto::VectorTileLayer, std::string, ClickHandlerLayerFilter, getClickHandlerLayerFilter, setClickHandlerLayerFilter)
 !attributestring_polymorphic(carto::VectorTileLayer, vectortiles.VectorTileDecoder, TileDecoder, getTileDecoder)
 !attributestring_polymorphic(carto::VectorTileLayer, layers.VectorTileEventListener, VectorTileEventListener, getVectorTileEventListener, setVectorTileEventListener)
 %std_exceptions(carto::VectorTileLayer::VectorTileLayer)

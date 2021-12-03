@@ -289,7 +289,7 @@ namespace carto {
                     }
                     for (const std::shared_ptr<vt::TileLayer>& tileLayer : tile->getLayers()) {
                         int layerIdx = static_cast<int>(i * 65536) + tileLayer->getLayerIndex();
-                        tileLayers.push_back(std::make_shared<vt::TileLayer>(layerIdx, tileLayer->getCompOp(), tileLayer->getOpacityFunc(), tileLayer->getBackgrounds(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
+                        tileLayers.push_back(std::make_shared<vt::TileLayer>(tileLayer->getLayerName(), layerIdx, tileLayer->getCompOp(), tileLayer->getOpacityFunc(), tileLayer->getBackgrounds(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
                     }
                 }
             }
