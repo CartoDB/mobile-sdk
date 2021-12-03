@@ -8,6 +8,8 @@ import android.opengl.GLSurfaceView;
 
 /**
  * EGL configuration chooser for MapView and TextureMapView.
+ * It is not intended for public usage.
+ * @hidden
  */
 public class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
     

@@ -197,11 +197,15 @@ def fixProxyCode(fileName, className):
 
   lines_out = []
   for line in lines_in:
-    # Add '@hide' comment above the special SWIG-wrapper lines
+    # Add '@hidden' comment above the special SWIG-wrapper lines
     hide = line.strip() in [
-      'private long swigCPtr;',
-      'protected boolean swigCMemOwn;',
+      'public class %sModuleJNI {' % className,
+      '@com.carto.utils.DontObfuscate public class %sModuleJNI {' % className,
+      'private transient long swigCPtr;',
+      'protected transient boolean swigCMemOwn;',
       'public %s(long cPtr, boolean cMemoryOwn) {' % className,
+      'protected void finalize() {',
+      'public synchronized void delete() {',
       'public static long getCPtr(%s obj) {' % className,
       'public long swigGetRawPtr() {',
       'public String swigGetClassName() {',
@@ -214,7 +218,7 @@ def fixProxyCode(fileName, className):
       hide = True
     if hide:
       numSpaces = len(line) - len(line.lstrip())
-      lines_out.append(line[:numSpaces] + '/** @hide */\n')
+      lines_out.append(line[:numSpaces] + '/** @hidden */\n')
 
     lines_out.append(line)
 
@@ -465,7 +469,15 @@ def buildSwigPackage(args, sourceDir, packageName):
     if subprocess.call(cmd) != 0:
       print("Error in %s" % fileName)
       return False
+
+    for line in [line.rstrip('\n') for line in readUncommentedLines(sourcePath)]:
+      match = re.search('^\s*%template\((.*)\).*$', line)
+      if match:
+        templateFileNameWithoutExt = match.group(1)
+        if templateFileNameWithoutExt != fileNameWithoutExt:
+          fixProxyCode(os.path.join(proxyDir, templateFileNameWithoutExt + ".java"), templateFileNameWithoutExt)
     fixProxyCode(os.path.join(proxyDir, fileNameWithoutExt + ".java"), fileNameWithoutExt)
+    fixProxyCode(os.path.join(proxyDir, fileNameWithoutExt + "ModuleJNI.java"), fileNameWithoutExt)
     os.remove(os.path.join(proxyDir, fileNameWithoutExt + "Module.java"))
   return True
 

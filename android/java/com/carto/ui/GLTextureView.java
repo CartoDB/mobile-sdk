@@ -44,6 +44,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 /**
  * GLTextureView is a wrapper for TextureView class that emulates GLSurfaceView API.
+ * @hidden
  */
 public class GLTextureView extends TextureView
         implements TextureView.SurfaceTextureListener, View.OnLayoutChangeListener {

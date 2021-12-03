@@ -6,6 +6,8 @@ import com.carto.renderers.RedrawRequestListener;
 
 /**
  * Android-specific implementation of RedrawRequestListener, used by TextureMapView.
+ * It is not intended for public usage.
+ * @hidden
  */
 public class TextureMapRedrawRequestListener extends RedrawRequestListener {
     private final WeakReference<TextureMapView> mapViewRef;

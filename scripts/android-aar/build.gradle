@@ -60,11 +60,8 @@ task javadoc(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     destinationDir = file("../../dist/android/javadoc")
-    title = null
-    options.noTimestamp(false)
-    options.addStringOption("title", "CARTO Mobile SDK")
-    options.addStringOption("doclet", "com.google.doclava.Doclava")
-    options.addStringOption("docletpath", "../javadoc/doclava-1.0.6.jar")
+    title = "CARTO Mobile SDK"
+    options.setMemberLevel(JavadocMemberLevel.PUBLIC)
     failOnError false
 }
 
