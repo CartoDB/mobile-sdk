@@ -35,6 +35,8 @@ namespace carto {
         _clickRadius(4.0f),
         _layerBlendingSpeed(1.0f),
         _labelBlendingSpeed(1.0f),
+        _rendererLayerFilter(),
+        _clickHandlerLayerFilter(),
         _tileMapsMode(false),
         _tileDecoder(decoder),
         _tileDecoderListener(),
@@ -113,6 +115,49 @@ namespace carto {
     
     void VectorTileLayer::setLabelBlendingSpeed(float speed) {
         _labelBlendingSpeed.store(speed);
+    }
+
+    std::string VectorTileLayer::getRendererLayerFilter() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _rendererLayerFilter;
+    }
+
+    void VectorTileLayer::setRendererLayerFilter(const std::string& filter) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::optional<std::regex> filterRe;
+        try {
+            if (!filter.empty()) {
+                filterRe = std::regex(filter);
+            }
+            _rendererLayerFilter = filter;
+        }
+        catch (const std::regex_error& ex) {
+            Log::Errorf("VectorTileLayer::setRendererLayerFilter: Invalid filter: %s", ex.what());
+            throw InvalidArgumentException("Invalid filter expression");
+        }
+        _tileRenderer->setRendererLayerFilter(filterRe);
+        updateTiles(false); // need to reload tiles to display the changes
+    }
+
+    std::string VectorTileLayer::getClickHandlerLayerFilter() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _clickHandlerLayerFilter;
+    }
+
+    void VectorTileLayer::setClickHandlerLayerFilter(const std::string& filter) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::optional<std::regex> filterRe;
+        try {
+            if (!filter.empty()) {
+                filterRe = std::regex(filter);
+            }
+            _clickHandlerLayerFilter = filter;
+        }
+        catch (const std::regex_error& ex) {
+            Log::Errorf("VectorTileLayer::setClickHandlerLayerFilter: Invalid filter: %s", ex.what());
+            throw InvalidArgumentException("Invalid filter expression");
+        }
+        _tileRenderer->setClickHandlerLayerFilter(filterRe);
     }
     
     std::shared_ptr<VectorTileEventListener> VectorTileLayer::getVectorTileEventListener() const {
@@ -224,9 +269,9 @@ namespace carto {
             float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
             vt::TileId vtTile(0, 0, y);
             std::shared_ptr<const vt::TileTransformer::VertexTransformer> vtTransformer = getTileTransformer()->createTileVertexTransformer(vtTile);
-            vt::TileLayerBuilder tileLayerBuilder(vtTile, 0, vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
+            vt::TileLayerBuilder tileLayerBuilder(vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
             tileLayerBuilder.addBackground(tileBackground);
-            std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer(std::optional<vt::CompOp>(), vt::FloatFunction(1));
+            std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer(std::string(), 0, std::optional<vt::CompOp>(), vt::FloatFunction(1));
             tile = std::make_shared<vt::Tile>(vtTile, tileSize, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
         }
         return tile;

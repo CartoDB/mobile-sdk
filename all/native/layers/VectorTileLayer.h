@@ -142,6 +142,32 @@ namespace carto {
          * @param speed The new relative speed value. Default is 1.0. Use zero or negative values to disable blending.
          */
         void setLabelBlendingSpeed(float speed);
+
+        /**
+         * Returns the renderer layer filter. The filter is given as ECMA regular expression that is applied to qualified layer names.
+         * @return The renderer layer filter. Default is empty string, which means no filter is used.
+         */
+        std::string getRendererLayerFilter() const;
+        /**
+         * Sets the renderer layer filter. The filter is given as ECMA regular expression that is applied to qualified layer names.
+         * If non-empty, then only layers that pass the filter are rendered.
+         * @param filter The new renderer layer filter.
+         * @throws std::runtime_error If the filter expression is not valid.
+         */
+        void setRendererLayerFilter(const std::string& filter);
+
+        /**
+         * Returns the click handler layer filter. The filter is given as ECMA regular expression that is applied to qualified layer names.
+         * @return The click handler layer filter. Default is empty string, which means no filter is used.
+         */
+        std::string getClickHandlerLayerFilter() const;
+        /**
+         * Sets the click handler layer filter. The filter is given as ECMA regular expression that is applied to qualified layer names.
+         * If non-empty, then only layers that pass the filter are tested when handling clicks.
+         * @param filter The new click handler layer filter.
+         * @throws std::runtime_error If the filter expression is not valid.
+         */
+        void setClickHandlerLayerFilter(const std::string& filter);
     
         /**
          * Returns the vector tile event listener.
@@ -244,6 +270,8 @@ namespace carto {
         std::atomic<float> _clickRadius;
         std::atomic<float> _layerBlendingSpeed;
         std::atomic<float> _labelBlendingSpeed;
+        std::string _rendererLayerFilter;
+        std::string _clickHandlerLayerFilter;
 
         std::atomic<bool> _tileMapsMode;
     
