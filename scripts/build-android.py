@@ -51,6 +51,7 @@ def buildAndroidSO(args, abi):
   api32, api64 = detectAndroidAPIs(args)
   if api32 is None or api64 is None:
     print('Failed to detect available platform APIs')
+    return False
   print('Using API-%d for 32-bit builds, API-%d for 64-bit builds' % (api32, api64))
 
   if not cmake(args, buildDir, options + [
@@ -89,6 +90,8 @@ def buildAndroidJAR(args):
   apiJava = detectAndroidJavaAPI(args)
   if apiJava is None:
     print('Failed to detect available platform APIs')
+    return False
+  print('Using target API %d for Java files' % apiJava)
 
   javaFiles = []
   for sourceDir in ["%s/generated/android-java/proxies" % baseDir, "%s/android/java" % baseDir]:
@@ -126,11 +129,12 @@ def buildAndroidJAR(args):
   ):
     return False
 
-  if makedirs(distDir) and \
-     copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
-    print("Output available in:\n%s" % distDir)
-    return True
-  return False
+  if not makedirs(distDir) or \
+     not copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
+    return False
+
+  print("JAR output available in:\n%s" % distDir)
+  return True
 
 def buildAndroidAAR(args):
   shutil.rmtree(getBuildDir('android-src'), True)
@@ -175,14 +179,15 @@ def buildAndroidAAR(args):
   aarFileName = '%s/outputs/aar/carto-mobile-sdk-%s.aar' % (buildDir, args.configuration.lower())
   if not os.path.exists(aarFileName):
     aarFileName = '%s/outputs/aar/carto-mobile-sdk.aar' % buildDir
-  if makedirs(distDir) and \
-     copyfile(pomFileName, '%s/carto-mobile-sdk-%s.pom' % (distDir, version)) and \
-     copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) and \
-     copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)):
-    zip(args, '%s/scripts/android/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print("Output available in:\n%s\n\nTo publish, use:\ngradle -p android publishReleasePublicationToSonatypeRepository -Dbuild-version=%s\nThen log in to https://s01.oss.sonatype.org, 'Close' and then 'Release'.\n" % (distDir, version))
-    return True
-  return False
+  if not makedirs(distDir) or \
+     not copyfile(pomFileName, '%s/carto-mobile-sdk-%s.pom' % (distDir, version)) or \
+     not copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) or \
+     not copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)) or \
+     not zip(args, '%s/scripts/android/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt'):
+    return False
+
+  print("AAR output available in:\n%s" % distDir)
+  return True
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')

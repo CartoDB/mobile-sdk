@@ -44,7 +44,7 @@ def buildWinPhoneNativeDLL(args, arch):
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
 
   if not cmake(args, buildDir, options + [
-    '-G', 'Visual Studio 16 2019',
+    '-G', 'Visual Studio 17 2022',
     '-DCMAKE_SYSTEM_NAME=WindowsStore',
     '-DCMAKE_SYSTEM_VERSION=10.0',
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,
@@ -103,10 +103,11 @@ def buildWinPhoneVSIX(args):
     '%s/CartoMobileSDK.WinPhone.VSIX.csproj' % buildDir
   ):
     return False
-  if copyfile('%s/bin/%s/CartoMobileSDK.WinPhone.VSIX.vsix' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone10.VSIX.vsix' % distDir):
-    print("Output available in:\n%s" % distDir)
-    return True
-  return False
+  if not copyfile('%s/bin/%s/CartoMobileSDK.WinPhone.VSIX.vsix' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone10.VSIX.vsix' % distDir):
+    return False
+
+  print("VSIX output available in:\n%s" % distDir)
+  return True
 
 def buildWinPhoneNuget(args):
   baseDir = getBaseDir()
@@ -144,7 +145,8 @@ def buildWinPhoneNuget(args):
 
   if not copyfile('%s/CartoMobileSDK.UWP.%s.nupkg' % (buildDir, version), '%s/CartoMobileSDK.UWP.%s.nupkg' % (distDir, version)):
     return False
-  print("Output available in:\n%s\n\nTo publish, use:\nnuget.exe push %s/CartoMobileSDK.UWP.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, version))
+
+  print("Nuget output available in:\n%s" % distDir)
   return True
 
 parser = argparse.ArgumentParser()

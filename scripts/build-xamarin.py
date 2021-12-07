@@ -35,6 +35,7 @@ def buildAndroidSO(args, abi):
   api32, api64 = detectAndroidAPIs(args)
   if api32 is None or api64 is None:
     print('Failed to detect available platform APIs')
+    return False
   print('Using API-%d for 32-bit builds, API-%d for 64-bit builds' % (api32, api64))
 
   if not cmake(args, buildDir, options + [
@@ -88,6 +89,7 @@ def buildIOSLib(args, arch):
     '%s/scripts/build' % baseDir
   ]):
     return False
+
   bitcodeOptions = ['ENABLE_BITCODE=NO']
   return execute('xcodebuild', buildDir,
     '-project', 'carto_mobile_sdk.xcodeproj', '-arch', arch, '-configuration', args.configuration, 'archive',
@@ -112,12 +114,10 @@ def buildIOSFatLib(args, archs):
       libFilePath = mergedLibFilePath
     libFilePaths.append(libFilePath)
 
-  if not execute('lipo', baseDir,
+  return execute('lipo', baseDir,
     '-output', '%s/libcarto_mobile_sdk.a' % buildDir,
     '-create', *libFilePaths
-  ):
-    return False
-  return True
+  )
 
 def buildXamarinDLL(args, target):
   baseDir = getBaseDir()
@@ -170,7 +170,8 @@ def buildXamarinNuget(args, target):
 
   if not copyfile('%s/CartoMobileSDK.%s.%s.nupkg' % (buildDir, target, version), '%s/CartoMobileSDK.%s.%s.nupkg' % (distDir, target, version)):
     return False
-  print("Output available in:\n%s\n\nTo publish, use:\nnuget push %s/CartoMobileSDK.%s.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, target, version))
+
+  print("Nuget output available in:\n%s" % distDir)
   return True
 
 parser = argparse.ArgumentParser()

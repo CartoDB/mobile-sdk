@@ -67,6 +67,7 @@ def buildModuleMap(filename, publicHeaders):
     f.write('    export *\n')
     f.write('    module * { export * }\n')
     f.write('}\n')
+  return True
 
 def copyHeaders(args, baseDir, outputDir):
   proxyHeaderDir = '%s/generated/ios-objc/proxies' % baseDir
@@ -102,8 +103,7 @@ def copyHeaders(args, baseDir, outputDir):
   updateUmbrellaHeader('%s/CartoMobileSDK.h' % destDir, args.defines)
 
   makedirs('%s/Modules' % outputDir)
-  buildModuleMap('%s/Modules/module.modulemap' % outputDir, publicHeaders)
-  return True
+  return buildModuleMap('%s/Modules/module.modulemap' % outputDir, publicHeaders)
 
 def buildIOSLib(args, baseArch, outputDir=None):
   platform, arch = getPlatformArch(baseArch)
@@ -191,7 +191,7 @@ def buildIOSFramework(args, baseArchs, outputDir=None):
     return False
 
   if outputDir is None:
-    print("Output available in:\n%s" % distDir)
+    print("iOS framework output available in:\n%s" % distDir)
   return True
 
 def buildIOSXCFramework(args, baseArchs, outputDir=None):
@@ -219,7 +219,7 @@ def buildIOSXCFramework(args, baseArchs, outputDir=None):
     return False
 
   if outputDir is None:
-    print("Output available in:\n%s" % distDir)
+    print("iOS xcframework output available in:\n%s" % distDir)
   return True
 
 def buildIOSPackage(args, buildCocoapod, buildSwiftPackage):
@@ -269,12 +269,7 @@ def buildIOSPackage(args, buildCocoapod, buildSwiftPackage):
     with open('%s/Package.swift' % distDir, 'w') as f:
       f.write(packageFile)
 
-  print('Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers\n' % (distDir, distDir, distName, distName))
-  if buildCocoapod:
-    print('pod trunk push\n')
-  if buildSwiftPackage:
-    spmPackageName = "mobile-sdk-ios-metal-swift-package" if args.metalangle else "mobile-sdk-ios-swift-package"
-    print('rm -rf %s\ngit clone git@github.com:nutiteq/%s\ncp Package.swift %s\ncd %s\ngit add Package.swift\ngit commit -m "Version %s" && git tag %s\ngit push origin && git push origin --tags\n' % (spmPackageName, spmPackageName, spmPackageName, spmPackageName, version, version))
+  print("iOS package output available in:\n%s" % distDir)
   return True
 
 parser = argparse.ArgumentParser()

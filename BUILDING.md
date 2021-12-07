@@ -42,7 +42,7 @@ Android build requires **Android SDK**, **JDK 10** or newer and **Android NDK r2
 
 iOS build requires **XCode 12** or later.
 
-Universal Windows Platform build requires **Visual Studio 2019**.
+Universal Windows Platform build requires **Visual Studio 2022** and **Microsoft Windows SDK**.
 
 ## SDK profiles
 CARTO Mobile SDK can be compiled with different features. The feature set is defined by **profiles**,
