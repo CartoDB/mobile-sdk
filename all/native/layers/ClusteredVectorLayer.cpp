@@ -200,7 +200,7 @@ namespace carto {
         }
 
         // Check if we must recalculate clustering
-        std::size_t singletonClusterCount = clusters->size();
+        int singletonClusterCount = static_cast<int>(clusters->size());
         {
             std::lock_guard<std::mutex> lock(_clusterMutex);
 
