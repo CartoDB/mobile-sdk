@@ -1,3 +1,23 @@
+CARTO Mobile SDK 4.4.3RC3
+-------------------
+
+### New features:
+
+* Added 'getRendererLayerFilter', 'setRendererLayerFilter', 'getClickHandlerLayerFilter', 'setClickHandlerLayerFilter' methods to 'VectorTileLayer'. These methods allow ignoring certain layers for rendering or click detection.
+* Added 'reverse' function support to CartoCSS 'text-transform'
+
+### Changes, fixes:
+
+* Dropped 'doclava' based javadoc generation, documentation for Android is now based on standard JDK doclet
+* Improved Android documentation by hiding unneeded wrapping related details
+* Fixed regression in 4.4.3RC2 related to parallel requests to 'ValhallaOfflineRoutingService'
+* Added better support for 'none' keyword in CartoCSS
+* Minor improvements to error reporting for CartoCSS issues
+* Fixes and cleanups in Android build script
+* Updated internal FreeType library to latest stable version
+* Minor speed and size optimizations
+
+
 CARTO Mobile SDK 4.4.3RC2
 -------------------
 
