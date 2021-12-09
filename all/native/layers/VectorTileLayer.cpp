@@ -55,13 +55,23 @@ namespace carto {
             throw NullArgumentException("Null decoder");
         }
 
-        readDecoderParameter<float>("_clickradius", _clickRadius);
-        readDecoderParameter<float>("_layerblendingspeed", _layerBlendingSpeed),
-        readDecoderParameter<float>("_labelblendingspeed", _labelBlendingSpeed),
-        readDecoderParameter<std::string>("_rendererlayerfilter", _rendererLayerFilter);
-        readDecoderParameter<std::string>("_clickhandlerlayerfilter", _clickHandlerLayerFilter);
-
         setCullDelay(DEFAULT_CULL_DELAY);
+
+        if (auto clickRadius = readDecoderParameter<float>("_clickradius")) {
+            setClickRadius(*clickRadius);
+        }
+        if (auto layerBlendingSpeed = readDecoderParameter<float>("_layerblendingspeed")) {
+            setLayerBlendingSpeed(*layerBlendingSpeed);
+        }
+        if (auto labelBlendingSpeed = readDecoderParameter<float>("_labelblendingspeed")) {
+            setLabelBlendingSpeed(*labelBlendingSpeed);
+        }
+        if (auto rendererLayerFilter = readDecoderParameter<std::string>("_rendererlayerfilter")) {
+            setRendererLayerFilter(*rendererLayerFilter);
+        }
+        if (auto clickHandlerLayerFilter = readDecoderParameter<std::string>("_clickhandlerlayerfilter")) {
+            setClickHandlerLayerFilter(*clickHandlerLayerFilter);
+        }
     }
     
     VectorTileLayer::~VectorTileLayer() {
