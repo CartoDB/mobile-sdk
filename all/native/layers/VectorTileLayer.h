@@ -221,7 +221,7 @@ namespace carto {
         void setTileMapsMode(bool enabled);
 
         template <typename T>
-        std::optional<T> readDecoderParameter(const std::string& paramName) {
+        std::optional<T> readDecoderParameter(const std::string& paramName) const {
             std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > parameters = _tileDecoder->getNutiParameters();
             auto paramIt = parameters->find(paramName);
             if (paramIt != parameters->end()) {
