@@ -24,6 +24,7 @@ namespace carto {
         _fallbackFonts(),
         _map(),
         _mapSettings(),
+        _nutiParameters(),
         _symbolizerContext(),
         _styleSet(),
         _mutex()
@@ -70,9 +71,14 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    std::shared_ptr<mvt::Map::Settings> TorqueTileDecoder::getMapSettings() const  {
+    std::shared_ptr<const mvt::Map::Settings> TorqueTileDecoder::getMapSettings() const  {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
+    }
+
+    std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > TorqueTileDecoder::getNutiParameters() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _nutiParameters;
     }
 
     void TorqueTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
@@ -113,8 +119,8 @@ namespace carto {
             return std::shared_ptr<TileMap>();
         }
 
-        std::shared_ptr<mvt::TorqueMap> map;
-        std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
+        std::shared_ptr<const mvt::TorqueMap> map;
+        std::shared_ptr<const mvt::SymbolizerContext> symbolizerContext;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             map = _map;
@@ -147,11 +153,14 @@ namespace carto {
 
     void TorqueTileDecoder::updateCurrentStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
         std::shared_ptr<mvt::TorqueMap> map;
+        std::shared_ptr<mvt::Map::Settings> mapSettings;
         try {
             auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", std::shared_ptr<AssetPackage>());
             css::TorqueCartoCSSMapLoader mapLoader(assetLoader, _logger);
             mapLoader.setIgnoreLayerPredicates(true);
             map = mapLoader.loadMap(styleSet->getCartoCSS());
+            mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
+            mapSettings->backgroundColor = map->getTorqueSettings().clearColor;
         }
         catch (const std::exception& ex) {
             throw ParseException(std::string("Style parsing failed: ") + ex.what(), styleSet->getCartoCSS());
@@ -173,12 +182,13 @@ namespace carto {
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
         _map = map;
-        _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
-        _mapSettings->backgroundColor = _map->getTorqueSettings().clearColor;
+        _mapSettings = mapSettings;
+        _nutiParameters = std::make_shared<std::map<std::string, mvt::NutiParameter>>(map->getNutiParameterMap());
         _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
     }
 
     const int TorqueTileDecoder::DEFAULT_TILE_SIZE = 256;
     const int TorqueTileDecoder::GLYPHMAP_SIZE = 2048;
+
 }

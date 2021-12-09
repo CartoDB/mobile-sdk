@@ -21,6 +21,8 @@
 
 #include <stdext/timed_lru_cache.h>
 
+#include <mapnikvt/ValueConverter.h>
+
 namespace carto {
     class TileDrawData;
     class VectorTileEventListener;
@@ -217,6 +219,17 @@ namespace carto {
 
         bool isTileMapsMode() const;
         void setTileMapsMode(bool enabled);
+
+        template <typename T, typename V>
+        bool readDecoderParameter(const std::string& paramName, V& paramValue) {
+            std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > parameters = _tileDecoder->getNutiParameters();
+            auto paramIt = parameters->find(paramName);
+            if (paramIt != parameters->end()) {
+                paramValue = mvt::ValueConverter<T>::convert(paramIt->second.getDefaultValue());
+                return true;
+            }
+            return false;
+        }
     
     private:    
         class TileDecoderListener : public VectorTileDecoder::OnChangeListener {

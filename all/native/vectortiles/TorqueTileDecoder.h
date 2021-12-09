@@ -66,7 +66,9 @@ namespace carto {
          */
         void setStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
-        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
+        virtual std::shared_ptr<const mvt::Map::Settings> getMapSettings() const;
+
+        virtual std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > getNutiParameters() const;
 
         virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
 
@@ -88,9 +90,10 @@ namespace carto {
 
         const std::shared_ptr<mvt::Logger> _logger;
         std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
-        std::shared_ptr<mvt::TorqueMap> _map;
-        std::shared_ptr<mvt::Map::Settings> _mapSettings;
-        std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
+        std::shared_ptr<const mvt::TorqueMap> _map;
+        std::shared_ptr<const mvt::Map::Settings> _mapSettings;
+        std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > _nutiParameters;
+        std::shared_ptr<const mvt::SymbolizerContext> _symbolizerContext;
         std::shared_ptr<CartoCSSStyleSet> _styleSet;
 
         mutable std::mutex _mutex;

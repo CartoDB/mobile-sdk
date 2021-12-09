@@ -132,7 +132,9 @@ namespace carto {
          */
         void setLayerNameOverride(const std::string& name);
 
-        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
+        virtual std::shared_ptr<const mvt::Map::Settings> getMapSettings() const;
+
+        virtual std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > getNutiParameters() const;
     
         virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
 
@@ -161,10 +163,11 @@ namespace carto {
         std::map<std::string, mvt::Value> _parameterValueMap;
         std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
         std::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
-        std::shared_ptr<mvt::Map> _map;
-        std::shared_ptr<mvt::Map::Settings> _mapSettings;
-        std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
-        std::map<std::pair<std::string, std::shared_ptr<AssetPackage> >, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
+        std::shared_ptr<const mvt::Map> _map;
+        std::shared_ptr<const mvt::Map::Settings> _mapSettings;
+        std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > _nutiParameters;
+        std::shared_ptr<const mvt::SymbolizerContext> _symbolizerContext;
+        std::map<std::pair<std::string, std::shared_ptr<AssetPackage> >, std::shared_ptr<const mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
 
         mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     

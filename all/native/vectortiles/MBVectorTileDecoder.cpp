@@ -53,6 +53,7 @@ namespace carto {
         _styleSet(),
         _map(),
         _mapSettings(),
+        _nutiParameters(),
         _symbolizerContext(),
         _assetPackageSymbolizerContexts()
     {
@@ -268,9 +269,14 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    std::shared_ptr<mvt::Map::Settings> MBVectorTileDecoder::getMapSettings() const {
+    std::shared_ptr<const mvt::Map::Settings> MBVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
+    }
+
+    std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > MBVectorTileDecoder::getNutiParameters() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _nutiParameters;
     }
 
     void MBVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
@@ -401,8 +407,8 @@ namespace carto {
             return std::shared_ptr<TileMap>();
         }
 
-        std::shared_ptr<mvt::Map> map;
-        std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
+        std::shared_ptr<const mvt::Map> map;
+        std::shared_ptr<const mvt::SymbolizerContext> symbolizerContext;
         bool featureIdOverride;
         std::string layerNameOverride;
         {
@@ -499,7 +505,7 @@ namespace carto {
         if (_assetPackageSymbolizerContexts.find(std::make_pair(styleAssetName, assetPackage)) == _assetPackageSymbolizerContexts.end() && _assetPackageSymbolizerContexts.size() >= MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS) {
             _assetPackageSymbolizerContexts.clear();
         }
-        std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[std::make_pair(styleAssetName, assetPackage)];
+        std::shared_ptr<const mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[std::make_pair(styleAssetName, assetPackage)];
         if (!symbolizerContext) {
             auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
             auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), assetPackage);
@@ -565,6 +571,7 @@ namespace carto {
         _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(symbolizerContext->getBitmapManager(), symbolizerContext->getFontManager(), symbolizerContext->getStrokeMap(), symbolizerContext->getGlyphMap(), settings);
         _map = map;
         _mapSettings = std::make_shared<mvt::Map::Settings>(_map->getSettings());
+        _nutiParameters = std::make_shared<std::map<std::string, mvt::NutiParameter>>(_map->getNutiParameterMap());
         _styleSet = styleSet;
         _cachedFeatureDecoder.first.reset();
         _cachedFeatureDecoder.second.reset();
@@ -574,4 +581,5 @@ namespace carto {
     const int MBVectorTileDecoder::STROKEMAP_SIZE = 512;
     const int MBVectorTileDecoder::GLYPHMAP_SIZE = 2048;
     const std::size_t MBVectorTileDecoder::MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS = 2;
+
 }

@@ -28,6 +28,7 @@
 %ignore carto::VectorTileDecoder::decodeFeatures;
 %ignore carto::VectorTileDecoder::decodeTile;
 %ignore carto::VectorTileDecoder::getMapSettings;
+%ignore carto::VectorTileDecoder::getNutiParameters;
 %ignore carto::VectorTileDecoder::OnChangeListener;
 %ignore carto::VectorTileDecoder::registerOnChangeListener;
 %ignore carto::VectorTileDecoder::unregisterOnChangeListener;

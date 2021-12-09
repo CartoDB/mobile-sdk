@@ -55,6 +55,12 @@ namespace carto {
             throw NullArgumentException("Null decoder");
         }
 
+        readDecoderParameter<float>("_clickradius", _clickRadius);
+        readDecoderParameter<float>("_layerblendingspeed", _layerBlendingSpeed),
+        readDecoderParameter<float>("_labelblendingspeed", _labelBlendingSpeed),
+        readDecoderParameter<std::string>("_rendererlayerfilter", _rendererLayerFilter);
+        readDecoderParameter<std::string>("_clickhandlerlayerfilter", _clickHandlerLayerFilter);
+
         setCullDelay(DEFAULT_CULL_DELAY);
     }
     
@@ -473,10 +479,7 @@ namespace carto {
     std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        Color backgroundColor = _backgroundColor;
-        if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
-            backgroundColor = Color(mapSettings->backgroundColor.value());
-        }
+        Color backgroundColor = Color(_tileDecoder->getMapSettings()->backgroundColor.value());
         if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
             if (backgroundColor != Color(0, 0, 0, 0)) {
                 _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
@@ -496,10 +499,7 @@ namespace carto {
             return std::shared_ptr<Bitmap>();
         }
 
-        Color skyGroundColor = _skyGroundColor;
-        if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
-            skyGroundColor = Color(mapSettings->backgroundColor.value());
-        }
+        Color skyGroundColor = Color(_tileDecoder->getMapSettings()->backgroundColor.value());
         Color skyColor = options->getSkyColor();
         if (skyGroundColor != _skyGroundColor || skyColor != _skyColor || !_skyBitmap) {
             if (skyColor == Color(0, 0, 0, 0)) {

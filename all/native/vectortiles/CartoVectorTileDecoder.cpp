@@ -51,7 +51,8 @@ namespace carto {
         _layerMaps(),
         _layerSymbolizerContexts(),
         _assetPackageSymbolizerContexts(),
-        _mapSettings()
+        _mapSettings(std::make_shared<mvt::Map::Settings>()),
+        _nutiParameters(std::make_shared<std::map<std::string, mvt::NutiParameter>>())
     {
         for (auto it = layerStyleSets.begin(); it != layerStyleSets.end(); it++) {
             updateLayerStyleSet(it->first, it->second);
@@ -114,11 +115,16 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    std::shared_ptr<mvt::Map::Settings> CartoVectorTileDecoder::getMapSettings() const {
+    std::shared_ptr<const mvt::Map::Settings> CartoVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
     }
-    
+
+    std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > CartoVectorTileDecoder::getNutiParameters() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _nutiParameters;
+    }
+
     void CartoVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -250,8 +256,8 @@ namespace carto {
         }
 
         std::set<std::string> layerInvisibleSet;
-        std::map<std::string, std::shared_ptr<mvt::Map> > layerMaps;
-        std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > layerSymbolizerContexts;
+        std::map<std::string, std::shared_ptr<const mvt::Map> > layerMaps;
+        std::map<std::string, std::shared_ptr<const mvt::SymbolizerContext> > layerSymbolizerContexts;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             layerInvisibleSet = _layerInvisibleSet;
@@ -314,7 +320,7 @@ namespace carto {
         if (_assetPackageSymbolizerContexts.find(assetPackage) == _assetPackageSymbolizerContexts.end() && _assetPackageSymbolizerContexts.size() >= MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS) {
             _assetPackageSymbolizerContexts.clear();
         }
-        std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
+        std::shared_ptr<const mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
         if (!symbolizerContext) {
             auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
             auto bitmapLoader = std::make_shared<VTBitmapLoader>("", assetPackage);
@@ -357,6 +363,7 @@ namespace carto {
 
         if (!_layerIds.empty() && _layerIds.front() == layerId) {
             _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
+            _nutiParameters = std::make_shared<std::map<std::string, mvt::NutiParameter>>(map->getNutiParameterMap());
         }
 
         _layerStyleSets[layerId] = styleSet;
@@ -368,4 +375,5 @@ namespace carto {
     const int CartoVectorTileDecoder::STROKEMAP_SIZE = 512;
     const int CartoVectorTileDecoder::GLYPHMAP_SIZE = 2048;
     const std::size_t CartoVectorTileDecoder::MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS = 4;
+
 }

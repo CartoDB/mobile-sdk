@@ -56,7 +56,13 @@ namespace carto {
          * Returns map settings.
          * @return Map settings.
          */
-        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const = 0;
+        virtual std::shared_ptr<const mvt::Map::Settings> getMapSettings() const = 0;
+
+        /**
+         * Returns map parameters.
+         * @return Map parameters.
+         */
+        virtual std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > getNutiParameters() const = 0;
 
         /**
          * Adds a fallback font. The font should be TTF or OTF font. It is used for glyphs not found in style defined fonts.

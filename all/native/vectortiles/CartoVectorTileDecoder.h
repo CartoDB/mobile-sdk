@@ -78,7 +78,9 @@ namespace carto {
          */
         void setLayerStyleSet(const std::string& layerId, const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
-        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
+        virtual std::shared_ptr<const mvt::Map::Settings> getMapSettings() const;
+
+        virtual std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > getNutiParameters() const;
     
         virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
 
@@ -105,10 +107,11 @@ namespace carto {
         std::set<std::string> _layerInvisibleSet;
         std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
         std::map<std::string, std::shared_ptr<CartoCSSStyleSet> > _layerStyleSets;
-        std::map<std::string, std::shared_ptr<mvt::Map> > _layerMaps;
-        std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > _layerSymbolizerContexts;
-        std::map<std::shared_ptr<AssetPackage>, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
-        std::shared_ptr<mvt::Map::Settings> _mapSettings;
+        std::map<std::string, std::shared_ptr<const mvt::Map> > _layerMaps;
+        std::map<std::string, std::shared_ptr<const mvt::SymbolizerContext> > _layerSymbolizerContexts;
+        std::map<std::shared_ptr<AssetPackage>, std::shared_ptr<const mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
+        std::shared_ptr<const mvt::Map::Settings> _mapSettings;
+        std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > _nutiParameters;
 
         mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     
