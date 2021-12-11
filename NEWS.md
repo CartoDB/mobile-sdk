@@ -1,3 +1,17 @@
+CARTO Mobile SDK 4.4.3
+-------------------
+
+### New features:
+
+* Added an experimental option to configure various 'VectorTileLayer' parameters via project.json nutiparameters
+* Added support for configuring vector tile map parameters via project.json
+* Updated boost dependency to the latest stable version
+
+### Changes, fixes:
+
+* Build script cleanup
+
+
 CARTO Mobile SDK 4.4.3RC3
 -------------------
 
