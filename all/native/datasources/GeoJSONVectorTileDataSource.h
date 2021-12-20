@@ -48,6 +48,17 @@ namespace carto {
         void setSimplifyTolerance(float tolerance);
 
         /**
+         * Returns the default layer buffer in tile pixels.
+         * @return The default layer buffer in tile pixels.
+         */
+        float getDefaultLayerBuffer() const;
+        /**
+         * Sets the default layer buffer in tile pixels. This buffer value will be used for all layers created afterwards.
+         * @param buffer The default layer buffer in tile pixels. The default is 4.0. Use 0.0 to disable any buffering. Use larger values (up to 32.0) in case of clipping artifacts.
+         */
+        void setDefaultLayerBuffer(float tolerance);
+
+        /**
          * Creates a new layer with specified name.
          * @param name The name for the layer.
          * @return The layer index of the created layer.
@@ -83,7 +94,6 @@ namespace carto {
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
     
     private:
-        float _simplifyTolerance;
         std::unique_ptr<mbvtbuilder::MBVTTileBuilder> _tileBuilder;
         mutable std::mutex _mutex;
     };

@@ -25,6 +25,7 @@
 !polymorphic_shared_ptr(carto::GeoJSONVectorTileDataSource, datasources.GeoJSONVectorTileDataSource)
 
 %attribute(carto::GeoJSONVectorTileDataSource, float, SimplifyTolerance, getSimplifyTolerance, setSimplifyTolerance)
+%attribute(carto::GeoJSONVectorTileDataSource, float, DefaultLayerBuffer, getDefaultLayerBuffer, setDefaultLayerBuffer)
 %std_io_exceptions(carto::GeoJSONVectorTileDataSource::createLayer)
 %std_io_exceptions(carto::GeoJSONVectorTileDataSource::setLayerGeoJSON)
 %std_io_exceptions(carto::GeoJSONVectorTileDataSource::setLayerFeatureCollection)

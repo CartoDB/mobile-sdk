@@ -50,7 +50,6 @@ namespace carto {
 
     GeoJSONVectorTileDataSource::GeoJSONVectorTileDataSource(int minZoom, int maxZoom) :
         TileDataSource(minZoom, maxZoom),
-        _simplifyTolerance(1.0f),
         _tileBuilder(std::make_unique<mbvtbuilder::MBVTTileBuilder>(minZoom, maxZoom)),
         _mutex()
     {
@@ -61,16 +60,25 @@ namespace carto {
 
     float GeoJSONVectorTileDataSource::getSimplifyTolerance() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _simplifyTolerance;
+        return _tileBuilder->getSimplifyTolerance();
     }
 
     void GeoJSONVectorTileDataSource::setSimplifyTolerance(float tolerance) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            _simplifyTolerance = tolerance;
             _tileBuilder->setSimplifyTolerance(tolerance);
         }
         notifyTilesChanged(false);
+    }
+
+    float GeoJSONVectorTileDataSource::getDefaultLayerBuffer() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _tileBuilder->getDefaultLayerBuffer();
+    }
+
+    void GeoJSONVectorTileDataSource::setDefaultLayerBuffer(float buffer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _tileBuilder->setDefaultLayerBuffer(buffer);
     }
 
     int GeoJSONVectorTileDataSource::createLayer(const std::string& name) {
