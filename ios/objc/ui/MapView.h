@@ -10,7 +10,6 @@
 
 #define NTGLContext MGLContext
 #define NTGLKView MGLKView
-#define NTGLKViewDelegate MGLKViewDelegate
 
 #else
 
@@ -18,7 +17,6 @@
 
 #define NTGLContext EAGLContext
 #define NTGLKView GLKView
-#define NTGLKViewDelegate GLKViewDelegate
 
 #endif
 
