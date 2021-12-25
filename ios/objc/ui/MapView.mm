@@ -61,10 +61,9 @@ static const int NATIVE_NO_COORDINATE = -1;
 }
 
 -(void)initBase {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
-
+    _active = NO;
+    _surfaceCreated = NO;
+    _activeDrawableSize = CGSizeMake(0, 0);
     _scale = [[UIScreen mainScreen] scale];
     // In case of MetalANGLE build, use the original scale value
 #ifndef _CARTO_USE_METALANGLE
@@ -72,29 +71,24 @@ static const int NATIVE_NO_COORDINATE = -1;
         _scale = [[UIScreen mainScreen] nativeScale];
     }
 #endif
+    self.contentScaleFactor = _scale;
 
     _baseMapView = [[NTBaseMapView alloc] init];
-    _nativeMapView = [_baseMapView getCptr];
-
-    _active = NO;
-    _surfaceCreated = NO;
-    _activeDrawableSize = CGSizeMake(0, 0);
+    [[_baseMapView getOptions] setDPI:carto::Const::UNSCALED_DPI * _scale];
 
     NTMapRedrawRequestListener* redrawRequestListener = [[NTMapRedrawRequestListener alloc] initWithView:self];
     [_baseMapView setRedrawRequestListener:redrawRequestListener];
     
-    [[_baseMapView getOptions] setDPI:carto::Const::UNSCALED_DPI * _scale];
-
-    self.contentScaleFactor = _scale;
-
     if (self.window != nil) {
-        @synchronized (self) {
-            [self initContext];
-            _active = YES;
-        }
+        [self initContext];
+        _active = YES;
 
         [self setNeedsDisplay];
     }
+
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
 }
 
 -(void)initContext {
@@ -104,7 +98,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     NTGLContext* context = [[NTGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
 #endif
     if (!context) {
-        carto::Log::Fatal("MapView::initBase: Failed to create OpenGL ES 2.0 context");
+        carto::Log::Fatal("MapView::initContext: Failed to create OpenGL ES 2.0 context");
     }
 
     self.context = context;
@@ -129,6 +123,7 @@ static const int NATIVE_NO_COORDINATE = -1;
         carto::Log::Info("MapView::willMoveToWindow: null");
     } else {
         carto::Log::Info("MapView::willMoveToWindow: nonnull");
+
         @synchronized (self) {
             if (!_active) {
                 [self initContext];
@@ -147,6 +142,7 @@ static const int NATIVE_NO_COORDINATE = -1;
 
     if (self.window == nil) {
         carto::Log::Info("MapView::didMoveToWindow: null");
+
         @synchronized (self) {
             if (_active) {
                 [_baseMapView onSurfaceDestroyed];
@@ -195,6 +191,7 @@ static const int NATIVE_NO_COORDINATE = -1;
                 _activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
                 [_baseMapView onSurfaceChanged:(int)_activeDrawableSize.width height:(int)_activeDrawableSize.height];
             }
+
             [_baseMapView onDrawFrame];
 
 #ifdef _CARTO_USE_METALANGLE
@@ -208,25 +205,24 @@ static const int NATIVE_NO_COORDINATE = -1;
 }
 
 -(void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
+
     @synchronized (self) {
         if (self.context) {
             [_baseMapView onSurfaceDestroyed];
+            [_baseMapView setRedrawRequestListener:nil];
 
             if ([NTGLContext currentContext] == self.context) {
                 [NTGLContext setCurrentContext:nil];
             }
 
-            [_baseMapView setRedrawRequestListener:nil];
-            _nativeMapView = nil;
             _baseMapView = nil;
             _surfaceCreated = NO;
             _activeDrawableSize = CGSizeMake(0, 0);
         }
     }
-
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
 }
 
 -(void)appWillResignActive {

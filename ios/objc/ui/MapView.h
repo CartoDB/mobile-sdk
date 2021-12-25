@@ -38,8 +38,6 @@
  */
 __attribute__ ((visibility("default"))) @interface NTMapView : NTGLKView
 
-@property (readonly, assign, nonatomic) void* nativeMapView;
-
 -(id)init;
 -(id)initWithCoder:(NSCoder *)aDecoder;
 -(id)initWithFrame:(CGRect)frame;
