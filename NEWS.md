@@ -1,3 +1,19 @@
+CARTO Mobile SDK 4.4.4RC1
+-------------------
+
+### New features:
+
+* Added 'getDefaultLayerBuffer', 'setDefaultLayerBuffer' methods to 'GeoJSONVectorTileDataSource'. This allows controlling buffer size (in tile pixels) for vector tile layers.
+
+### Changes, fixes:
+
+* Restored support for arbitrary expressions in transform arguments (available in 4.3.x but removed from 4.4.0-4.4.3)
+* Improved batching for transformed geometries, all non-translated geometries can be now added into a single batch.
+* Fixed shield symbolizer issues where background was affected by fill color.
+* Fixed several clipping related issues in 'GeoJSONVectorTileDataSource'
+* Improved EAGLContext handling for iOS, workaround for a crash when a view is moved out of a window and then back
+
+
 CARTO Mobile SDK 4.4.3
 -------------------
 
