@@ -333,11 +333,8 @@ namespace carto {
 
             std::map<std::string, Variant> featureData;
             if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature.getFeatureData()) {
-                for (const std::string& varName : mvtFeatureData->getVariableNames()) {
-                    mvt::Value mvtValue;
-                    if (mvtFeatureData->getVariable(varName, mvtValue)) {
-                        featureData[varName] = std::visit(MVTValueConverter(), mvtValue);
-                    }
+                for (const std::pair<std::string, mvt::Value>& var : mvtFeatureData->getVariables()) {
+                    featureData[var.first] = std::visit(MVTValueConverter(), var.second);
                 }
             }
 
@@ -380,12 +377,9 @@ namespace carto {
                     std::shared_ptr<Geometry> geometry = std::visit(MVTGeometryConverter(tileBounds), *mvtGeometry);
 
                     std::map<std::string, Variant> featureData;
-                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData(nullptr)) {
-                        for (const std::string& varName : mvtFeatureData->getVariableNames()) {
-                            mvt::Value mvtValue;
-                            if (mvtFeatureData->getVariable(varName, mvtValue)) {
-                                featureData[varName] = std::visit(MVTValueConverter(), mvtValue);
-                            }
+                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData(false, nullptr)) {
+                        for (const std::pair<std::string, mvt::Value>& var : mvtFeatureData->getVariables()) {
+                            featureData[var.first] = std::visit(MVTValueConverter(), var.second);
                         }
                     }
 
