@@ -1,3 +1,5 @@
+#ifdef _CARTO_OFFLINE_SUPPORT
+
 #include "PersistentCacheTileDataSource.h"
 #include "core/BinaryData.h"
 #include "datasources/TileDownloadListener.h"
@@ -408,3 +410,5 @@ namespace carto {
     const unsigned int PersistentCacheTileDataSource::EXTRA_TILE_FOOTPRINT = 1024;
 
 }
+
+#endif

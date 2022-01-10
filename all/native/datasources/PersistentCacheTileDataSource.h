@@ -7,6 +7,8 @@
 #ifndef _CARTO_PERSISTENTCACHETILEDATASOURCE_H_
 #define _CARTO_PERSISTENTCACHETILEDATASOURCE_H_
 
+#ifdef _CARTO_OFFLINE_SUPPORT
+
 #include "core/MapBounds.h"
 #include "components/CancelableThreadPool.h"
 #include "components/DirectorPtr.h"
@@ -133,5 +135,7 @@ namespace carto {
     };
 
 }
+
+#endif
 
 #endif

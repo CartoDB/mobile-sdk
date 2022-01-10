@@ -10,6 +10,8 @@ CARTO Mobile SDK 4.4.4
 * Fixed issues with 'feature id' handling in vector tile renderer when feature was used in multiple layers
 * Updated harfbuzz dependency to the latest stable version
 * Fixed wrong compilation profile used for UWP builds, resulting in missing a few features
+* Dropped 'PersistentCacheTileDataSource' from 'lite' compilation profile, making 'lite' SDK build smaller
+* Minor fixes related to non-standard SDK profiles
 * Minor optimizations
 
 

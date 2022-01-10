@@ -7,6 +7,8 @@
 #ifndef _CARTO_ADDRESS_H_
 #define _CARTO_ADDRESS_H_
 
+#ifdef _CARTO_GEOCODING_SUPPORT
+
 #include <string>
 #include <vector>
 
@@ -138,5 +140,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

@@ -10,7 +10,9 @@
 #import "NTOptions.h"
 #import "NTLayers.h"
 
+#ifdef _CARTO_GEOCODING_SUPPORT
 #import "NTAddress.h"
+#endif
 #import "NTMapBounds.h"
 #import "NTMapEnvelope.h"
 #import "NTMapPos.h"
@@ -32,7 +34,6 @@
 #import "NTGeoJSONVectorTileDataSource.h"
 #import "NTHTTPTileDataSource.h"
 #import "NTMemoryCacheTileDataSource.h"
-#import "NTPersistentCacheTileDataSource.h"
 #import "NTCartoOnlineTileDataSource.h"
 #import "NTMapTilerOnlineTileDataSource.h"
 #import "NTLocalVectorDataSource.h"
@@ -157,6 +158,7 @@
 
 #ifdef _CARTO_OFFLINE_SUPPORT
 #import "NTMBTilesTileDataSource.h"
+#import "NTPersistentCacheTileDataSource.h"
 #endif
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT

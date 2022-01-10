@@ -109,8 +109,8 @@ if(WIN32)
 endif(WIN32)
 
 # Subprojects
-set(SDK_CARTO_SUBPROJECTS vt mapnikvt mbvtbuilder cartocss nml osrm sgre geocoding)
-set(SDK_EXTERNAL_SUBPROJECTS botan pugixml sqlite sqlite3pp bidi freetype harfbuzz brotli miniz libjpeg libpng libwebp tess2 pvrt rg_etc1)
+set(SDK_CARTO_SUBPROJECTS vt mapnikvt mbvtbuilder cartocss nml)
+set(SDK_EXTERNAL_SUBPROJECTS botan pugixml bidi freetype harfbuzz brotli miniz libjpeg libpng libwebp tess2 pvrt rg_etc1)
 
 if(WIN32)
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "zlib")
@@ -119,6 +119,18 @@ endif(WIN32)
 if(NOT (WIN32 OR APPLE OR ANDROID))
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "pion")
 endif()
+
+if(INCLUDE_GEOCODING)
+  list(APPEND SDK_CARTO_SUBPROJECTS "geocoding")
+endif(INCLUDE_GEOCODING)
+
+if(INCLUDE_ROUTING)
+  list(APPEND SDK_CARTO_SUBPROJECTS "osrm" "sgre")
+endif(INCLUDE_ROUTING)
+
+if(INCLUDE_SQLITE)
+  list(APPEND SDK_EXTERNAL_SUBPROJECTS "sqlite" "sqlite3pp")
+endif(INCLUDE_SQLITE)
 
 if(INCLUDE_VALHALLA)
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "date" "protobuf" "valhalla")

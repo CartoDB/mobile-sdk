@@ -104,7 +104,7 @@ def getProfile(profileIds):
   defines = set()
   cmakeOptions = set()
   allProfileIds = profileIds.split('+')
-  if 'lite' not in profileIds:
+  if 'lite' not in allProfileIds:
     allProfileIds.append(getDefaultProfileId())
   for profileId in allProfileIds:
     profile = getProfiles()[profileId]

@@ -7,6 +7,8 @@
 #ifndef _CARTO_GEOCODINGADDRESS_H_
 #define _CARTO_GEOCODINGADDRESS_H_
 
+#ifdef _CARTO_GEOCODING_SUPPORT
+
 #include "core/Address.h"
 
 namespace carto {
@@ -38,5 +40,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

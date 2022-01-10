@@ -5,6 +5,8 @@
 
 %module GeocodingAddress
 
+#ifdef _CARTO_GEOCODING_SUPPORT
+
 !proxy_imports(carto::GeocodingAddress, core.Address, core.StringVector)
 
 %{
@@ -22,5 +24,7 @@
 !custom_tostring(carto::GecodingAddress);
 
 %include "geocoding/GeocodingAddress.h"
+
+#endif
 
 #endif

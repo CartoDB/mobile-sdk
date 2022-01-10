@@ -1,3 +1,5 @@
+#ifdef _CARTO_GEOCODING_SUPPORT
+
 #include "Address.h"
 
 #include <sstream>
@@ -119,3 +121,5 @@ namespace carto {
     }
     
 }
+
+#endif
