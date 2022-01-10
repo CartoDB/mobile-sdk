@@ -1,3 +1,18 @@
+CARTO Mobile SDK 4.4.4
+-------------------
+
+### New features:
+
+* Feature id is now accessible in CartoCSS using 'mapnik::feature_id' variable
+
+### Changes, fixes:
+
+* Fixed issues with 'feature id' handling in vector tile renderer when feature was used in multiple layers
+* Updated harfbuzz dependency to the latest stable version
+* Fixed wrong compilation profile used for UWP builds, resulting in missing a few features
+* Minor optimizations
+
+
 CARTO Mobile SDK 4.4.4RC1
 -------------------
 
