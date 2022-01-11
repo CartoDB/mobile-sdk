@@ -11,6 +11,7 @@ CARTO Mobile SDK 4.4.4
 * Updated harfbuzz dependency to the latest stable version
 * Fixed wrong compilation profile used for UWP builds, resulting in missing a few features
 * Dropped 'PersistentCacheTileDataSource' from 'lite' compilation profile, making 'lite' SDK build smaller
+* Minor tweaks to built-in styles, related to admin boundaries
 * Minor fixes related to non-standard SDK profiles
 * Minor optimizations
 
