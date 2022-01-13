@@ -25,13 +25,12 @@
 %attributeval(carto::MBVectorTileDecoder, std::vector<std::string>, StyleParameters, getStyleParameters)
 %attributestring(carto::MBVectorTileDecoder, std::shared_ptr<carto::CompiledStyleSet>, CompiledStyle, getCompiledStyleSet, setCompiledStyleSet)
 %attributestring(carto::MBVectorTileDecoder, std::shared_ptr<carto::CartoCSSStyleSet>, CartoCSSStyle, getCartoCSSStyleSet, setCartoCSSStyleSet)
+%attribute(carto::MBVectorTileDecoder, bool, FeatureIdOverride, isFeatureIdOverride, setFeatureIdOverride)
 %std_exceptions(carto::MBVectorTileDecoder::MBVectorTileDecoder)
 %std_exceptions(carto::MBVectorTileDecoder::setCompiledStyleSet)
 %std_exceptions(carto::MBVectorTileDecoder::setCartoCSSStyleSet)
 %std_exceptions(carto::MBVectorTileDecoder::getStyleParameter)
 %std_exceptions(carto::MBVectorTileDecoder::setStyleParameter)
-%ignore carto::MBVectorTileDecoder::isFeatureIdOverride;
-%ignore carto::MBVectorTileDecoder::setFeatureIdOverride;
 %ignore carto::MBVectorTileDecoder::isCartoCSSLayerNamesIgnored;
 %ignore carto::MBVectorTileDecoder::setCartoCSSLayerNamesIgnored;
 %ignore carto::MBVectorTileDecoder::getLayerNameOverride;
