@@ -20,8 +20,9 @@ namespace carto {
          * @param zoomAction The zoom action flag.
          * @param rotateAction The rotate action flag.
          * @param tiltAction The tilt action flag.
+         * @param animationStarted The animation started flag.
          */
-        MapInteractionInfo(bool panAction, bool zoomAction, bool rotateAction, bool tiltAction);
+        MapInteractionInfo(bool panAction, bool zoomAction, bool rotateAction, bool tiltAction, bool animationStarted = false);
         virtual ~MapInteractionInfo();
 
         /**
@@ -44,12 +45,18 @@ namespace carto {
          * @return True if the interaction included a tilt action.
          */
         bool isTiltAction() const;
+        /**
+         * Returns true if the interaction has started an animation.
+         * @return True if the interaction has started an animation.
+         */
+        bool isAnimationStarted() const;
     
     private:
         bool _panAction;
         bool _zoomAction;
         bool _rotateAction;
         bool _tiltAction;
+        bool _animationStarted;
     };
     
 }

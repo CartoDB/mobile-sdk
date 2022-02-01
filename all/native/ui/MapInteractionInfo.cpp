@@ -2,11 +2,12 @@
 
 namespace carto {
 
-    MapInteractionInfo::MapInteractionInfo(bool panAction, bool zoomAction, bool rotateAction, bool tiltAction) :
+    MapInteractionInfo::MapInteractionInfo(bool panAction, bool zoomAction, bool rotateAction, bool tiltAction, bool animationStarted) :
         _panAction(panAction),
         _zoomAction(zoomAction),
         _rotateAction(rotateAction),
-        _tiltAction(tiltAction)
+        _tiltAction(tiltAction),
+        _animationStarted(animationStarted)
     {
     }
 
@@ -29,4 +30,8 @@ namespace carto {
         return _tiltAction;
     }
     
+    bool MapInteractionInfo::isAnimationStarted() const {
+        return _animationStarted;
+    }
+
 }

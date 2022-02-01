@@ -106,10 +106,11 @@ namespace carto {
 
         void singlePointerPan(const ScreenPos& screenPos, const ViewState& viewState);
         void singlePointerZoom(const ScreenPos& screenPos, const ViewState& viewState);
-        void singlePointerZoomStop(const ScreenPos& screenPos, const ViewState& viewState);
+        bool singlePointerZoomStop(const ScreenPos& screenPos, const ViewState& viewState);
         void dualPointerGuess(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const ViewState& viewState);
         void dualPointerTilt(const ScreenPos& screenPos, const ViewState& viewState);
         void dualPointerPan(const ScreenPos& screenPos1, const ScreenPos& screenPos2, bool rotate, bool scale, const ViewState& viewState);
+        void doubleTapZoom(const ScreenPos& screenPos, const ViewState& viewState);
 
         bool isValidScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
         MapPos mapScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const;

@@ -187,7 +187,11 @@ namespace carto {
                 }
                 break;
             case SINGLE_POINTER_ZOOM:
-                singlePointerZoomStop(screenPos1, viewState);
+                if (singlePointerZoomStop(screenPos1, viewState)) {
+                    lock.unlock();
+                    doubleTapZoom(screenPos1, viewState);
+                    lock.lock();
+                }
                 _gestureMode = SINGLE_POINTER_CLICK_GUESS;
                 if (_noDualPointerYet) {
                     _mapRenderer->getKineticEventHandler().startZoom();
@@ -241,14 +245,19 @@ namespace carto {
 
     void TouchHandler::onWheelEvent(int delta, const ScreenPos& screenPos) {
         if (_options->isUserInput()) {
+            ViewState viewState = _mapRenderer->getViewState();
+            std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+            if (!projectionSurface) {
+                return;
+            }
+
             _mapRenderer->getAnimationHandler().stopPan();
             _mapRenderer->getAnimationHandler().stopRotation();
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
             
-            ViewState viewState = _mapRenderer->getViewState();
-            if (isValidScreenPosition(screenPos, viewState)) {
-                MapPos targetPos(mapScreenPosition(screenPos, viewState));
+            if (_options->getPivotMode() != PivotMode::PIVOT_MODE_TOUCHPOINT || isValidScreenPosition(screenPos, viewState)) {
+                MapPos targetPos = (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT ? mapScreenPosition(screenPos, viewState) : projectionSurface->calculateMapPos(viewState.getFocusPos()));
 
                 CameraZoomEvent cameraZoomTargetEvent;
                 cameraZoomTargetEvent.setZoomDelta(delta * WHEEL_TICK_TO_ZOOM_DELTA);
@@ -369,19 +378,22 @@ namespace carto {
         _prevScreenPos1 = screenPos;
     }
 
-    void TouchHandler::singlePointerZoomStop(const ScreenPos& screenPos, const ViewState& viewState) {
+    bool TouchHandler::singlePointerZoomStop(const ScreenPos& screenPos, const ViewState& viewState) {
+        bool zoom = false;
         if (_options->isUserInput()) {
-            if (isValidScreenPosition(screenPos, viewState) && cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD) {
-                MapPos targetPos = mapScreenPosition(screenPos, viewState);
+            std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+            if (!projectionSurface) {
+                return false;
+            }
 
-                CameraZoomEvent cameraZoomTargetEvent;
-                cameraZoomTargetEvent.setZoomDelta(1.0f);
-                cameraZoomTargetEvent.setTargetPos(targetPos);
-                // No need to set flag in _cameraEvents, as we use animation, not immediate update
-                _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
+            if (cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD) {
+                if (_options->getPivotMode() != PivotMode::PIVOT_MODE_TOUCHPOINT || isValidScreenPosition(screenPos, viewState)) {
+                    zoom = true;
+                }
             }
         }
         _prevScreenPos1 = screenPos;
+        return zoom;
     }
     
     void TouchHandler::dualPointerGuess(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const ViewState& viewState) {
@@ -534,6 +546,31 @@ namespace carto {
         _prevScreenPos1 = screenPos1;
         _prevScreenPos2 = screenPos2;
     }
+
+    void TouchHandler::doubleTapZoom(const ScreenPos& screenPos, const ViewState& viewState) {
+        if (!_options->isUserInput()) {
+            return;
+        }
+
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+
+        MapPos targetPos = (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT ? mapScreenPosition(screenPos, viewState) : projectionSurface->calculateMapPos(viewState.getFocusPos()));
+
+        CameraZoomEvent cameraZoomTargetEvent;
+        cameraZoomTargetEvent.setZoomDelta(1.0f);
+        cameraZoomTargetEvent.setTargetPos(targetPos);
+        _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
+
+        DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
+
+        if (mapEventListener) {
+            // NOTE: animated action
+            mapEventListener->onMapInteraction(std::make_shared<MapInteractionInfo>(false, true, false, false, true));
+        }
+    }
     
     void TouchHandler::click(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
         if (!_options->isUserInput()) {
@@ -613,7 +650,8 @@ namespace carto {
             DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
 
             if (mapEventListener) {
-                mapEventListener->onMapInteraction(std::make_shared<MapInteractionInfo>(false, true, false, false));
+                // NOTE: animated action
+                mapEventListener->onMapInteraction(std::make_shared<MapInteractionInfo>(false, true, false, false, true));
             }
         } else if (_options->isClickTypeDetection()) {
             ScreenPos centreScreenPos((screenPos1.getX() + screenPos2.getX()) / 2, (screenPos1.getY() + screenPos2.getY()) / 2);

@@ -19,6 +19,7 @@
 %attribute(carto::MapInteractionInfo, bool, ZoomAction, isZoomAction)
 %attribute(carto::MapInteractionInfo, bool, RotateAction, isRotateAction)
 %attribute(carto::MapInteractionInfo, bool, TiltAction, isTiltAction)
+%attribute(carto::MapInteractionInfo, bool, AnimationStarted, isAnimationStarted)
 %ignore carto::MapInteractionInfo::MapInteractionInfo;
 !standard_equals(carto::MapInteractionInfo);
 
