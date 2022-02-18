@@ -10,7 +10,7 @@
 #include "geometry/MultiPointGeometry.h"
 #include "geometry/MultiLineGeometry.h"
 #include "geometry/MultiPolygonGeometry.h"
-#include "geometry/WKTGeometryParser.h"
+#include "geometry/utils/WKTGeometryParser.h"
 #include "utils/Log.h"
 
 #include <memory>
