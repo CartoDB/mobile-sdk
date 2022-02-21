@@ -12,6 +12,10 @@
 
 %include <attribute.i>
 
+#ifdef WINDOWS_PHONE
+%include <std_string.i>
+#endif
+
 %define %staticattribute_custom(Class, AttributeType, AttributeName, GetMethod, SetMethod, GetMethodCall, SetMethodCall)
   %ignore Class::GetMethod();
   %ignore Class::GetMethod() const;
