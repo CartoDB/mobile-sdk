@@ -10,6 +10,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <cartoswig.i>
 
 %import "core/MapPos.i"
 %import "vectorelements/VectorElement.i"

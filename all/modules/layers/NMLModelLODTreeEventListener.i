@@ -7,13 +7,13 @@
 
 !proxy_imports(carto::NMLModelLODTreeEventListener, ui.NMLModelLODTreeClickInfo)
 
-
 %{
 #include "layers/NMLModelLODTreeEventListener.h"
 #include <memory>
 %}
 
 %include <std_shared_ptr.i>
+%include <cartoswig.i>
 
 %import "ui/NMLModelLODTreeClickInfo.i"
 

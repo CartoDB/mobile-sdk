@@ -13,6 +13,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <cartoswig.i>
 
 %import "core/ScreenPos.i"
 %import "geometry/Geometry.i"
