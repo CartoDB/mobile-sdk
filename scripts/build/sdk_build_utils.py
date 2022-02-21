@@ -6,7 +6,7 @@ import argparse
 import shutil
 import json
 
-SDK_VERSION = '4.4.4'
+SDK_VERSION = '4.4.5'
 
 def makedirs(dir):
   try:

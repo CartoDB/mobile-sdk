@@ -1,3 +1,21 @@
+CARTO Mobile SDK 4.4.5RC1
+-------------------
+
+### New features:
+
+* Added 'setFeatureIdOverride' and 'isFeatureIdOverride' methods to 'MBVectorTileDecoder'
+* Added 'isAnimationStarted' method to 'MapInteractionInfo'
+
+### Changes, fixes:
+
+* Fixed critical issue with non-ASCII string wrapping on UWP platform
+* Fixed missing 'onMapInterAction' callback on double tap zoom
+* Changed user initiated zoom behaviour when 'PIVOT_MODE_CENTERPOINT' mode is used, now screen center is used as a pivot point.
+* Updated harfbuzz, libwebp and pugixml dependencies to latest stable versions
+* Fixed stack overflow issue in external css2xml utility due to missing rules for EXP/LOG functions
+* Added 'build id' to Android shared libraries, to help analyze Android native stack traces
+
+
 CARTO Mobile SDK 4.4.4
 -------------------
 
