@@ -364,8 +364,8 @@ namespace carto {
 
         std::uint64_t tileCount = 0;
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
-            MapTile mapTile1 = TileUtils::CalculateMapTile(_mapBounds.getMin(), zoom, projection);
-            MapTile mapTile2 = TileUtils::CalculateMapTile(_mapBounds.getMax(), zoom, projection);
+            MapTile mapTile1 = TileUtils::CalculateClippedMapTile(_mapBounds.getMin(), zoom, projection);
+            MapTile mapTile2 = TileUtils::CalculateClippedMapTile(_mapBounds.getMax(), zoom, projection);
             std::uint64_t dx = std::abs(mapTile1.getX() - mapTile2.getX()) + 1;
             std::uint64_t dy = std::abs(mapTile1.getY() - mapTile2.getY()) + 1;
             tileCount += dx * dy;
@@ -379,8 +379,8 @@ namespace carto {
 
         std::uint64_t tileIndex = 0;
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
-            MapTile mapTile1 = TileUtils::CalculateMapTile(_mapBounds.getMin(), zoom, projection);
-            MapTile mapTile2 = TileUtils::CalculateMapTile(_mapBounds.getMax(), zoom, projection);
+            MapTile mapTile1 = TileUtils::CalculateClippedMapTile(_mapBounds.getMin(), zoom, projection);
+            MapTile mapTile2 = TileUtils::CalculateClippedMapTile(_mapBounds.getMax(), zoom, projection);
             for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
                 if (isCanceled()) {
                     break;

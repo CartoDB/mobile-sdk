@@ -345,7 +345,7 @@ namespace carto {
         static bool CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey);
         static std::string CalculateKeyHash(const std::string& encKey);
 
-        static MapTile CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj);
+        static MapTile CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj, bool clip);
 
         static std::shared_ptr<PackageTileMask> DecodeTileMask(const std::string& tileMaskStr);
         static std::string EncodeTileMask(const std::shared_ptr<PackageTileMask>& tileMask);

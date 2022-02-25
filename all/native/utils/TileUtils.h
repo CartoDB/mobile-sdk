@@ -32,6 +32,15 @@ namespace carto {
         static MapTile CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj);
 
         /**
+         * Calculates the map tile corresponding to specified point and zoom level. If the resulting tile is outside the valid range, it will be clipped.
+         * @param mapPos Coordinates for the point.
+         * @param zoom Zoom level for the tile.
+         * @param proj The projection to use for tile and point.
+         * @return The corresponding map tile.
+         */
+        static MapTile CalculateClippedMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj);
+
+        /**
          * Calculates origin coordinates for the given map tile.
          * @param mapTile The map tile to use.
          * @param proj The projection to use for origin.

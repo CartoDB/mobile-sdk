@@ -381,7 +381,7 @@ namespace carto {
         }
 
         // Calculate map tile from the map position
-        MapTile mapTile = CalculateMapTile(mapPos, zoom, projection);
+        MapTile mapTile = CalculateMapTile(mapPos, zoom, projection, false);
 
         // Find tile statuses from all packages. Keep only packages where the tile exists
         std::vector<std::pair<std::shared_ptr<PackageInfo>, PackageTileStatus::PackageTileStatus> > packageTileStatuses;
@@ -428,8 +428,8 @@ namespace carto {
         std::vector<std::shared_ptr<PackageInfo> > localPackages = getLocalPackages();
 
         // Calculate tile extents
-        MapTile mapTile1 = CalculateMapTile(mapBounds.getMin(), zoom, projection);
-        MapTile mapTile2 = CalculateMapTile(mapBounds.getMax(), zoom, projection);
+        MapTile mapTile1 = CalculateMapTile(mapBounds.getMin(), zoom, projection, true);
+        MapTile mapTile2 = CalculateMapTile(mapBounds.getMax(), zoom, projection, true);
         for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
             for (int x = std::min(mapTile1.getX(), mapTile2.getX()); x <= std::max(mapTile1.getX(), mapTile2.getX()); x++) {
                 bool found = false;
@@ -1523,13 +1523,18 @@ namespace carto {
         return Botan::hex_encode(hash->final(), true);
     }
 
-    MapTile PackageManager::CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj) {
+    MapTile PackageManager::CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj, bool clip) {
         EPSG3857 epsg3857;
         double tileWidth = epsg3857.getBounds().getDelta().getX() / (1 << zoom);
         double tileHeight = epsg3857.getBounds().getDelta().getY() / (1 << zoom);
         MapVec mapVec = epsg3857.fromWgs84(proj->toWgs84(mapPos)) - epsg3857.getBounds().getMin();
         int x = static_cast<int>(std::floor(mapVec.getX() / tileWidth));
         int y = static_cast<int>(std::floor(mapVec.getY() / tileHeight));
+        if (clip) {
+            int maxExtent = (1 << zoom) - 1;
+            x = std::max(0, std::min(maxExtent, x));
+            y = std::max(0, std::min(maxExtent, y));
+        }
         return MapTile(x, y, zoom, 0);
     }
 

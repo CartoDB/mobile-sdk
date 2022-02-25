@@ -15,6 +15,12 @@ namespace carto {
         return MapTile(x, y, zoom, 0);
     }
 
+    MapTile TileUtils::CalculateClippedMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj) {
+        MapTile mapTile = CalculateMapTile(mapPos, zoom, proj);
+        int maxExtent = (1 << mapTile.getZoom()) - 1;
+        return MapTile(std::max(0, std::min(maxExtent, mapTile.getX())), std::max(0, std::min(maxExtent, mapTile.getY())), mapTile.getZoom(), mapTile.getFrameNr());
+    }
+
     MapPos TileUtils::CalculateMapTileOrigin(const MapTile& mapTile, const std::shared_ptr<Projection>& proj) {
         double tileWidth = proj->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
         double tileHeight = proj->getBounds().getDelta().getY() / (1 << mapTile.getZoom());

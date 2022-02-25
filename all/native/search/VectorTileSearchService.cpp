@@ -114,8 +114,8 @@ namespace carto {
         };
 
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
-            MapTile mapTile1 = TileUtils::CalculateMapTile(searchBounds.getMin(), zoom, _dataSource->getProjection());
-            MapTile mapTile2 = TileUtils::CalculateMapTile(searchBounds.getMax(), zoom, _dataSource->getProjection());
+            MapTile mapTile1 = TileUtils::CalculateClippedMapTile(searchBounds.getMin(), zoom, _dataSource->getProjection());
+            MapTile mapTile2 = TileUtils::CalculateClippedMapTile(searchBounds.getMax(), zoom, _dataSource->getProjection());
             for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
                 for (int x = std::min(mapTile1.getX(), mapTile2.getX()); x <= std::max(mapTile1.getX(), mapTile2.getX()); x++) {
                     if (static_cast<int>(features.size()) >= maxResults) {
