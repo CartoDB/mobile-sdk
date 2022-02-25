@@ -1,5 +1,3 @@
-#ifdef _CARTO_OFFLINE_SUPPORT
-
 #include "PersistentCacheTileDataSource.h"
 #include "core/BinaryData.h"
 #include "datasources/TileDownloadListener.h"
@@ -7,6 +5,7 @@
 #include "utils/TileUtils.h"
 
 #include <memory>
+#include <algorithm>
 
 #include <sqlite3pp.h>
 
@@ -16,6 +15,7 @@ namespace carto {
         CacheTileDataSource(dataSource),
         _database(),
         _cacheOnlyMode(false),
+        _downloadTasks(),
         _downloadThreadPool(std::make_shared<CancelableThreadPool>()),
         _cache(DEFAULT_CAPACITY),
         _mutex()
@@ -42,10 +42,22 @@ namespace carto {
 
     void PersistentCacheTileDataSource::startDownloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& tileDownloadListener) {
         auto task = std::make_shared<DownloadTask>(std::static_pointer_cast<PersistentCacheTileDataSource>(shared_from_this()), mapBounds, minZoom, maxZoom, tileDownloadListener);
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _downloadTasks.insert(task);
+        }
         _downloadThreadPool->execute(task, 0);
     }
 
     void PersistentCacheTileDataSource::stopAllDownloads() {
+        std::set<std::shared_ptr<DownloadTask>> downloadTasks;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            downloadTasks = _downloadTasks;
+        }
+        for (std::shared_ptr<DownloadTask> task : downloadTasks) {
+            task->cancel();
+        }
         _downloadThreadPool->cancelAll();
     }
     
@@ -346,6 +358,7 @@ namespace carto {
             minZoom = std::max(minZoom, dataSource->getMinZoom());
             maxZoom = std::min(maxZoom, dataSource->getMaxZoom());
         } else {
+            Log::Info("PersistentCacheTileDataSource::DownloadTask: Download cancelled due to lost datasource");
             return;
         }
 
@@ -387,7 +400,8 @@ namespace carto {
                     if (auto dataSource = _dataSource.lock()) {
                         tileData = dataSource->loadTile(mapTile.getFlipped());
                     } else {
-                        return;
+                        cancel();
+                        break;
                     }
                     tileIndex++;
 
@@ -398,17 +412,25 @@ namespace carto {
             }
         }
 
-        if (tileIndex == tileCount && _downloadListener) {
-            _downloadListener->onDownloadProgress(100.0f);
-            _downloadListener->onDownloadCompleted();
+        if (auto dataSource = _dataSource.lock()) {
+            dataSource->_downloadTasks.erase(std::static_pointer_cast<DownloadTask>(shared_from_this()));
+        } else {
+            Log::Info("PersistentCacheTileDataSource::DownloadTask: Download cancelled due to lost datasource");
+            return;
         }
 
-        Log::Info("PersistentCacheTileDataSource::DownloadTask: Finished downloading");
+        if (tileIndex == tileCount) {
+            if (_downloadListener) {
+                _downloadListener->onDownloadProgress(100.0f);
+                _downloadListener->onDownloadCompleted();
+            }
+            Log::Info("PersistentCacheTileDataSource::DownloadTask: Finished downloading");
+        } else {
+            Log::Info("PersistentCacheTileDataSource::DownloadTask: Download cancelled");
+        }
     }
 
     const unsigned int PersistentCacheTileDataSource::DEFAULT_CAPACITY = 50 * 1024 * 1024;
     const unsigned int PersistentCacheTileDataSource::EXTRA_TILE_FOOTPRINT = 1024;
 
 }
-
-#endif
