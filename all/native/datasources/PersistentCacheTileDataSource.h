@@ -14,6 +14,8 @@
 #include "components/DirectorPtr.h"
 #include "datasources/CacheTileDataSource.h"
 
+#include <mutex>
+#include <memory>
 #include <string>
 #include <set>
 
