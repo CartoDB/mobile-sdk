@@ -1,3 +1,12 @@
+CARTO Mobile SDK 4.4.5
+-------------------
+
+### Changes, fixes:
+
+* Fixed 'PersistentCacheTileDataSource' tile preload canceling not working
+* Fixed several cases where tile datasources could be accessed with tile coordinates out of bounds
+
+
 CARTO Mobile SDK 4.4.5RC1
 -------------------
 
