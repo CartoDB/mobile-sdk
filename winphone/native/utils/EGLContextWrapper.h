@@ -23,7 +23,7 @@ namespace carto {
         EGLContextWrapper();
         virtual ~EGLContextWrapper();
 
-        EGLSurface createSurface(void* panelPtr, int renderSurfaceWidth, int renderSurfaceHeight);
+        EGLSurface createSurface(void* panelPtr);
         void destroySurface(const EGLSurface surface);
         void makeCurrent(const EGLSurface surface);
         bool swapBuffers(const EGLSurface surface);

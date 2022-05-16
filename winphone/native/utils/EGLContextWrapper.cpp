@@ -142,7 +142,7 @@ namespace carto {
         initialize();
     }
 
-    EGLSurface EGLContextWrapper::createSurface(void* panelPtr, int renderSurfaceWidth, int renderSurfaceHeight) {
+    EGLSurface EGLContextWrapper::createSurface(void* panelPtr) {
         SwapChainPanel^ panel = reinterpret_cast<SwapChainPanel^>(panelPtr);
         if (!panel) {
             Log::Error("EGLContextWrapper: SwapChainPanel parameter is invalid");
@@ -163,11 +163,6 @@ namespace carto {
         // Create a PropertySet and initialize with the EGLNativeWindowType.
         PropertySet^ surfaceCreationProperties = ref new PropertySet();
         surfaceCreationProperties->Insert(ref new String(EGLNativeWindowTypeProperty), panel);
-
-        // If a render surface size is specified, add it to the surface creation properties
-        if (renderSurfaceWidth != -1 && renderSurfaceHeight != -1) {
-            surfaceCreationProperties->Insert(ref new String(EGLRenderSurfaceSizeProperty), PropertyValue::CreateSize(Size(renderSurfaceWidth, renderSurfaceHeight)));
-        }
 
         surface = eglCreateWindowSurface(_eglDisplay, _eglConfig, reinterpret_cast<IInspectable*>(surfaceCreationProperties), surfaceAttributes);
         if (surface == EGL_NO_SURFACE) {

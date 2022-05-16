@@ -53,6 +53,7 @@
             Windows.UI.Core.CoreWindow window = Windows.UI.Xaml.Window.Current.CoreWindow;
             window.VisibilityChanged += new Windows.Foundation.TypedEventHandler<Windows.UI.Core.CoreWindow, Windows.UI.Core.VisibilityChangedEventArgs > (OnVisibilityChanged);
 
+            _swapChainPanel.LayoutUpdated += new System.EventHandler<object>(OnSwapChainPanelLayoutUpdated);
             _swapChainPanel.SizeChanged += new Windows.UI.Xaml.SizeChangedEventHandler(OnSwapChainPanelSizeChanged);
             _swapChainPanelSize = new Windows.Foundation.Size(_swapChainPanel.RenderSize.Width, _swapChainPanel.RenderSize.Height);
 
@@ -64,8 +65,10 @@
         }
 
         ~MapView() {
-            StopRenderLoop();
-            DestroyRenderSurface();
+            lock (_renderSurfaceLock) {
+                StopRenderLoop();
+                DestroyRenderSurface();
+            }
         }
 
         public void InitializeComponent() {
@@ -89,23 +92,29 @@
         }
 
         void OnPageLoaded(object sender, Windows.UI.Xaml.RoutedEventArgs args) {
-            // The SwapChainPanel has been created and arranged in the page layout, so EGL can be initialized.
-            CreateRenderSurface();
+            lock (_renderSurfaceLock) {
+                if (_renderSurface == IntPtr.Zero) {
+                    // The SwapChainPanel has been created and arranged in the page layout, so EGL can be initialized.
+                    CreateRenderSurface();
 
-            if (_renderSurface != IntPtr.Zero) {
-                StartRenderLoop();
+                    if (_renderSurface != IntPtr.Zero) {
+                        StartRenderLoop();
+                    }
+                }
             }
         }
 
         void OnVisibilityChanged(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.VisibilityChangedEventArgs args) {
-            if (args.Visible && _renderSurface == IntPtr.Zero) {
-                CreateRenderSurface();
-            }
+            lock (_renderSurfaceLock) {
+                if (args.Visible && _renderSurface == IntPtr.Zero) {
+                    CreateRenderSurface();
+                }
 
-            if (args.Visible && _renderSurface != IntPtr.Zero) {
-                StartRenderLoop();
-            } else {
-                StopRenderLoop();
+                if (args.Visible && _renderSurface != IntPtr.Zero) {
+                    StartRenderLoop();
+                } else {
+                    StopRenderLoop();
+                }
             }
         }
 
@@ -170,11 +179,24 @@
             }
         }
 
+        void OnSwapChainPanelLayoutUpdated(object sender, object args) {
+            Redraw();
+        }
+
         void OnSwapChainPanelSizeChanged(object sender, Windows.UI.Xaml.SizeChangedEventArgs args) {
             lock (_swapChainPanelSizeLock) {
                 _swapChainPanelSize = new Windows.Foundation.Size(args.NewSize.Width, args.NewSize.Height);
             }
-            RecoverFromLostDevice();
+            lock (_renderSurfaceLock) {
+                if (_renderSurface == IntPtr.Zero) {
+                    CreateRenderSurface();
+
+                    if (_renderSurface != IntPtr.Zero) {
+                        StartRenderLoop();
+                    }
+                }
+            }
+            Redraw();
         }
 
         void GetSwapChainPanelSize(out int width, out int height) {
@@ -189,7 +211,7 @@
                 int width = (int)(ConvertDipsToPixels(_swapChainPanelSize.Width) + 0.5f);
                 int height = (int)(ConvertDipsToPixels(_swapChainPanelSize.Height) + 0.5f);
                 if (width > 0 && height > 0) {
-                    _renderSurface = _eglContext.CreateSurface(_swapChainPanel, width, height);
+                    _renderSurface = _eglContext.CreateSurface(_swapChainPanel);
                     _eglContext.MakeCurrent(_renderSurface);
                     _baseMapView.OnSurfaceCreated();
                 }
@@ -204,59 +226,69 @@
         }
 
         void RecoverFromLostDevice() {
-            StopRenderLoop();
-
             lock (_renderSurfaceLock) {
+                StopRenderLoop();
+
                 DestroyRenderSurface();
                 _eglContext.Reset();
                 CreateRenderSurface();
-            }
 
-            if (_renderSurface != IntPtr.Zero) {
-                StartRenderLoop();
+                if (_renderSurface != IntPtr.Zero) {
+                    StartRenderLoop();
+                }
             }
         }
 
         void StartRenderLoop() {
             // If the render loop is already running then do not start another thread.
-            if (_renderLoopWorker != null && _renderLoopWorker.Status == Windows.Foundation.AsyncStatus.Started) {
+            if (_renderLoopWorker != null) {
                 return;
             }
 
             // Create a task for rendering that will be run on a background thread.
             var workItemHandler = new Windows.System.Threading.WorkItemHandler((Windows.Foundation.IAsyncAction action) => {
-                lock (_renderSurfaceLock) {
-                    _eglContext.MakeCurrent(_renderSurface);
+                int oldPanelWidth = -1;
+                int oldPanelHeight = -1;
+                while (action.Status == Windows.Foundation.AsyncStatus.Started) {
+                    int panelWidth = 0;
+                    int panelHeight = 0;
+                    GetSwapChainPanelSize(out panelWidth, out panelHeight);
 
-                    int oldPanelWidth = -1;
-                    int oldPanelHeight = -1;
+                    bool swapResult = false;
+                    lock (_renderSurfaceLock) {
+                        if (_renderSurface == IntPtr.Zero) {
+                            continue;
+                        }
+                        _eglContext.MakeCurrent(_renderSurface);
 
-                    while (action.Status == Windows.Foundation.AsyncStatus.Started) {
-                        int panelWidth = 0;
-                        int panelHeight = 0;
-                        GetSwapChainPanelSize(out panelWidth, out panelHeight);
+                        // Signal 'surface changed' when needed
                         if (panelWidth != oldPanelWidth || panelHeight != oldPanelHeight) {
                             _baseMapView.OnSurfaceChanged(panelWidth, panelHeight);
                             oldPanelWidth = panelWidth;
                             oldPanelHeight = panelHeight;
                         }
 
+                        // Do actual rendering
                         _baseMapView.OnDrawFrame();
 
-                        // The call to eglSwapBuffers might not be successful (i.e. due to Device Lost)
-                        // If the call fails, then we must reinitialize EGL and the GL resources.
-                        if (!_eglContext.SwapBuffers(_renderSurface)) {
-                            // XAML objects like the SwapChainPanel must only be manipulated on the UI thread.
-                            var worker = _swapChainPanel.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() => {
-                                RecoverFromLostDevice();
-                            }));
-                            worker.Close();
-                            return;
-                        }
-
-                        _swapChainEvent.WaitOne();
-                        _swapChainEvent.Reset();
+                        // Display rendered image
+                        swapResult = _eglContext.SwapBuffers(_renderSurface);
                     }
+
+                    // The call to eglSwapBuffers might not be successful (i.e. due to Device Lost)
+                    // If the call fails, then we must reinitialize EGL and the GL resources.
+                    if (!swapResult) {
+                        // XAML objects like the SwapChainPanel must only be manipulated on the UI thread.
+                        var recoveryWorker = _swapChainPanel.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() => {
+                            RecoverFromLostDevice();
+                        }));
+                        recoveryWorker.Close();
+                        return;
+                    }
+
+                    // Wait for the next 'redraw' signal
+                    _swapChainEvent.WaitOne();
+                    _swapChainEvent.Reset();
                 }
             });
 
@@ -266,8 +298,8 @@
 
         void StopRenderLoop() {
             if (_renderLoopWorker != null) {
-                _swapChainEvent.Set();
                 _renderLoopWorker.Cancel();
+                _swapChainEvent.Set();
                 _renderLoopWorker = null;
             }
         }
