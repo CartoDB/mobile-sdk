@@ -87,6 +87,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     }
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidBecomeActive) name:UIApplicationDidBecomeActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
 }
@@ -206,6 +207,7 @@ static const int NATIVE_NO_COORDINATE = -1;
 
 -(void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
 
@@ -243,6 +245,16 @@ static const int NATIVE_NO_COORDINATE = -1;
         }
         _active = NO;
     }
+}
+
+-(void)appDidBecomeActive {
+    carto::Log::Info("MapView::appDidBecomeActive");
+
+    @synchronized (self) {
+        _active = YES;
+    }
+
+    [self setNeedsDisplay];
 }
 
 -(void)appDidEnterBackground {

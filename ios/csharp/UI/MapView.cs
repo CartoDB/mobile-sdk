@@ -22,6 +22,7 @@
         private CGSize _activeDrawableSize = new CGSize(0, 0);
         private float _scale = 1;
         private NSObject _willResignActiveNotificationObserver;
+        private NSObject _didBecomeActiveNotificationObserver;
         private NSObject _didEnterBackgroundNotificationObserver;
         private NSObject _willEnterForegroundNotificationObserver;
         private MapRedrawRequestListener _redrawRequestListener;
@@ -88,6 +89,7 @@
             }
 
             _willResignActiveNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.WillResignActiveNotification, OnAppWillResignActive, null);
+            _didBecomeActiveNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidBecomeActiveNotification, OnAppDidBecomeActive, null);
             _didEnterBackgroundNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidEnterBackgroundNotification, OnAppDidEnterBackground, null);
             _willEnterForegroundNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.WillEnterForegroundNotification, OnAppWillEnterForeground, null);
         }
@@ -181,6 +183,10 @@
                 NSNotificationCenter.DefaultCenter.RemoveObserver(_willResignActiveNotificationObserver);
                 _willResignActiveNotificationObserver = null;
             }
+            if (_didBecomeActiveNotificationObserver != null) {
+                NSNotificationCenter.DefaultCenter.RemoveObserver(_didBecomeActiveNotificationObserver);
+                _didBecomeActiveNotificationObserver = null;
+            }
             if (_didEnterBackgroundNotificationObserver != null) {
                 NSNotificationCenter.DefaultCenter.RemoveObserver(_didEnterBackgroundNotificationObserver);
                 _didEnterBackgroundNotificationObserver = null;
@@ -228,6 +234,16 @@
                 }
                 _active = false;
             }
+        }
+
+        private void OnAppDidBecomeActive(NSNotification notification) {
+            Log.Info("MapView.OnAppDidBecomeActive");
+
+            lock (this) {
+                _active = true;
+            }
+
+            SetNeedsDisplay();
         }
 
         private void OnAppDidEnterBackground(NSNotification notification) {
