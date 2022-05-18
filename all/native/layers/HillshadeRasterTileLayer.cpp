@@ -111,8 +111,7 @@ namespace carto {
         
         // Build vector tile from created normal map
         float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
-        std::shared_ptr<const vt::TileTransformer::VertexTransformer> vtTransformer = getTileTransformer()->createTileVertexTransformer(vtTileId);
-        vt::TileLayerBuilder tileLayerBuilder(std::string(), 0, vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
+        vt::TileLayerBuilder tileLayerBuilder(std::string(), 0, vtTileId, getTileTransformer(), tileSize, 1.0f); // Note: the size/scale argument is ignored
         tileLayerBuilder.addBitmap(tileBitmap);
         std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer();
         return std::make_shared<vt::Tile>(vtTileId, tileSize, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
