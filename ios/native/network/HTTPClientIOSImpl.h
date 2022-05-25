@@ -9,6 +9,8 @@
 
 #include "network/HTTPClient.h"
 
+#include <atomic>
+
 namespace carto {
 
     class HTTPClient::IOSImpl : public HTTPClient::Impl {
@@ -20,8 +22,8 @@ namespace carto {
         virtual bool makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const;
 
     private:
-        bool _log;
-        int _timeout;
+        const bool _log;
+        std::atomic<int> _timeout;
     };
 
 }

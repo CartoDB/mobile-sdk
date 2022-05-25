@@ -15,6 +15,7 @@ namespace carto {
         _key(key),
         _httpClient(Log::IsShowDebug()),
         _serviceURL(),
+        _timeout(-1),
         _tmsScheme(false),
         _tileURLs(),
         _randomGenerator(),
@@ -34,6 +35,17 @@ namespace carto {
     void MapTilerOnlineTileDataSource::setCustomServiceURL(const std::string& serviceURL) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _serviceURL = serviceURL;
+    }
+
+    int MapTilerOnlineTileDataSource::getTimeout() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _timeout;
+    }
+
+    void MapTilerOnlineTileDataSource::setTimeout(int timeout) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _httpClient.setTimeout(timeout < 0 ? -1 : timeout * 1000);
+        _timeout = timeout;
     }
 
     std::shared_ptr<TileData> MapTilerOnlineTileDataSource::loadTile(const MapTile& mapTile) {

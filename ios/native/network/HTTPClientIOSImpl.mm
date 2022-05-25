@@ -136,8 +136,9 @@ namespace carto {
         [mutableRequest setURL:url];
         [mutableRequest setHTTPShouldUsePipelining:YES];
 
-        if (_timeout > 0) {
-            [mutableRequest setTimeoutInterval:_timeout / 1000.0];
+        int timeout = _timeout.load();
+        if (timeout > 0) {
+            [mutableRequest setTimeoutInterval:timeout / 1000.0];
         }
 
         NSString* method = [NSString stringWithUTF8String:request.method.c_str()];

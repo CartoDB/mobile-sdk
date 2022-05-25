@@ -24,6 +24,7 @@ namespace carto {
         _cacheSize(0),
         _httpClient(Log::IsShowDebug()),
         _schema(),
+        _timeout(-1),
         _tmsScheme(false),
         _tileURLs(),
         _tileMasks(),
@@ -44,6 +45,17 @@ namespace carto {
             loadConfiguration();
         }
         return _schema;
+    }
+
+    int CartoOnlineTileDataSource::getTimeout() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _timeout;
+    }
+
+    void CartoOnlineTileDataSource::setTimeout(int timeout) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _httpClient.setTimeout(timeout < 0 ? -1 : timeout * 1000);
+        _timeout = timeout;
     }
 
     std::shared_ptr<TileData> CartoOnlineTileDataSource::loadTile(const MapTile& mapTile) {

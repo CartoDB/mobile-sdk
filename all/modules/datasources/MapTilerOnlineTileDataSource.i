@@ -20,6 +20,7 @@
 !polymorphic_shared_ptr(carto::MapTilerOnlineTileDataSource, datasources.MapTilerOnlineTileDataSource)
 
 %attributestring(carto::MapTilerOnlineTileDataSource, std::string, CustomServiceURL, getCustomServiceURL, setCustomServiceURL)
+%attribute(carto::MapTilerOnlineTileDataSource, int, Timeout, getTimeout, setTimeout)
 %std_exceptions(carto::MapTilerOnlineTileDataSource::MapTilerOnlineTileDataSource)
 %ignore carto::MapTilerOnlineTileDataSource::buildTileURL;
 %ignore carto::MapTilerOnlineTileDataSource::loadConfiguration;
