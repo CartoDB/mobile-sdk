@@ -35,6 +35,33 @@ namespace carto {
         return std::dynamic_pointer_cast<TileDataSource>(dataSource1.second) == std::dynamic_pointer_cast<TileDataSource>(dataSource2.second);
     };
 
+    int MultiTileDataSource::getMinZoom() const {
+        int minZoom = Const::MAX_SUPPORTED_ZOOM_LEVEL;
+        for (auto it = _dataSources.begin(); it != _dataSources.end(); it++)
+        {
+            minZoom = std::min(minZoom, it->second->getMinZoom());
+        }
+        return minZoom;
+    }
+
+    int MultiTileDataSource::getMaxZoom() const {
+        int maxZoom = 0;
+        for (auto it = _dataSources.begin(); it != _dataSources.end(); it++)
+        {
+            maxZoom = std::max(maxZoom, it->second->getMaxZoom());
+        }
+        return maxZoom;
+    }
+
+    MapBounds MultiTileDataSource::getDataExtent() const {
+        MapBounds bounds;
+        for (auto it = _dataSources.begin(); it != _dataSources.end(); it++)
+        {
+            bounds.expandToContain( it->second->getDataExtent());
+        }
+        return bounds;
+    }
+
     std::shared_ptr<TileData> MultiTileDataSource::loadTile(const MapTile &mapTile)
     {
         Log::Infof("MultiTileDataSource::loadTile: Loading %s", mapTile.toString().c_str());
@@ -76,7 +103,6 @@ namespace carto {
                 // Slow path: try other packages
                 for (auto it = _dataSources.begin(); it != _dataSources.end(); it++)
                 {
-
                     if (auto dataSource = std::dynamic_pointer_cast<TileDataSource>(it->second))
                     {
                         auto it2 = std::find_if(_cachedOpenDataSources.begin(), _cachedOpenDataSources.end(), [&it](const std::pair<std::shared_ptr<PackageTileMask>, std::shared_ptr<TileDataSource>> pair)

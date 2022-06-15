@@ -31,6 +31,11 @@ namespace carto {
         MultiTileDataSource(int maxOpenedPackages);
         virtual ~MultiTileDataSource();
 
+        virtual int getMinZoom() const;
+        virtual int getMaxZoom() const;
+
+        virtual MapBounds getDataExtent() const;
+
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
 
         
