@@ -286,8 +286,6 @@ namespace carto {
         return true;
     }
 
-<<<<<<< HEAD
-=======
     std::string MBTilesTileDataSource::getMetaData(const std::string &key) const {
         // As a first step, try to use metadata
         std::string result;
@@ -304,7 +302,6 @@ namespace carto {
         }
         return result;
     }
->>>>>>> 527b8b95 (fix: working MultiTileDataSource (renamed from LocalPackageManagerTileDataSource))
 }
 
 #endif

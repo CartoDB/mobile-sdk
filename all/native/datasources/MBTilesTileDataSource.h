@@ -81,6 +81,13 @@ namespace carto {
          * @return Map containing meta data information (parameter names mapped to parameter values).
          */
         std::map<std::string, std::string> getMetaData() const;
+
+        /**
+         * Query a metadata value
+         * Possible parameters can be found in MBTiles specification.
+         * @return a string representation of the metadata value
+         */
+        std::string MBTilesTileDataSource::getMetaData(const std::string &key) const;
         
         virtual int getMinZoom() const;
 
