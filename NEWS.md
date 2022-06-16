@@ -1,3 +1,11 @@
+CARTO Mobile SDK 4.4.6
+-------------------
+
+### Changes, fixes:
+
+* Fixed minor rendering issue with lines joined at steep angles when BEVEL/ROUND join modes were used
+
+
 CARTO Mobile SDK 4.4.6RC1
 -------------------
 
