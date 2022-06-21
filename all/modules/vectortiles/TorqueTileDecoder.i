@@ -30,7 +30,7 @@
 %ignore carto::TorqueTileDecoder::decodeFeatures;
 %ignore carto::TorqueTileDecoder::decodeTile;
 %ignore carto::TorqueTileDecoder::getMapSettings;
-%ignore carto::TorqueTileDecoder::getNutiParameters;
+%ignore carto::TorqueTileDecoder::getSymbolizerContextSettings;
 
 %include "vectortiles/TorqueTileDecoder.h"
 

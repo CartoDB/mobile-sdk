@@ -24,8 +24,8 @@ namespace carto {
         _fallbackFonts(),
         _map(),
         _mapSettings(),
-        _nutiParameters(),
         _symbolizerContext(),
+        _symbolizerContextSettings(),
         _styleSet(),
         _mutex()
     {
@@ -76,9 +76,9 @@ namespace carto {
         return _mapSettings;
     }
 
-    std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > TorqueTileDecoder::getNutiParameters() const {
+    std::shared_ptr<const mvt::SymbolizerContext::Settings> TorqueTileDecoder::getSymbolizerContextSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _nutiParameters;
+        return _symbolizerContextSettings;
     }
 
     void TorqueTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
@@ -178,13 +178,13 @@ namespace carto {
             std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
             fallbackFont = fontManager->getFont(fontName, fallbackFont);
         }
-        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
-        auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
+        auto symbolizerContextSettings = std::make_shared<mvt::SymbolizerContext::Settings>(DEFAULT_TILE_SIZE, std::make_shared<std::map<std::string, mvt::Value>>(), fallbackFont);
+        auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, *symbolizerContextSettings);
 
         _map = map;
         _mapSettings = mapSettings;
-        _nutiParameters = std::make_shared<std::map<std::string, mvt::NutiParameter>>(map->getNutiParameterMap());
         _symbolizerContext = symbolizerContext;
+        _symbolizerContextSettings = symbolizerContextSettings;
         _styleSet = styleSet;
     }
 

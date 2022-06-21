@@ -37,7 +37,8 @@ namespace carto {
         if (auto mapRenderer = getMapRenderer()) {
             float opacity = getOpacity();
 
-            Color backgroundColor = Color(getTileDecoder()->getMapSettings()->backgroundColor.value());
+            vt::ColorFunction colorFunc = getTileDecoder()->getMapSettings()->backgroundColor.getFunction(getExpressionContext());
+            Color backgroundColor = TileRenderer::evaluateColorFunc(colorFunc, viewState);
             mapRenderer->clearAndBindScreenFBO(backgroundColor, false, false);
 
             _tileRenderer->setLayerBlendingSpeed(0.0f);

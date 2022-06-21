@@ -19,14 +19,12 @@
 
 #include <stdext/timed_lru_cache.h>
 
+#include <vt/Tile.h>
 #include <vt/Styles.h>
 
 namespace carto {
     class TileDrawData;
     class RasterTileEventListener;
-    namespace vt {
-        class Tile;
-    }
     
     namespace RasterTileFilterMode {
         /**

@@ -227,11 +227,11 @@ namespace carto {
         return false;
     }
     
-    std::shared_ptr<Bitmap> Layer::getBackgroundBitmap() const {
+    std::shared_ptr<Bitmap> Layer::getBackgroundBitmap(const ViewState& viewState) const {
         return std::shared_ptr<Bitmap>();
     }
 
-    std::shared_ptr<Bitmap> Layer::getSkyBitmap() const {
+    std::shared_ptr<Bitmap> Layer::getSkyBitmap(const ViewState& viewState) const {
         return std::shared_ptr<Bitmap>();
     }
 

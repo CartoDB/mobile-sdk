@@ -72,6 +72,8 @@ namespace carto {
         void calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<vt::GLTileRenderer::GeometryIntersectionInfo>& results) const;
         void calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<vt::GLTileRenderer::BitmapIntersectionInfo>& results) const;
     
+        static Color evaluateColorFunc(const vt::ColorFunction& colorFunc, const ViewState& viewState);
+
     private:
         bool initializeRenderer();
 

@@ -333,6 +333,12 @@ namespace carto {
         tileRenderer->findBitmapIntersections(rays, results);
     }
 
+    Color TileRenderer::evaluateColorFunc(const vt::ColorFunction& colorFunc, const ViewState& viewState) {
+        cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat();
+        vt::ViewState vtViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
+        return Color(colorFunc(vtViewState).value());
+    }
+
     bool TileRenderer::initializeRenderer() {
         if (_vtRenderer && _vtRenderer->isValid()) {
             return true;

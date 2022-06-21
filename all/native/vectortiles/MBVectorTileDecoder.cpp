@@ -53,8 +53,8 @@ namespace carto {
         _styleSet(),
         _map(),
         _mapSettings(),
-        _nutiParameters(),
         _symbolizerContext(),
+        _symbolizerContextSettings(),
         _assetPackageSymbolizerContexts()
     {
         if (!compiledStyleSet) {
@@ -217,12 +217,12 @@ namespace carto {
                 }
             }
 
-            std::map<std::string, mvt::Value> parameterValueMap = _symbolizerContext->getSettings().getNutiParameterValueMap();
+            auto parameterValueMap = std::make_shared<std::map<std::string, mvt::Value>>(*_symbolizerContextSettings->getNutiParameterValueMap());
             for (auto it2 = _parameterValueMap.begin(); it2 != _parameterValueMap.end(); it2++) {
-                parameterValueMap[it2->first] = it2->second;
+                (*parameterValueMap)[it2->first] = it2->second;
             }
-            mvt::SymbolizerContext::Settings settings(_symbolizerContext->getSettings().getTileSize(), parameterValueMap, _symbolizerContext->getSettings().getFallbackFont());
-            _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(_symbolizerContext->getBitmapManager(), _symbolizerContext->getFontManager(), _symbolizerContext->getStrokeMap(), _symbolizerContext->getGlyphMap(), settings);
+            _symbolizerContextSettings = std::make_shared<mvt::SymbolizerContext::Settings>(_symbolizerContextSettings->getTileSize(), parameterValueMap, _symbolizerContextSettings->getFallbackFont());
+            _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(_symbolizerContext->getBitmapManager(), _symbolizerContext->getFontManager(), _symbolizerContext->getStrokeMap(), _symbolizerContext->getGlyphMap(), *_symbolizerContextSettings);
         }
         notifyDecoderChanged();
         return true;
@@ -274,9 +274,9 @@ namespace carto {
         return _mapSettings;
     }
 
-    std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > MBVectorTileDecoder::getNutiParameters() const {
+    std::shared_ptr<const mvt::SymbolizerContext::Settings> MBVectorTileDecoder::getSymbolizerContextSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _nutiParameters;
+        return _symbolizerContextSettings;
     }
 
     void MBVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
@@ -513,7 +513,7 @@ namespace carto {
                 std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
                 fallbackFont = fontManager->getFont(fontName, fallbackFont);
             }
-            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
+            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::make_shared<std::map<std::string, mvt::Value>>(), fallbackFont);
             symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
             if (assetPackage) {
@@ -530,9 +530,9 @@ namespace carto {
             }
         }
 
-        std::map<std::string, mvt::Value> parameterValueMap;
+        auto parameterValueMap = std::make_shared<std::map<std::string, mvt::Value>>();
         for (auto it = map->getNutiParameterMap().begin(); it != map->getNutiParameterMap().end(); it++) {
-            parameterValueMap[it->first] = it->second.getDefaultValue();
+            (*parameterValueMap)[it->first] = it->second.getDefaultValue();
         }
         for (auto it = _parameterValueMap.begin(); it != _parameterValueMap.end(); ) {
             auto it2 = map->getNutiParameterMap().find(it->first);
@@ -557,15 +557,14 @@ namespace carto {
                 continue;
             }
 
-            parameterValueMap[it->first] = it->second;
+            (*parameterValueMap)[it->first] = it->second;
             it++;
         }
 
-        mvt::SymbolizerContext::Settings settings(symbolizerContext->getSettings().getTileSize(), parameterValueMap, symbolizerContext->getSettings().getFallbackFont());
-        _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(symbolizerContext->getBitmapManager(), symbolizerContext->getFontManager(), symbolizerContext->getStrokeMap(), symbolizerContext->getGlyphMap(), settings);
+        _symbolizerContextSettings = std::make_shared<mvt::SymbolizerContext::Settings>(symbolizerContext->getSettings().getTileSize(), parameterValueMap, symbolizerContext->getSettings().getFallbackFont());
+        _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(symbolizerContext->getBitmapManager(), symbolizerContext->getFontManager(), symbolizerContext->getStrokeMap(), symbolizerContext->getGlyphMap(), *_symbolizerContextSettings);
         _map = map;
         _mapSettings = std::make_shared<mvt::Map::Settings>(_map->getSettings());
-        _nutiParameters = std::make_shared<std::map<std::string, mvt::NutiParameter>>(_map->getNutiParameterMap());
         _styleSet = styleSet;
         _cachedFeatureDecoder.first.reset();
         _cachedFeatureDecoder.second.reset();

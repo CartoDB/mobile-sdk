@@ -91,11 +91,11 @@ namespace carto {
         return false;
     }
     
-    std::shared_ptr<Bitmap> SolidLayer::getBackgroundBitmap() const {
+    std::shared_ptr<Bitmap> SolidLayer::getBackgroundBitmap(const ViewState& viewState) const {
         return std::shared_ptr<Bitmap>();
     }
     
-    std::shared_ptr<Bitmap> SolidLayer::getSkyBitmap() const {
+    std::shared_ptr<Bitmap> SolidLayer::getSkyBitmap(const ViewState& viewState) const {
         return std::shared_ptr<Bitmap>();
     }
     

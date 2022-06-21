@@ -52,7 +52,7 @@ namespace carto {
         _layerSymbolizerContexts(),
         _assetPackageSymbolizerContexts(),
         _mapSettings(std::make_shared<mvt::Map::Settings>()),
-        _nutiParameters(std::make_shared<std::map<std::string, mvt::NutiParameter>>())
+        _symbolizerContextSettings(std::make_shared<mvt::SymbolizerContext::Settings>(0.0f, std::make_shared<std::map<std::string, mvt::Value>>(), std::shared_ptr<const vt::Font>()))
     {
         for (auto it = layerStyleSets.begin(); it != layerStyleSets.end(); it++) {
             updateLayerStyleSet(it->first, it->second);
@@ -120,9 +120,9 @@ namespace carto {
         return _mapSettings;
     }
 
-    std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > CartoVectorTileDecoder::getNutiParameters() const {
+    std::shared_ptr<const mvt::SymbolizerContext::Settings> CartoVectorTileDecoder::getSymbolizerContextSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _nutiParameters;
+        return _symbolizerContextSettings;
     }
 
     void CartoVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
@@ -328,7 +328,7 @@ namespace carto {
                 std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
                 fallbackFont = fontManager->getFont(fontName, fallbackFont);
             }
-            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
+            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::make_shared<std::map<std::string, mvt::Value>>(), fallbackFont);
             symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
             if (assetPackage) {
@@ -357,7 +357,7 @@ namespace carto {
 
         if (!_layerIds.empty() && _layerIds.front() == layerId) {
             _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
-            _nutiParameters = std::make_shared<std::map<std::string, mvt::NutiParameter>>(map->getNutiParameterMap());
+            _symbolizerContextSettings = std::make_shared<mvt::SymbolizerContext::Settings>(symbolizerContext->getSettings());
         }
 
         _layerStyleSets[layerId] = styleSet;

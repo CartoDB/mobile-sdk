@@ -80,8 +80,8 @@ namespace carto {
 
         virtual std::shared_ptr<const mvt::Map::Settings> getMapSettings() const;
 
-        virtual std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > getNutiParameters() const;
-    
+        virtual std::shared_ptr<const mvt::SymbolizerContext::Settings> getSymbolizerContextSettings() const;
+
         virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
 
         virtual int getMinZoom() const;
@@ -111,7 +111,7 @@ namespace carto {
         std::map<std::string, std::shared_ptr<const mvt::SymbolizerContext> > _layerSymbolizerContexts;
         std::map<std::shared_ptr<AssetPackage>, std::shared_ptr<const mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
         std::shared_ptr<const mvt::Map::Settings> _mapSettings;
-        std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > _nutiParameters;
+        std::shared_ptr<const mvt::SymbolizerContext::Settings> _symbolizerContextSettings;
 
         mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     

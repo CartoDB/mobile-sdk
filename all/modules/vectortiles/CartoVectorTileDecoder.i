@@ -32,7 +32,7 @@
 %ignore carto::CartoVectorTileDecoder::decodeFeatures;
 %ignore carto::CartoVectorTileDecoder::decodeTile;
 %ignore carto::CartoVectorTileDecoder::getMapSettings;
-%ignore carto::CartoVectorTileDecoder::getNutiParameters;
+%ignore carto::CartoVectorTileDecoder::getSymbolizerContextSettings;
 %ignore carto::CartoVectorTileDecoder::loadMapnikMap;
 %ignore carto::CartoVectorTileDecoder::loadCartoCSSMap;
 

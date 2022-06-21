@@ -17,6 +17,7 @@
 #include "utils/Log.h"
 #include "utils/Const.h"
 #include "vectortiles/VectorTileDecoder.h"
+#include "vectortiles/MBVectorTileDecoder.h"
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
@@ -24,6 +25,24 @@
 #include <vt/TileLayer.h>
 #include <vt/TileLayerBuilder.h>
 #include <vt/TileTransformer.h>
+#include <mapnikvt/ValueConverter.h>
+
+namespace {
+
+    template <typename T>
+    std::optional<T> readDecoderParameter(const std::shared_ptr<carto::VectorTileDecoder>& decoder, const std::string& paramName) {
+        if (auto symbolizerContextSettings = decoder->getSymbolizerContextSettings()) {
+            if (auto parameterValueMap = symbolizerContextSettings->getNutiParameterValueMap()) {
+                auto it = parameterValueMap->find(paramName);
+                if (it != parameterValueMap->end()) {
+                    return std::optional<T>(carto::mvt::ValueConverter<T>::convert(it->second));
+                }
+            }
+        }
+        return std::optional<T>();
+    }
+
+}
 
 namespace carto {
 
@@ -57,19 +76,19 @@ namespace carto {
 
         setCullDelay(DEFAULT_CULL_DELAY);
 
-        if (auto clickRadius = readDecoderParameter<float>("_clickradius")) {
+        if (auto clickRadius = readDecoderParameter<float>(decoder, "_clickradius")) {
             setClickRadius(*clickRadius);
         }
-        if (auto layerBlendingSpeed = readDecoderParameter<float>("_layerblendingspeed")) {
+        if (auto layerBlendingSpeed = readDecoderParameter<float>(decoder, "_layerblendingspeed")) {
             setLayerBlendingSpeed(*layerBlendingSpeed);
         }
-        if (auto labelBlendingSpeed = readDecoderParameter<float>("_labelblendingspeed")) {
+        if (auto labelBlendingSpeed = readDecoderParameter<float>(decoder, "_labelblendingspeed")) {
             setLabelBlendingSpeed(*labelBlendingSpeed);
         }
-        if (auto rendererLayerFilter = readDecoderParameter<std::string>("_rendererlayerfilter")) {
+        if (auto rendererLayerFilter = readDecoderParameter<std::string>(decoder, "_rendererlayerfilter")) {
             setRendererLayerFilter(*rendererLayerFilter);
         }
-        if (auto clickHandlerLayerFilter = readDecoderParameter<std::string>("_clickhandlerlayerfilter")) {
+        if (auto clickHandlerLayerFilter = readDecoderParameter<std::string>(decoder, "_clickhandlerlayerfilter")) {
             setClickHandlerLayerFilter(*clickHandlerLayerFilter);
         }
     }
@@ -277,10 +296,11 @@ namespace carto {
 
     std::shared_ptr<vt::Tile> VectorTileLayer::getPoleTile(int y) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        vt::Color color = (y < 0 ? _tileDecoder->getMapSettings()->northPoleColor : _tileDecoder->getMapSettings()->southPoleColor);
+        mvt::ColorFunctionProperty poleColor = (y < 0 ? _tileDecoder->getMapSettings()->northPoleColor : _tileDecoder->getMapSettings()->southPoleColor);
+        vt::ColorFunction colorFunc = poleColor.getFunction(getExpressionContext());
         std::shared_ptr<vt::Tile>& tile = _poleTiles[y < 0 ? 0 : 1];
-        if (!tile || tile->getLayers().at(0)->getBackgrounds().at(0)->getColor() != color) {
-            auto tileBackground = std::make_shared<vt::TileBackground>(color, std::shared_ptr<const vt::BitmapPattern>());
+        if (!tile || tile->getLayers().at(0)->getBackgrounds().at(0)->getColorFunc() != colorFunc) {
+            auto tileBackground = std::make_shared<vt::TileBackground>(colorFunc, std::shared_ptr<const vt::BitmapPattern>());
 
             float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
             vt::TileId vtTile(0, 0, y);
@@ -485,10 +505,10 @@ namespace carto {
         return false;
     }
     
-    std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {
+    std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap(const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        Color backgroundColor = Color(_tileDecoder->getMapSettings()->backgroundColor.value());
+        Color backgroundColor = TileRenderer::evaluateColorFunc(_tileDecoder->getMapSettings()->backgroundColor.getFunction(getExpressionContext()), viewState);
         if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
             if (backgroundColor != Color(0, 0, 0, 0)) {
                 _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
@@ -500,7 +520,7 @@ namespace carto {
         return _backgroundBitmap;
     }
 
-    std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap() const {
+    std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap(const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         auto options = getOptions();
@@ -508,7 +528,7 @@ namespace carto {
             return std::shared_ptr<Bitmap>();
         }
 
-        Color skyGroundColor = Color(_tileDecoder->getMapSettings()->backgroundColor.value());
+        Color skyGroundColor = TileRenderer::evaluateColorFunc(_tileDecoder->getMapSettings()->backgroundColor.getFunction(getExpressionContext()), viewState);
         Color skyColor = options->getSkyColor();
         if (skyGroundColor != _skyGroundColor || skyColor != _skyColor || !_skyBitmap) {
             if (skyColor == Color(0, 0, 0, 0)) {
@@ -544,6 +564,14 @@ namespace carto {
 
     void VectorTileLayer::setTileMapsMode(bool enabled) {
         _tileMapsMode.store(enabled);
+    }
+
+    mvt::ExpressionContext VectorTileLayer::getExpressionContext() const {
+        mvt::ExpressionContext exprContext;
+        if (auto symbolizerContextSettings = _tileDecoder->getSymbolizerContextSettings()) {
+            exprContext.setNutiParameterValueMap(symbolizerContextSettings->getNutiParameterValueMap());
+        }
+        return exprContext;
     }
     
     VectorTileLayer::TileDecoderListener::TileDecoderListener(const std::shared_ptr<VectorTileLayer>& layer) :

@@ -21,15 +21,13 @@
 
 #include <stdext/timed_lru_cache.h>
 
-#include <mapnikvt/ValueConverter.h>
+#include <vt/Tile.h>
+#include <mapnikvt/Properties.h>
 
 namespace carto {
     class TileDrawData;
     class VectorTileEventListener;
     class VTLabelPlacementWorker;
-    namespace vt {
-        class Tile;
-    }
         
     namespace VectorTileRenderOrder {
         /**
@@ -211,8 +209,8 @@ namespace carto {
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         
-        virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
-        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
+        virtual std::shared_ptr<Bitmap> getBackgroundBitmap(const ViewState& viewState) const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap(const ViewState& viewState) const;
 
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
@@ -220,16 +218,8 @@ namespace carto {
         bool isTileMapsMode() const;
         void setTileMapsMode(bool enabled);
 
-        template <typename T>
-        std::optional<T> readDecoderParameter(const std::string& paramName) const {
-            std::shared_ptr<const std::map<std::string, mvt::NutiParameter> > parameters = _tileDecoder->getNutiParameters();
-            auto paramIt = parameters->find(paramName);
-            if (paramIt != parameters->end()) {
-                return std::optional<T>(mvt::ValueConverter<T>::convert(paramIt->second.getDefaultValue()));
-            }
-            return std::optional<T>();
-        }
-    
+        mvt::ExpressionContext getExpressionContext() const;
+
     private:    
         class TileDecoderListener : public VectorTileDecoder::OnChangeListener {
         public:
