@@ -5,7 +5,10 @@
 #include "utils/Log.h"
 #include "utils/Const.h"
 #include "packagemanager/PackageTileMask.h"
+
+#ifdef _CARTO_OFFLINE_SUPPORT
 #include "datasources/MBTilesTileDataSource.h"
+#endif
 
 #include <boost/lexical_cast.hpp>
 
@@ -14,17 +17,17 @@
 namespace carto {
 
     MultiTileDataSource::MultiTileDataSource(int maxOpenedPackages) : TileDataSource(0, Const::MAX_SUPPORTED_ZOOM_LEVEL),
-                                                                                                  _dataSources(),
-                                                                                                  _cachedOpenDataSources(),
-                                                                                                  _maxOpenedPackages(maxOpenedPackages),
-                                                                                                  _mutex()
+        _dataSources(),
+        _cachedOpenDataSources(),
+        _maxOpenedPackages(maxOpenedPackages),
+        _mutex()
     {
     }
     MultiTileDataSource::MultiTileDataSource() : TileDataSource(0, Const::MAX_SUPPORTED_ZOOM_LEVEL),
-                                                                             _dataSources(),
-                                                                             _cachedOpenDataSources(),
-                                                                             _maxOpenedPackages(4),
-                                                                             _mutex()
+        _dataSources(),
+        _cachedOpenDataSources(),
+        _maxOpenedPackages(4),
+        _mutex()
     {
     }
 

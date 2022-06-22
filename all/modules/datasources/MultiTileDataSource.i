@@ -3,8 +3,7 @@
 
 %module(directors="1") MultiTileDataSource
 
-!proxy_imports(carto::MultiTileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.TileDataSource, datasources.MBTilesTileDataSource, datasources.components.TileData)
-
+!proxy_imports(carto::MultiTileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.TileDataSource,  datasources.components.TileData)
 %{
 #include "datasources/MultiTileDataSource.h"
 #include "components/Exceptions.h"
@@ -18,19 +17,16 @@
 %import "core/MapTile.i"
 %import "core/StringMap.i"
 %import "datasources/TileDataSource.i"
+#ifdef _CARTO_OFFLINE_SUPPORT
 %import "datasources/MBTilesTileDataSource.i"
+#endif
 %import "datasources/components/TileData.i"
 
 !polymorphic_shared_ptr(carto::MultiTileDataSource, datasources.MultiTileDataSource)
 
 %std_exceptions(carto::MultiTileDataSource::MultiTileDataSource)
 %std_exceptions(carto::LocalVectorDataSource::add)
-// %std_exceptions(carto::LocalVectorDataSource::addAll)
 %std_exceptions(carto::LocalVectorDataSource::remove)
-// %std_exceptions(carto::LocalVectorDataSource::removeAll)
-
-%ignore carto::LocalVectorDataSource::addAll;
-%ignore carto::LocalVectorDataSource::removeAll;
 
 %feature("director") carto::MultiTileDataSource;
 
