@@ -29,6 +29,7 @@
 
 %attribute(carto::TileDataSource, int, MinZoom, getMinZoom)
 %attribute(carto::TileDataSource, int, MaxZoom, getMaxZoom)
+%attribute(carto::TileDataSource, int, MaxOverzoomLevel, getMaxOverzoomLevel, setMaxOverzoomLevel)
 %attributeval(carto::TileDataSource, carto::MapBounds, DataExtent, getDataExtent)
 !attributestring_polymorphic(carto::TileDataSource, projections.Projection, Projection, getProjection)
 %ignore carto::TileDataSource::OnChangeListener;
