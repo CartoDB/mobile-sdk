@@ -299,7 +299,7 @@ args.defines += ';' + getProfile(args.profile).get('defines', '')
 if args.metalangle:
   args.defines += ';' + '_CARTO_USE_METALANGLE'
 else:
-  if filter(lambda arch: arch.endswith('-maccatalyst'), args.iosarch):
+  if list(filter(lambda arch: arch.endswith('-maccatalyst'), args.iosarch)):
     print('Mac Catalyst builds are only supported with MetalANGLE')
     sys.exit(-1)
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
