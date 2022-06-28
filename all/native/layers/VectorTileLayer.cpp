@@ -534,7 +534,7 @@ namespace carto {
             if (skyColor == Color(0, 0, 0, 0)) {
                 _skyBitmap.reset();
             } else {
-                _skyBitmap = SkyBitmapGenerator(1, 128).generateBitmap(skyGroundColor, skyColor);
+                _skyBitmap = SkyBitmapGenerator(1, SKY_BITMAP_HEIGHT).generateBitmap(skyGroundColor, skyColor);
             }
             _skyGroundColor = skyGroundColor;
             _skyColor = skyColor;
@@ -691,6 +691,7 @@ namespace carto {
     
     const int VectorTileLayer::BACKGROUND_BLOCK_SIZE = 16;
     const int VectorTileLayer::BACKGROUND_BLOCK_COUNT = 16;
+    const int VectorTileLayer::SKY_BITMAP_HEIGHT = 128;
 
     const int VectorTileLayer::DEFAULT_CULL_DELAY = 200;
 

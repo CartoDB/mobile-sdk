@@ -259,6 +259,7 @@ namespace carto {
 
         static const int BACKGROUND_BLOCK_SIZE;
         static const int BACKGROUND_BLOCK_COUNT;
+        static const int SKY_BITMAP_HEIGHT;
 
         static const int DEFAULT_CULL_DELAY;
 
