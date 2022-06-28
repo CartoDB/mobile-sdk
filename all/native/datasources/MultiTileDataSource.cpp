@@ -22,6 +22,7 @@ namespace carto {
         _maxOpenedPackages(maxOpenedPackages),
         _mutex()
     {
+        _dataSourceListener = std::make_shared<DataSourceListener>(*this);
     }
     MultiTileDataSource::MultiTileDataSource() : TileDataSource(0, Const::MAX_SUPPORTED_ZOOM_LEVEL),
         _dataSources(),
@@ -29,9 +30,19 @@ namespace carto {
         _maxOpenedPackages(4),
         _mutex()
     {
+        _dataSourceListener = std::make_shared<DataSourceListener>(*this);
     }
 
     MultiTileDataSource::~MultiTileDataSource() {
+        _cachedOpenDataSources.clear();
+        for (auto it = _dataSources.begin(); it != _dataSources.end(); it++)
+        {
+            if (auto dataSource = std::dynamic_pointer_cast<TileDataSource>(it->second))
+            {
+                dataSource->unregisterOnChangeListener(_dataSourceListener);
+            }
+        }
+        _dataSourceListener.reset();
     }
 
     bool compare_datasource (std::pair<std::shared_ptr<PackageTileMask>, std::shared_ptr<TileDataSource>> dataSource1, std::pair<std::shared_ptr<PackageTileMask>, std::shared_ptr<TileDataSource>> dataSource2) {
@@ -85,12 +96,8 @@ namespace carto {
                 }
 
                 std::shared_ptr<PackageTileMask> tileMask = it->first;
-                if (tileMask)
-                {
-                    if (tileMask->getTileStatus(mapTileFlipped) == PackageTileStatus::PACKAGE_TILE_STATUS_MISSING)
-                    {
-                        continue;
-                    }
+                if (tileMask && tileMask->getTileStatus(mapTileFlipped) == PackageTileStatus::PACKAGE_TILE_STATUS_MISSING) {
+                    continue;
                 }
 
                 tileData = dataSource->loadTile(mapTile);
@@ -101,7 +108,7 @@ namespace carto {
                     break;
                 }
             }
-            if (!tileOk)
+            if (!tileOk && _cachedOpenDataSources.size() != _dataSources.size())
             {
                 // Slow path: try other packages
                 for (auto it = _dataSources.begin(); it != _dataSources.end(); it++)
@@ -117,12 +124,8 @@ namespace carto {
                             continue;
                         }
                         std::shared_ptr<PackageTileMask> tileMask = it->first;
-                        if (tileMask)
-                        {
-                            if (tileMask->getTileStatus(mapTileFlipped) == PackageTileStatus::PACKAGE_TILE_STATUS_MISSING)
-                            {
-                                continue;
-                            }
+                        if (tileMask && tileMask->getTileStatus(mapTileFlipped) == PackageTileStatus::PACKAGE_TILE_STATUS_MISSING) {
+                            continue;
                         }
 
                         tileData = dataSource->loadTile(mapTile);
@@ -212,6 +215,7 @@ namespace carto {
                     tileMask = std::make_shared<PackageTileMask>(parts[0], zoomLevel);
                 }
             }
+            dataSource->registerOnChangeListener(_dataSourceListener);
             _dataSources.emplace_back(tileMask, dataSource);
         }
         onPackagesChanged(PACKAGES_ADDED);
@@ -229,9 +233,19 @@ namespace carto {
             if (it == _dataSources.end()) {
                 return false;
             }
+            dataSource->unregisterOnChangeListener(_dataSourceListener);
             _dataSources.erase(it);
         }
         onPackagesChanged(PACKAGES_DELETED);
         return true;
+    }
+
+    MultiTileDataSource::DataSourceListener::DataSourceListener(MultiTileDataSource& combinedDataSource) :
+        _combinedDataSource(combinedDataSource)
+    {
+    }
+    
+    void MultiTileDataSource::DataSourceListener::onTilesChanged(bool removeTiles) {
+        _combinedDataSource.notifyTilesChanged(removeTiles);
     }
 }

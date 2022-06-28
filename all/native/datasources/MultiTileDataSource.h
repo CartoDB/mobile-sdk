@@ -64,6 +64,16 @@ namespace carto {
             PACKAGES_DELETED
         };
 
+        class DataSourceListener : public TileDataSource::OnChangeListener {
+        public:
+            explicit DataSourceListener(MultiTileDataSource& combinedDataSource);
+            
+            virtual void onTilesChanged(bool removeTiles);
+            
+        private:
+            MultiTileDataSource& _combinedDataSource;
+        };
+
         mutable std::optional<int> _maxOpenedPackages;
 
         mutable std::vector<std::pair<std::shared_ptr<PackageTileMask>, std::shared_ptr<TileDataSource> > > _dataSources;
@@ -72,6 +82,9 @@ namespace carto {
         mutable std::mutex _mutex;
 
         void onPackagesChanged(ChangeType changeType);
+
+    private:
+        std::shared_ptr<DataSourceListener> _dataSourceListener;
     };
 
 }
