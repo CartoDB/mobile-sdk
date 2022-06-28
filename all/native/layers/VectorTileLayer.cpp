@@ -324,14 +324,14 @@ namespace carto {
         if (std::shared_ptr<VectorTileDecoder::TileMap> tileMap = tileInfo.getTileMap()) {
             auto it = tileMap->find(isTileMapsMode() ? closestTile.getFrameNr() : 0);
             if (it != tileMap->end()) {
-                std::shared_ptr<const vt::Tile> vtTile = it->second;
+                std::shared_ptr<const vt::Tile> tile = it->second;
                 vt::TileId vtTileId(visTile.getZoom(), visTile.getX(), visTile.getY());
                 if (closestTile.getZoom() > visTile.getZoom()) {
                     int dx = visTile.getX() >> visTile.getZoom();
                     int dy = visTile.getY() >> visTile.getZoom();
                     vtTileId = vt::TileId(closestTile.getZoom(), closestTile.getX() + (dx << closestTile.getZoom()), closestTile.getY() + (dy << closestTile.getZoom()));
                 }
-                _tempDrawDatas.push_back(std::make_shared<TileDrawData>(vtTileId, vtTile, closestTileId, preloadingTile));
+                _tempDrawDatas.push_back(std::make_shared<TileDrawData>(vtTileId, tile, closestTileId, preloadingTile));
             }
         }
     }
@@ -433,8 +433,8 @@ namespace carto {
                     if (!tileInfo.getTileMap()) {
                         _preloadingCache.peek(tileId, tileInfo);
                     }
-                    if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                        if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(hitResult.featureId, hitResult.tileId, tileData, tileInfo.getTileBounds())) {
+                    if (std::shared_ptr<BinaryData> data = tileInfo.getTileData()) {
+                        if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(hitResult.featureId, hitResult.tileId, data, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
                             results.push_back(RayIntersectedElement(tileFeature, thisLayer, ray(hitResult.rayT), ray(hitResult.rayT), pass > 0));
                         } else {
@@ -608,66 +608,72 @@ namespace carto {
             if (tileData->isReplaceWithParent()) {
                 continue;
             }
-            if (!tileData->getData()) {
-                break;
-            }
 
             if (isCanceled()) {
                 break;
             }
 
+            // Decode vector tile.
             vt::TileId vtTile(_tile.getZoom(), _tile.getX(), _tile.getY());
             vt::TileId vtDataSourceTile(dataSourceTile.getZoom(), dataSourceTile.getX(), dataSourceTile.getY());
             std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
-            std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileTransformer, tileData->getData());
-            if (tileMap) {
-                // Construct tile info - keep original data if interactivity is required
-                VectorTileLayer::TileInfo tileInfo(layer->calculateMapTileBounds(dataSourceTile.getFlipped()), layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
+            std::shared_ptr<VectorTileDecoder::TileMap> tileMap;
+            if (std::shared_ptr<BinaryData> data = tileData->getData()) {
+                tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileTransformer, data);
+                if (!tileMap && !data->empty()) {
+                    Log::Error("VectorTileLayer::FetchTask: Failed to decode tile");
+                }
+            }
 
-                {
-                    std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            // Construct tile info - keep original data if interactivity is required
+            VectorTileLayer::TileInfo tileInfo(layer->calculateMapTileBounds(dataSourceTile.getFlipped()), layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
+            {
+                std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
 
-                    // Store tile to cache, unless invalidated
-                    if (!isInvalidated()) {
-                        if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
-                            if (isPreloadingTile()) {
-                                layer->_preloadingCache.put(_tileId, tileInfo, tileInfo.getSize());
-                                if (tileData->getMaxAge() >= 0) {
-                                    layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                                }
-                            } else {
-                                layer->_visibleCache.put(_tileId, tileInfo, tileInfo.getSize());
-                                if (tileData->getMaxAge() >= 0) {
-                                    layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                                }
+                // Store the decoded tile in cache, unless invalidated.
+                if (!isInvalidated()) {
+                    if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
+                        if (isPreloadingTile()) {
+                            layer->_preloadingCache.put(_tileId, tileInfo, tileInfo.getSize());
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
+                        } else {
+                            layer->_visibleCache.put(_tileId, tileInfo, tileInfo.getSize());
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                             }
                         }
                     }
                 }
-                
-                // Debug tile performance issues
-                if (Log::IsShowDebug()) {
-                    int maxDrawCallCount = 0;
-                    for (auto it = tileMap->begin(); it != tileMap->end(); it++) {
-                        int drawCallCount = 0;
-                        for (const std::shared_ptr<vt::TileLayer>& vtLayer : it->second->getLayers()) {
-                            drawCallCount += static_cast<int>(vtLayer->getBitmaps().size() + vtLayer->getGeometries().size());
-                        }
-                        maxDrawCallCount = std::max(maxDrawCallCount, drawCallCount);
-                    }
-                    if (maxDrawCallCount >= 20) {
-                        Log::Debugf("VectorTileLayer::FetchTask: Tile requires %d draw calls", maxDrawCallCount);
-                    }
-                }
-                
-                refresh = true; // NOTE: need to refresh even when invalidated
-            } else if (!tileData->getData()->empty()) {
-                Log::Error("VectorTileLayer::FetchTask: Failed to decode tile");
             }
+            
+            // Debug tile performance issues
+            if (Log::IsShowDebug()) {
+                if (tileInfo.getMaxDrawCallCount() >= 20) {
+                    Log::Debugf("VectorTileLayer::FetchTask: Tile requires %d draw calls", tileInfo.getMaxDrawCallCount());
+                }
+            }
+                
+            refresh = true; // NOTE: need to refresh even when invalidated
             break;
         }
         
         return refresh;
+    }
+
+    int VectorTileLayer::TileInfo::getMaxDrawCallCount() const {
+        int maxDrawCallCount = 0;
+        if (_tileMap) {
+            for (auto it = _tileMap->begin(); it != _tileMap->end(); it++) {
+                int drawCallCount = 0;
+                for (const std::shared_ptr<vt::TileLayer>& layer : it->second->getLayers()) {
+                    drawCallCount += static_cast<int>(layer->getBitmaps().size() + layer->getGeometries().size());
+                }
+                maxDrawCallCount = std::max(maxDrawCallCount, drawCallCount);
+            }
+        }
+        return maxDrawCallCount;
     }
 
     std::size_t VectorTileLayer::TileInfo::getSize() const {
@@ -675,8 +681,10 @@ namespace carto {
         if (_tileData) {
             size += _tileData->size();
         }
-        for (auto it = _tileMap->begin(); it != _tileMap->end(); it++) {
-            size += it->second->getResidentSize();
+        if (_tileMap) {
+            for (auto it = _tileMap->begin(); it != _tileMap->end(); it++) {
+                size += it->second->getResidentSize();
+            }
         }
         return size;
     }

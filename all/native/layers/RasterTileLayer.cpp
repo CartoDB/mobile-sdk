@@ -1,4 +1,5 @@
 #include "RasterTileLayer.h"
+#include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "datasources/TileDataSource.h"
@@ -209,7 +210,7 @@ namespace carto {
         }
     }
 
-    std::shared_ptr<vt::Tile> RasterTileLayer::createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const {
+    std::shared_ptr<vt::Tile> RasterTileLayer::createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) const {
         // Build tile bitmap from the original bitmap, by doing conversion, if necessary
         std::shared_ptr<vt::TileBitmap> tileBitmap;
         switch (bitmap->getColorFormat()) {
@@ -230,7 +231,7 @@ namespace carto {
         // Build actual vector tile using created colormap
         float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
         vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
-        vt::TileLayerBuilder tileLayerBuilder(std::string(), 0, vtTile, getTileTransformer(), tileSize, 1.0f); // Note: the size/scale argument is ignored
+        vt::TileLayerBuilder tileLayerBuilder(std::string(), 0, vtTile, tileTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
         tileLayerBuilder.addBitmap(tileBitmap);
         std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer();
         return std::make_shared<vt::Tile>(vtTile, tileSize, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
@@ -240,19 +241,19 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         long long closestTileId = getTileId(closestTile);
-        std::shared_ptr<const vt::Tile> vtTile;
-        _visibleCache.read(closestTileId, vtTile);
-        if (!vtTile) {
-            _preloadingCache.read(closestTileId, vtTile);
+        TileInfo tileInfo;
+        _visibleCache.read(closestTileId, tileInfo);
+        if (!tileInfo.getTile()) {
+            _preloadingCache.read(closestTileId, tileInfo);
         }
-        if (vtTile) {
+        if (std::shared_ptr<const vt::Tile> tile = tileInfo.getTile()) {
             vt::TileId vtTileId(visTile.getZoom(), visTile.getX(), visTile.getY());
             if (closestTile.getZoom() > visTile.getZoom()) {
                 int dx = visTile.getX() >> visTile.getZoom();
                 int dy = visTile.getY() >> visTile.getZoom();
                 vtTileId = vt::TileId(closestTile.getZoom(), closestTile.getX() + (dx << closestTile.getZoom()), closestTile.getY() + (dy << closestTile.getZoom()));
             }
-            _tempDrawDatas.push_back(std::make_shared<TileDrawData>(vtTileId, vtTile, getTileId(closestTile), preloadingTile));
+            _tempDrawDatas.push_back(std::make_shared<TileDrawData>(vtTileId, tile, getTileId(closestTile), preloadingTile));
         }
     }
     
@@ -433,52 +434,56 @@ namespace carto {
             if (tileData->isReplaceWithParent()) {
                 continue;
             }
-            if (!tileData->getData()) {
-                break;
-            }
 
             if (isCanceled()) {
                 break;
             }
 
-            // Save tile to texture cache, unless invalidated
             vt::TileId vtTile(_tile.getZoom(), _tile.getX(), _tile.getY());
             vt::TileId vtDataSourceTile(dataSourceTile.getZoom(), dataSourceTile.getX(), dataSourceTile.getY());
-            std::shared_ptr<Bitmap> bitmap = Bitmap::CreateFromCompressed(tileData->getData());
+            std::shared_ptr<Bitmap> bitmap;
+            if (std::shared_ptr<BinaryData> data = tileData->getData()) {
+                bitmap = Bitmap::CreateFromCompressed(data);
+                if (!bitmap && !data->empty()) {
+                    Log::Error("RasterTileLayer::FetchTask: Failed to decode tile");
+                }
+            }
+
+            // Build vector tile from the bitmap
+            std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
+            std::shared_ptr<vt::Tile> tile;
             if (bitmap) {
                 // Check if we received the requested tile or extract/scale the corresponding part
                 if (dataSourceTile != _tile) {
                     bitmap = ExtractSubTile(_tile, dataSourceTile, bitmap);
                 }
-                std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
-                std::shared_ptr<vt::Tile> vtTile = layer->createVectorTile(_tile, bitmap);
-                std::size_t vtTileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
+                tile = layer->createVectorTile(_tile, bitmap, tileTransformer);
+            }
 
-                {
-                    std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            // Construct tile info and cache it.
+            TileInfo tileInfo(layer->calculateMapTileBounds(_tile.getFlipped()), tile);
+            {
+                std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
 
-                    // Build the bitmap object
-                    if (!isInvalidated()) {
-                        if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
-                            if (isPreloadingTile()) {
-                                layer->_preloadingCache.put(_tileId, vtTile, vtTileSize);
-                                if (tileData->getMaxAge() >= 0) {
-                                    layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                                }
-                            } else {
-                                layer->_visibleCache.put(_tileId, vtTile, vtTileSize);
-                                if (tileData->getMaxAge() >= 0) {
-                                    layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                                }
+                // Store the tile object, unless invalidated or tile transformer has changed.
+                if (!isInvalidated()) {
+                    if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
+                        if (isPreloadingTile()) {
+                            layer->_preloadingCache.put(_tileId, tileInfo, tileInfo.getSize());
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_preloadingCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
+                        } else {
+                            layer->_visibleCache.put(_tileId, tileInfo, tileInfo.getSize());
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_visibleCache.invalidate(_tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                             }
                         }
                     }
                 }
-
-                refresh = true; // NOTE: need to refresh even when invalidated
-            } else {
-                Log::Error("RasterTileLayer::FetchTask: Failed to decode tile");
             }
+
+            refresh = true; // NOTE: need to refresh even when invalidated
             break;
         }
         
@@ -493,6 +498,14 @@ namespace carto {
         int h = bitmap->getHeight() >> deltaZoom;
         std::shared_ptr<Bitmap> subBitmap = bitmap->getSubBitmap(x, y, std::max(w, 1), std::max(h, 1));
         return subBitmap->getResizedBitmap(bitmap->getWidth(), bitmap->getHeight());
+    }
+
+    std::size_t RasterTileLayer::TileInfo::getSize() const {
+        std::size_t tileSize = EXTRA_TILE_FOOTPRINT;
+        if (_tile) {
+            tileSize += _tile->getResidentSize();
+        }
+        return tileSize;
     }
 
     const int RasterTileLayer::DEFAULT_CULL_DELAY = 200;
