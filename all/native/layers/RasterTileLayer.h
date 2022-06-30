@@ -121,7 +121,7 @@ namespace carto {
 
         virtual vt::RasterFilterMode getRasterFilterMode() const;
 
-        virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) const;
+        virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState, bool tilesChanged);
@@ -141,6 +141,8 @@ namespace carto {
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
+        static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
+
     private:    
         class FetchTask : public TileLayer::FetchTaskBase {
         public:
@@ -148,9 +150,6 @@ namespace carto {
     
         protected:
             bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
-            
-        private:
-            static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
         };
     
         class TileInfo {

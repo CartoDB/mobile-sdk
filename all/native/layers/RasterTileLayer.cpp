@@ -210,7 +210,10 @@ namespace carto {
         }
     }
 
-    std::shared_ptr<vt::Tile> RasterTileLayer::createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) const {
+    std::shared_ptr<vt::Tile> RasterTileLayer::createVectorTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& baseBitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) const {
+        // Extract/scale subbitmap
+        std::shared_ptr<Bitmap> bitmap = ExtractSubTile(subTile, tile, baseBitmap);
+
         // Build tile bitmap from the original bitmap, by doing conversion, if necessary
         std::shared_ptr<vt::TileBitmap> tileBitmap;
         switch (bitmap->getColorFormat()) {
@@ -230,11 +233,11 @@ namespace carto {
 
         // Build actual vector tile using created colormap
         float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
-        vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
-        vt::TileLayerBuilder tileLayerBuilder(std::string(), 0, vtTile, tileTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
+        vt::TileId vtSubTileId(subTile.getZoom(), subTile.getX(), subTile.getY());
+        vt::TileLayerBuilder tileLayerBuilder(std::string(), 0, vtSubTileId, tileTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
         tileLayerBuilder.addBitmap(tileBitmap);
         std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer();
-        return std::make_shared<vt::Tile>(vtTile, tileSize, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
+        return std::make_shared<vt::Tile>(vtSubTileId, tileSize, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
     }
 
     void RasterTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {
@@ -413,6 +416,19 @@ namespace carto {
         _dataSourceListener.reset();
     }
     
+    std::shared_ptr<Bitmap> RasterTileLayer::ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) {
+        if (subTile == tile) {
+            return bitmap;
+        }
+        int deltaZoom = subTile.getZoom() - tile.getZoom();
+        int x = (bitmap->getWidth()  * (subTile.getX() & ((1 << deltaZoom) - 1))) >> deltaZoom;
+        int y = (bitmap->getHeight() * (subTile.getY() & ((1 << deltaZoom) - 1))) >> deltaZoom;
+        int w = bitmap->getWidth()  >> deltaZoom;
+        int h = bitmap->getHeight() >> deltaZoom;
+        std::shared_ptr<Bitmap> subBitmap = bitmap->getSubBitmap(x, y, std::max(w, 1), std::max(h, 1));
+        return subBitmap->getResizedBitmap(bitmap->getWidth(), bitmap->getHeight());
+    }
+
     RasterTileLayer::FetchTask::FetchTask(const std::shared_ptr<RasterTileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile) :
         FetchTaskBase(layer, tileId, tile, preloadingTile)
     {
@@ -453,11 +469,7 @@ namespace carto {
             std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
             std::shared_ptr<vt::Tile> tile;
             if (bitmap) {
-                // Check if we received the requested tile or extract/scale the corresponding part
-                if (dataSourceTile != _tile) {
-                    bitmap = ExtractSubTile(_tile, dataSourceTile, bitmap);
-                }
-                tile = layer->createVectorTile(_tile, bitmap, tileTransformer);
+                tile = layer->createVectorTile(_tile, dataSourceTile, bitmap, tileTransformer);
             }
 
             // Construct tile info and cache it.
@@ -490,16 +502,6 @@ namespace carto {
         return refresh;
     }
     
-    std::shared_ptr<Bitmap> RasterTileLayer::FetchTask::ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) {
-        int deltaZoom = subTile.getZoom() - tile.getZoom();
-        int x = (bitmap->getWidth()  * (subTile.getX() & ((1 << deltaZoom) - 1))) >> deltaZoom;
-        int y = (bitmap->getHeight() * (subTile.getY() & ((1 << deltaZoom) - 1))) >> deltaZoom;
-        int w = bitmap->getWidth()  >> deltaZoom;
-        int h = bitmap->getHeight() >> deltaZoom;
-        std::shared_ptr<Bitmap> subBitmap = bitmap->getSubBitmap(x, y, std::max(w, 1), std::max(h, 1));
-        return subBitmap->getResizedBitmap(bitmap->getWidth(), bitmap->getHeight());
-    }
-
     std::size_t RasterTileLayer::TileInfo::getSize() const {
         std::size_t tileSize = EXTRA_TILE_FOOTPRINT;
         if (_tile) {
