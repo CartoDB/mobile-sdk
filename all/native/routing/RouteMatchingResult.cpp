@@ -7,8 +7,9 @@
 
 namespace carto {
 
-    RouteMatchingResult::RouteMatchingResult(const std::shared_ptr<Projection>& projection, std::vector<RouteMatchingPoint> matchingPoints, std::vector<RouteMatchingEdge> matchingEdges) :
+    RouteMatchingResult::RouteMatchingResult(const std::shared_ptr<Projection>& projection, std::vector<RouteMatchingPoint> matchingPoints, std::vector<RouteMatchingEdge> matchingEdges, std::string rawResult) :
         _projection(projection),
+        _rawResult(rawResult),
         _matchingPoints(std::move(matchingPoints)),
         _matchingEdges(std::move(matchingEdges))
     {
@@ -39,6 +40,10 @@ namespace carto {
 
     const std::vector<RouteMatchingPoint>& RouteMatchingResult::getMatchingPoints() const {
         return _matchingPoints;
+    }
+
+    const std::string& RouteMatchingResult::getRawResult() const {
+        return _rawResult;
     }
 
     std::string RouteMatchingResult::toString() const {

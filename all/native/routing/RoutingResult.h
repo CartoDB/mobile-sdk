@@ -29,7 +29,7 @@ namespace carto {
          * @param points The point list defining the routing path. Instructions refer to this list.
          * @param instructions The turn-by-turn instruction list.
          */
-        RoutingResult(const std::shared_ptr<Projection>& projection, std::vector<MapPos> points, std::vector<RoutingInstruction> instructions);
+        RoutingResult(const std::shared_ptr<Projection>& projection, std::vector<MapPos> points, std::vector<RoutingInstruction> instructions, const std::string rawResult);
         virtual ~RoutingResult();
 
         /**
@@ -58,6 +58,10 @@ namespace carto {
          * @return The total duration in seconds.
          */
         double getTotalTime() const;
+        /**
+         * Returns raw result 
+         */
+        const std::string& getRawResult() const;
 
         /**
          * Creates a string representation of this result object, useful for logging.
@@ -69,6 +73,7 @@ namespace carto {
         std::shared_ptr<Projection> _projection;
         std::vector<MapPos> _points;
         std::vector<RoutingInstruction> _instructions;
+        std::string _rawResult;
     };
     
 }

@@ -12,8 +12,9 @@
 
 namespace carto {
 
-    RoutingResultBuilder::RoutingResultBuilder(const std::shared_ptr<Projection>& proj) :
+    RoutingResultBuilder::RoutingResultBuilder(const std::shared_ptr<Projection>& proj, const std::string& rawResult) :
         _projection(proj),
+        _rawResult(rawResult),
         _points(),
         _instructions()
     {
@@ -57,7 +58,7 @@ namespace carto {
             }
             instructions.push_back(instrBuilder.buildRoutingInstruction());
         }
-        return std::make_shared<RoutingResult>(_projection, _points, std::move(instructions));
+        return std::make_shared<RoutingResult>(_projection, _points, std::move(instructions), _rawResult);
     }
 
     float RoutingResultBuilder::calculateTurnAngle(int pointIndex) const {

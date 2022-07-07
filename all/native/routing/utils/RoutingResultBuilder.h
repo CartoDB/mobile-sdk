@@ -23,7 +23,7 @@ namespace carto {
 
     class RoutingResultBuilder {
     public:
-        explicit RoutingResultBuilder(const std::shared_ptr<Projection>& proj);
+        explicit RoutingResultBuilder(const std::shared_ptr<Projection>& proj, const std::string& rawResult);
 
         int addPoints(const std::vector<MapPos>& points);
 
@@ -45,6 +45,7 @@ namespace carto {
         const std::shared_ptr<Projection> _projection;
         std::vector<MapPos> _points;
         std::list<RoutingInstructionBuilder> _instructions;
+        std::string _rawResult;
     };
     
 }

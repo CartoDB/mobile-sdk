@@ -139,7 +139,7 @@ namespace carto {
             results.push_back(std::move(result));
         }
 
-        RoutingResultBuilder resultBuilder(proj);
+        RoutingResultBuilder resultBuilder(proj, nullptr);
         for (std::size_t i = 0; i < results.size(); i++) {
             const sgre::Result& result = results[i];
             if (result.getInstructions().empty()) {

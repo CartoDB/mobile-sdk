@@ -30,7 +30,7 @@ namespace carto {
          * @param matchingPoints The matched points corresponding to the requested points snapped to road network.
          * @param matchingEdges The matched edges that are referenced through matching points.
          */
-        RouteMatchingResult(const std::shared_ptr<Projection>& projection, std::vector<RouteMatchingPoint> matchingPoints, std::vector<RouteMatchingEdge> matchingEdges);
+        RouteMatchingResult(const std::shared_ptr<Projection>& projection, std::vector<RouteMatchingPoint> matchingPoints, std::vector<RouteMatchingEdge> matchingEdges, std::string rawResult);
         virtual ~RouteMatchingResult();
 
         /**
@@ -53,6 +53,10 @@ namespace carto {
          * @return The list with details of the matched points.
          */
         const std::vector<RouteMatchingPoint>& getMatchingPoints() const;
+        /**
+         * Returns raw result 
+         */
+        const std::string& getRawResult() const;
 
         /**
          * Creates a string representation of this result object, useful for logging.
@@ -64,6 +68,7 @@ namespace carto {
         std::shared_ptr<Projection> _projection;
         std::vector<RouteMatchingPoint> _matchingPoints;
         std::vector<RouteMatchingEdge> _matchingEdges;
+        std::string _rawResult;
     };
     
 }
