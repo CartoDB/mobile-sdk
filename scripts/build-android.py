@@ -65,7 +65,7 @@ def buildAndroidSO(args, abi):
     "-DANDROID_STL='c++_static'",
     "-DANDROID_ABI='%s'" % abi,
     "-DANDROID_PLATFORM='%d'" % (api64 if '64' in abi else api32),
-    "-DANDROID_ARM_NEON=%s" % ('true' if abi == 'arm64-v8a' else 'false'),
+    "-DANDROID_ARM_NEON=%s" % ('true' if abi == 'arm64-v8a' or api32 >= 19 else 'false'),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Android'",
