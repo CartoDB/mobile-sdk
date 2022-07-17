@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Mobile SDK Web View</title>
+    <style type="text/css">
+        html, body, * {
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+        .eruda-description {
+            white-space: pre-line;
+            font-size: 12px;
+            user-select: all !important;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <script type="text/javascript" src="../../dist/emscripten/CartoMobileSDK.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+
+    <script>
+        function activateDebugTool() {
+            console.log('Loading debug tool...');
+            if (!window.eruda || !window.erudaCode) {
+                console.error('Failed to load debug tool.');
+                return;
+            }
+
+            eruda.init({
+                useShadowDom: false,
+                tool: ['console', 'snippets'],
+                defaults: {
+                    displaySize: 50,
+                    transparency: 0.98,
+                    theme: 'Dark'
+                }
+            });
+            const snippets = eruda.get('snippets');
+            snippets.clear();
+            snippets.add('Clear all layers', () => { mapView.getLayers().clear(); mapView.setTilt(60, 0); }, 'mapView.getLayers().clear();\nmapView.setTilt(60, 0);');
+            snippets.add('Add Google raster layer', () => addGoogleMap(mapView), `const googleMapUrl = 'https://mt{s}.google.com/vt/lyrs=m&scale=1&x={x}&y={y}&z={zoom}';\nconst httpDataSource = new CartoMobileSDK.HTTPTileDataSource(0.0, 24.0, googleMapUrl);\nconst rasterTileLayer = new CartoMobileSDK.RasterTileLayer(httpDataSource);\nmapView.getLayers().add(rasterTileLayer);`);
+            snippets.add('Add local vector layer/datasource', () => {window.localDataSource = new CartoMobileSDK.LocalVectorDataSource(new CartoMobileSDK.EPSG3857()); const vectorLayer = new CartoMobileSDK.VectorLayer(localDataSource); mapView.getLayers().add(vectorLayer);}, `window.localDataSource = new CartoMobileSDK.LocalVectorDataSource(new CartoMobileSDK.EPSG3857());\nconst vectorLayer = new CartoMobileSDK.VectorLayer(localDataSource);\nmapView.getLayers().add(vectorLayer);`);
+            snippets.add('Add Marker', () => { const pos = new CartoMobileSDK.MapPos(-8237821, 4970805); const markerStyleBuilder = new CartoMobileSDK.MarkerStyleBuilder(); markerStyleBuilder.setSize(20.0); const marker = new CartoMobileSDK.Marker(pos, markerStyleBuilder.buildStyle()); localDataSource.add(marker); }, `const pos = new CartoMobileSDK.MapPos(-8237821, 4970805);\nconst markerStyleBuilder = new CartoMobileSDK.MarkerStyleBuilder();\nmarkerStyleBuilder.setSize(20.0);\nconst marker = new CartoMobileSDK.Marker(pos, markerStyleBuilder.buildStyle());\nlocalDataSource.add(marker);`);
+            snippets.add('Add Line', () => { const poses = new CartoMobileSDK.MapPosVector(); poses.push_back(new CartoMobileSDK.MapPos(-8237821, 4970805)); poses.push_back(new CartoMobileSDK.MapPos(-8238832, 4970287)); const lineStyleBuilder = new CartoMobileSDK.LineStyleBuilder(); const color = new CartoMobileSDK.Color(255, 0, 0, 125); lineStyleBuilder.setColor(color); const line = new CartoMobileSDK.Line(poses, lineStyleBuilder.buildStyle()); localDataSource.add(line); }, `const poses = new CartoMobileSDK.MapPosVector();\nposes.push_back(new CartoMobileSDK.MapPos(-8237821, 4970805));\nposes.push_back(new CartoMobileSDK.MapPos(-8238832, 4970287));\nconst lineStyleBuilder = new CartoMobileSDK.LineStyleBuilder();\nconst color = new CartoMobileSDK.Color(255, 0, 0, 125);\nlineStyleBuilder.setColor(color);\nconst line = new CartoMobileSDK.Line(poses, lineStyleBuilder.buildStyle());\nlocalDataSource.add(line);`);
+            
+            eruda.add(erudaCode);
+            const editor = document.querySelector(".eruda-editor");
+            editor.innerHTML = `const pos = new CartoMobileSDK.MapPos(-8237831, 4970831);\nconst markerStyleBuilder = new CartoMobileSDK.MarkerStyleBuilder();\nmarkerStyleBuilder.setSize(50.0);\nconst marker = new CartoMobileSDK.Marker(pos, markerStyleBuilder.buildStyle());\nlocalDataSource.add(marker);`;
+        }
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                var tag = document.createElement("script");
+                tag.src = url;
+                tag.crossOrigin = 'anonymous';
+                document.getElementsByTagName("head")[0].appendChild(tag);
+                tag.addEventListener("load", () => resolve());
+                tag.addEventListener("error", () => reject());
+            });
+        }
+        function loadDebugTool() {
+            const promises = [];
+            promises.push(loadScript('//cdn.jsdelivr.net/npm/eruda'));
+            promises.push(loadScript('//cdn.jsdelivr.net/npm/eruda-code'));
+            Promise.all(promises).then(() => activateDebugTool()).catch(() => console.error('Failed to load debug tool.'));
+        }
+        setTimeout(loadDebugTool, 7000);
+    </script>
+</body>
+</html>

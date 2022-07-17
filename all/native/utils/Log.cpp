@@ -39,6 +39,15 @@ namespace carto {
         OutputDebugStringA("\n");
     }
 #endif
+#ifdef __EMSCRIPTEN__
+    enum LogType { LOG_TYPE_FATAL = 0, LOG_TYPE_ERROR = 1, LOG_TYPE_WARNING = 2, LOG_TYPE_INFO = 3, LOG_TYPE_DEBUG = 4 };
+
+    static void OutputLog(LogType logType, const std::string& tag, const char* text) {
+        if ((int)logType <= 1) {
+            printf("LogType: %d, tag: %s, message: %s\n", logType, tag.c_str(), text);
+        }
+    }
+#endif
 
     bool Log::IsShowError() {
         std::lock_guard<std::mutex> lock(_Mutex);

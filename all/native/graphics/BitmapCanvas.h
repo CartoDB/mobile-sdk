@@ -71,6 +71,7 @@ namespace carto {
         class AndroidImpl;
         class IOSImpl;
         class UWPImpl;
+        class EmscriptenImpl;
         
         std::unique_ptr<Impl> _impl;
     };

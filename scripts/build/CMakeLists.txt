@@ -92,6 +92,13 @@ if(ANDROID)
   set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -s -fuse-ld=lld -Wl,-plugin-opt=O3 -Wl,--gc-sections -Wl,-icf=all -Wl,-threads=4 -Wl,--as-needed -Wl,--build-id -Wl,--version-script=${PROJECT_SOURCE_DIR}/../android/version-script")
 endif(ANDROID)
 
+if(EMSCRIPTEN)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden -O3 -fexceptions -pthread")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -fexceptions -pthread -flto=full -fomit-frame-pointer")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -flto=full -fomit-frame-pointer")
+endif()
+
 # Make common libraries available to all subprojects
 include_directories("${SDK_EXTERNAL_LIBS_DIR}/boost")
 
@@ -108,6 +115,10 @@ if(WIN32)
   include_directories("${SDK_EXTERNAL_LIBS_DIR}/angle-uwp/include" "${SDK_EXTERNAL_LIBS_DIR}/zlib/config" "${SDK_EXTERNAL_LIBS_DIR}/zlib/zlib")
 endif(WIN32)
 
+if(EMSCRIPTEN)
+  include_directories("${SDK_EXTERNAL_LIBS_DIR}/zlib/config" "${SDK_EXTERNAL_LIBS_DIR}/zlib/zlib")
+endif(EMSCRIPTEN)
+
 # Subprojects
 set(SDK_CARTO_SUBPROJECTS vt mapnikvt mbvtbuilder cartocss nml)
 set(SDK_EXTERNAL_SUBPROJECTS botan pugixml bidi freetype harfbuzz brotli miniz libjpeg libpng libwebp tess2 pvrt rg_etc1)
@@ -116,7 +127,11 @@ if(WIN32)
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "zlib")
 endif(WIN32)
 
-if(NOT (WIN32 OR APPLE OR ANDROID))
+if(EMSCRIPTEN)
+  list(APPEND SDK_EXTERNAL_SUBPROJECTS "zlib")
+endif(EMSCRIPTEN)
+
+if(NOT (WIN32 OR APPLE OR ANDROID OR EMSCRIPTEN))
   list(APPEND SDK_EXTERNAL_SUBPROJECTS "pion")
 endif()
 
@@ -180,7 +195,7 @@ file(GLOB SDK_SRC_FILES
 )
 set_source_files_properties("${SDK_SRC_DIR}/utils/PlatformUtils.cpp" PROPERTIES COMPILE_OPTIONS "-D_CARTO_MOBILE_SDK_PLATFORM=\"${SDK_PLATFORM}\";-D_CARTO_MOBILE_SDK_VERSION=\"${SDK_VERSION}\"")
 
-if(WIN32 OR APPLE OR ANDROID)
+if(WIN32 OR APPLE OR ANDROID OR EMSCRIPTEN)
   list(REMOVE_ITEM SDK_SRC_FILES "${SDK_SRC_DIR}/network/HTTPClientPionImpl.cpp")
 endif()
 
@@ -227,6 +242,19 @@ elseif(WIN32)
   foreach(WINRT_SRC_FILE IN ITEMS "utils/AssetUtils.cpp" "utils/PlatformUtils.cpp" "utils/EGLContextWrapper.cpp" "components/Task.cpp")
     set_source_files_properties("${SDK_BASE_DIR}/winphone/native/${WINRT_SRC_FILE}" PROPERTIES COMPILE_OPTIONS "/ZW")
   endforeach()
+elseif(EMSCRIPTEN)
+  file(GLOB SDK_EMSCRIPTEN_SRC_FILES
+    "${WRAPPER_DIR}/*.cpp"
+    "${WRAPPER_DIR}/*.h"
+    "${SDK_BASE_DIR}/emscripten/native/*.cpp"
+    "${SDK_BASE_DIR}/emscripten/native/*.h"
+    "${SDK_BASE_DIR}/emscripten/native/*/*.cpp"
+    "${SDK_BASE_DIR}/emscripten/native/*/*.h"
+    "${SDK_BASE_DIR}/emscripten/native/*/*/*.cpp"
+    "${SDK_BASE_DIR}/emscripten/native/*/*/*.h"
+    "${SDK_BASE_DIR}/generated/emscripten-js/wrappers/*.cpp"
+  )
+  set(SDK_SRC_FILES "${SDK_SRC_FILES}" "${SDK_EMSCRIPTEN_SRC_FILES}")
 endif()
 
 # Group wrapper files into different groups, to reduce clutter
@@ -258,6 +286,8 @@ elseif(APPLE)
   endif(INCLUDE_OBJC)
 elseif(WIN32)
   include_directories("${SDK_BASE_DIR}/winphone/native")
+elseif(EMSCRIPTEN)
+  include_directories("${SDK_BASE_DIR}/emscripten/native")
 endif()
 
 # Linking

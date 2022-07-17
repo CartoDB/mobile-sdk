@@ -19,6 +19,9 @@
 #elif defined(__ANDROID__)
 #define CARTO_HTTP_SOCKET_IMPL AndroidImpl
 #include "network/HTTPClientAndroidImpl.h"
+#elif defined(__EMSCRIPTEN__)
+#define CARTO_HTTP_SOCKET_IMPL EmscriptenImpl
+#include "network/HTTPClientEmscriptenImpl.h"
 #else
 #define CARTO_HTTP_SOCKET_IMPL PionImpl
 #include "HTTPClientPionImpl.h"
