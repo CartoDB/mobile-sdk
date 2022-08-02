@@ -71,7 +71,7 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
     public static boolean registerLicense(final String licenseKey, Context context) {
         // Check that native .so loading was successful
         if (libraryLoadingErrorCause != null) {
-            throw RuntimeException("Failed to load native library", libraryLoadingErrorCause);
+            throw new RuntimeException("Failed to load native library", libraryLoadingErrorCause);
         }
 
         // Connect context info and assets manager to native part
