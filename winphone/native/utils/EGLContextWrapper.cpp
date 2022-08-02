@@ -17,7 +17,12 @@ using namespace Windows::UI::Xaml::Controls;
 
 namespace carto {
 
-    EGLContextWrapper::EGLContextWrapper() : _eglConfig(NULL), _eglDisplay(EGL_NO_DISPLAY), _eglContext(EGL_NO_CONTEXT) {
+    EGLContextWrapper::EGLContextWrapper() :
+        _eglConfig(NULL),
+        _eglDisplay(EGL_NO_DISPLAY),
+        _eglContext(EGL_NO_CONTEXT),
+        _eglSurfaces()
+    {
         initialize();
     }
 
@@ -27,11 +32,11 @@ namespace carto {
 
     void EGLContextWrapper::initialize() {
         const EGLint configAttributes[] = {
-            EGL_RED_SIZE, 8,
-            EGL_GREEN_SIZE, 8,
-            EGL_BLUE_SIZE, 8,
-            EGL_ALPHA_SIZE, 8,
-            EGL_DEPTH_SIZE, 24,
+            EGL_RED_SIZE,     8,
+            EGL_GREEN_SIZE,   8,
+            EGL_BLUE_SIZE,    8,
+            EGL_ALPHA_SIZE,   8,
+            EGL_DEPTH_SIZE,  24,
             EGL_STENCIL_SIZE, 8,
             EGL_NONE
         };
@@ -91,15 +96,15 @@ namespace carto {
                 throw std::runtime_error("Failed to get function eglGetPlatformDisplayEXT");
             }
 
-            // This tries to initialize EGL to D3D11 Feature Level 9_3, if 10_0+ is unavailable (e.g. on Windows Phone, or certain Windows tablets).
-            _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
+            // This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU (e.g. on Surface RT).
+            _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
             if (_eglDisplay == EGL_NO_DISPLAY) {
                 throw std::runtime_error("Failed to get EGL display");
             }
 
             if (eglInitialize(_eglDisplay, NULL, NULL) == EGL_FALSE) {
-                // This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU (e.g. on Surface RT).
-                _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
+                // This tries to initialize EGL to D3D11 Feature Level 9_3, if 10_0+ is unavailable (e.g. on Windows Phone, or certain Windows tablets).
+                _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
                 if (_eglDisplay == EGL_NO_DISPLAY) {
                     throw std::runtime_error("Failed to get EGL display");
                 }
@@ -135,6 +140,8 @@ namespace carto {
             eglTerminate(_eglDisplay);
             _eglDisplay = EGL_NO_DISPLAY;
         }
+
+        _eglSurfaces.clear();
     }
 
     void EGLContextWrapper::reset() {
@@ -167,25 +174,44 @@ namespace carto {
         surface = eglCreateWindowSurface(_eglDisplay, _eglConfig, reinterpret_cast<IInspectable*>(surfaceCreationProperties), surfaceAttributes);
         if (surface == EGL_NO_SURFACE) {
             Log::Error("EGLContextWrapper: Failed to create EGL surface");
+        } else {
+            _eglSurfaces.insert(surface);
         }
 
         return surface;
     }
 
     void EGLContextWrapper::destroySurface(const EGLSurface surface) {
-        if (_eglDisplay != EGL_NO_DISPLAY && surface != EGL_NO_SURFACE) {
+        if (_eglDisplay != EGL_NO_DISPLAY && _eglSurfaces.count(surface) > 0) {
             eglDestroySurface(_eglDisplay, surface);
+            _eglSurfaces.erase(surface);
         }
     }
 
-    void EGLContextWrapper::makeCurrent(const EGLSurface surface) {
-        if (eglMakeCurrent(_eglDisplay, surface, surface, _eglContext) == EGL_FALSE) {
-            Log::Error("EGLContextWrapper: Failed to make EGLSurface current");
+    bool EGLContextWrapper::makeCurrent(const EGLSurface surface) {
+        if (_eglDisplay != EGL_NO_DISPLAY && _eglContext != EGL_NO_CONTEXT && _eglSurfaces.count(surface) > 0) {
+            if (eglMakeCurrent(_eglDisplay, surface, surface, _eglContext) == EGL_FALSE) {
+                Log::Error("EGLContextWrapper: makeCurrent failed");
+                return false;
+            }
+            return true;
+        } else {
+            Log::Error("EGLContextWrapper: display/context/surface not valid in makeCurrent");
+            return false;
         }
     }
 
     bool EGLContextWrapper::swapBuffers(const EGLSurface surface) {
-        return (eglSwapBuffers(_eglDisplay, surface)) != EGL_FALSE;
+        if (_eglDisplay != EGL_NO_DISPLAY && _eglSurfaces.count(surface) > 0) {
+            if (eglSwapBuffers(_eglDisplay, surface) == EGL_FALSE) {
+                Log::Error("EGLContextWrapper: swapBuffers failed");
+                return false;
+            }
+            return true;
+        } else {
+            Log::Error("EGLContextWrapper: display/surface not valid in swapBuffers");
+            return false;
+        }
     }
 
 }
