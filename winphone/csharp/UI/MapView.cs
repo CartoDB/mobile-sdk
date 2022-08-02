@@ -216,6 +216,12 @@
             args.Handled = true;
         }
 
+        protected override void OnPointerExited(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
+            _pointerStates.Clear();
+            UpdateInputCoordinates(NativeActionCancel);
+            base.OnPointerExited(args);
+        }
+
         protected override void OnPointerWheelChanged(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
             Windows.UI.Input.PointerPoint currentPoint = args.GetCurrentPoint(this);
             int delta = currentPoint.Properties.MouseWheelDelta / 120;
