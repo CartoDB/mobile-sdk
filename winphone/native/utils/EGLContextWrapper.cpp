@@ -96,8 +96,8 @@ namespace carto {
                 throw std::runtime_error("Failed to get function eglGetPlatformDisplayEXT");
             }
 
-            // This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU (e.g. on Surface RT).
-            _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
+            // Try to initialize EGL to D3D11.
+            _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, defaultDisplayAttributes);
             if (_eglDisplay == EGL_NO_DISPLAY) {
                 throw std::runtime_error("Failed to get EGL display");
             }
@@ -110,8 +110,16 @@ namespace carto {
                 }
 
                 if (eglInitialize(_eglDisplay, NULL, NULL) == EGL_FALSE) {
-                    // If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
-                    throw std::runtime_error("Failed to initialize EGL");
+                    // This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU (e.g. on Surface RT).
+                    _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
+                    if (_eglDisplay == EGL_NO_DISPLAY) {
+                        throw std::runtime_error("Failed to get EGL display");
+                    }
+
+                    if (eglInitialize(_eglDisplay, NULL, NULL) == EGL_FALSE) {
+                        // If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
+                        throw std::runtime_error("Failed to initialize EGL");
+                    }
                 }
             }
 

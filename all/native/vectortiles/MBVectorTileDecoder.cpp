@@ -73,7 +73,8 @@ namespace carto {
         _fallbackFonts(),
         _styleSet(),
         _map(),
-        _symbolizerContext()
+        _symbolizerContext(),
+        _assetPackageSymbolizerContexts()
     {
         if (!cartoCSSStyleSet) {
             throw NullArgumentException("Null cartoCSSStyleSet");
