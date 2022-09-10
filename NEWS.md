@@ -1,3 +1,23 @@
+CARTO Mobile SDK 4.4.7RC1
+-------------------
+
+### New features:
+
+* Added support for generic expressions in CartoCSS 'Map' element.
+* Added support for CartoCSS 'line-miterlimit' property, tweaked join handling in case of offsets/patterns. 
+* Generalized CartoCSS font support, added support expression based face names
+
+### Changes, fixes:
+
+* Fixed Angle UWP related threading issues, if multiple views were used.
+* Fixed minor synchronization issue with RasterTileLayer
+* Improved handling of null blob in TileData
+* Improved normal map building for overzoomed tiles, resulting is less artifacts.
+* Improved reporting of .so loading errors on Android (re-throw original exception, instead of just logging/failing afterwards)
+* Added handling of 'OnPointerExited' event in UWP MapView
+* Build script fixes, fixes related tolatest Python versions, Android NDK25 support
+
+
 CARTO Mobile SDK 4.4.6
 -------------------
 
