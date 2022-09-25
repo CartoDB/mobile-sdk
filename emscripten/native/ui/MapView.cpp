@@ -26,8 +26,7 @@ namespace carto {
 
     void _emscripten_main_loop() {
         for (MapView* mapView : cartoEmscriptenMapViews) {
-            if (mapView->_needRedraw) {
-                mapView->_needRedraw = false;
+            if (mapView->needRedraw()) {
                 mapView->onDrawFrame();
             }
         }
@@ -76,8 +75,8 @@ namespace carto {
         // emscripten_set_canvas_element_size("#canvas", 700, 700);
         EmscriptenWebGLContextAttributes attr;
         emscripten_webgl_init_context_attributes(&attr);
-        attr.alpha = attr.depth = attr.stencil = attr.antialias = 
-            attr.preserveDrawingBuffer = attr.failIfMajorPerformanceCaveat = 0;
+        attr.alpha = attr.depth = attr.stencil = 1;
+        attr.antialias = attr.preserveDrawingBuffer = attr.failIfMajorPerformanceCaveat = 0;
         attr.enableExtensionsByDefault = 1;
         attr.premultipliedAlpha = 0;
         attr.majorVersion = 2;
@@ -87,15 +86,15 @@ namespace carto {
 
         _baseMapView->onSurfaceCreated();
 
-        emscripten_set_touchstart_callback(_canvasId.c_str(), this, true, &_emscripten_touch_start);
-        emscripten_set_touchmove_callback(_canvasId.c_str(), this, true, &_emscripten_touch_move);
-        emscripten_set_touchend_callback(_canvasId.c_str(), this, true, &_emscripten_touch_end);
-        emscripten_set_touchcancel_callback(_canvasId.c_str(), this, true, &_emscripten_touch_cancel);
+        emscripten_set_touchstart_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_touch_start);
+        emscripten_set_touchmove_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_touch_move);
+        emscripten_set_touchend_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_touch_end);
+        emscripten_set_touchcancel_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_touch_cancel);
 
-        emscripten_set_mousedown_callback(_canvasId.c_str(), this, true, &_emscripten_mouse_start);
-        emscripten_set_mousemove_callback(_canvasId.c_str(), this, true, &_emscripten_mouse_move);
-        emscripten_set_mouseup_callback(_canvasId.c_str(), this, true, &_emscripten_mouse_end);
-        emscripten_set_wheel_callback(_canvasId.c_str(), this, true, &_emscripten_mouse_wheel);
+        emscripten_set_mousedown_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_mouse_start);
+        emscripten_set_mousemove_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_mouse_move);
+        emscripten_set_mouseup_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_mouse_end);
+        emscripten_set_wheel_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_mouse_wheel);
 
         if (!std::count(cartoEmscriptenMapViews.begin(), cartoEmscriptenMapViews.end(), this)) {
             cartoEmscriptenMapViews.emplace_back(this);
@@ -149,6 +148,10 @@ namespace carto {
     }
     int MapView::getCanvasHeight() {
         return _canvasHeight;
+    }
+
+    bool MapView::needRedraw() {
+        return std::atomic_exchange(&_needRedraw, false);
     }
 
     const std::shared_ptr<Layers>& MapView::getLayers() const {

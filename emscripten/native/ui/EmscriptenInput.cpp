@@ -3,226 +3,193 @@
 #include <unordered_map>
 
 namespace carto {
-    static const int NATIVE_ACTION_POINTER_1_DOWN = 0;
-    static const int NATIVE_ACTION_POINTER_2_DOWN = 1;
-    static const int NATIVE_ACTION_MOVE = 2;
-    static const int NATIVE_ACTION_CANCEL = 3;
-    static const int NATIVE_ACTION_POINTER_1_UP = 4;
-    static const int NATIVE_ACTION_POINTER_2_UP = 5;
-    static const int NATIVE_NO_COORDINATE = -1;
+    namespace EmscriptenInput {
+        static const int NATIVE_ACTION_POINTER_1_DOWN = 0;
+        static const int NATIVE_ACTION_POINTER_2_DOWN = 1;
+        static const int NATIVE_ACTION_MOVE = 2;
+        static const int NATIVE_ACTION_CANCEL = 3;
+        static const int NATIVE_ACTION_POINTER_1_UP = 4;
+        static const int NATIVE_ACTION_POINTER_2_UP = 5;
+        static const int NATIVE_NO_COORDINATE = -1;
 
-    struct Coord {
-        long x;
-        long y;
-    };
+        struct Coord {
+            long x;
+            long y;
+        };
 
-    std::unordered_map<long, Coord> touchList;
+        std::unordered_map<long, Coord> touchList;
 
-    long _pointer1 = -1;
-    long _pointer2 = -1;
-    bool isPressed = false;
+        long _pointer1 = -1;
+        long _pointer2 = -1;
+        bool isPressed = false;
 
-    long lastX = 0;
-    long lastY = 0;
+        long lastX = 0;
+        long lastY = 0;
 
-    long lastPressedX = 0;
-    long lastPressedY = 0;
-
-    long buttonTimestamp [3] = { -1, -1, -1 }; 
-    long lastDoubleClickTimestamp = -1;
+        long lastPressedX = 0;
+        long lastPressedY = 0;
 
 
-    EM_BOOL _emscripten_mouse_doubleClick(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        if (mouseEvent->button == 0) {
-            mapView->onWheelEvent(4, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale());
-        } else if (mouseEvent->button == 2) {
-            mapView->onWheelEvent(-4, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale());
-        }
-        return true;
-    }
-
-    EM_BOOL _emscripten_mouse_start(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        if (mouseEvent->buttons == 1) {
-            mapView->onInputEvent(NATIVE_ACTION_POINTER_1_DOWN, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-        }
-        isPressed = true;
-        return true;
-    }
-
-    EM_BOOL _emscripten_mouse_move(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        lastX = mouseEvent->targetX * mapView->getScale();
-        lastY = mouseEvent->targetY * mapView->getScale();
-        if (isPressed) {
-            buttonTimestamp[0] = -1;
-            buttonTimestamp[1] = -1;
-            buttonTimestamp[2] = -1;
-            if (mouseEvent->buttons == 2 || (mouseEvent->buttons == 1 && (mouseEvent->ctrlKey || mouseEvent->shiftKey || mouseEvent->altKey || mouseEvent->metaKey))) {
-                if (lastPressedX != 0 && lastPressedY != 0) {
-                    long diffX = lastX - lastPressedX;
-                    long diffY = lastY - lastPressedY;
-
-                    int x2 = mapView->getCanvasWidth() / 2;
-                    int y2 = mapView->getCanvasHeight() / 2;
-
-                    if (lastY > y2) diffX *= -1;
-
-                    mapView->rotate(diffX / 1.5, 0);
-                    mapView->tilt(diffY, 0);
-                } 
-                
-                lastPressedX = lastX;
-                lastPressedY = lastY;
-            } else if (mouseEvent->buttons == 1) {
-                mapView->onInputEvent(NATIVE_ACTION_MOVE, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+        EM_BOOL _emscripten_mouse_start(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
+            MapView* mapView = (MapView*)userData;
+            if (mouseEvent->buttons == 1) {
+                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_DOWN, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
             }
-        }
-        
-        return true;
-    }
-
-    EM_BOOL _emscripten_mouse_end(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        if (mouseEvent->timestamp - buttonTimestamp[mouseEvent->button] < 300) {
-            _emscripten_mouse_doubleClick(eventType, mouseEvent, userData);
-            buttonTimestamp[mouseEvent->button] = -1;
-        } else {
-            buttonTimestamp[mouseEvent->button] = mouseEvent->timestamp;
+            isPressed = true;
+            return true;
         }
 
-        isPressed = false;
-        if (mouseEvent->buttons == 0) {
-            mapView->onInputEvent(NATIVE_ACTION_POINTER_1_UP, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-        }
+        EM_BOOL _emscripten_mouse_move(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
+            MapView* mapView = (MapView*)userData;
+            lastX = mouseEvent->targetX * mapView->getScale();
+            lastY = mouseEvent->targetY * mapView->getScale();
+            if (isPressed) {
+                if (mouseEvent->buttons == 2 || (mouseEvent->buttons == 1 && (mouseEvent->ctrlKey || mouseEvent->shiftKey || mouseEvent->altKey || mouseEvent->metaKey))) {
+                    if (lastPressedX != 0 && lastPressedY != 0) {
+                        long diffX = lastX - lastPressedX;
+                        long diffY = lastY - lastPressedY;
 
-        lastPressedX = 0;
-        lastPressedY = 0;
+                        int x2 = mapView->getCanvasWidth() / 2;
+                        int y2 = mapView->getCanvasHeight() / 2;
 
-        return true;
-    }
+                        if (lastY > y2) diffX *= -1;
 
-
-    EM_BOOL _emscripten_mouse_wheel(int eventType, const EmscriptenWheelEvent *wheelEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        if (wheelEvent->deltaY < -1.0) {
-            mapView->onWheelEvent(1, lastX, lastY);
-        } else if (wheelEvent->deltaY > 1.0) {
-            mapView->onWheelEvent(-1, lastX, lastY);
-        }
-
-        return true;
-    }
-
-
-    bool isContainEmscriptenEvent(const EmscriptenTouchEvent *touchEvent, long identifier) {
-        bool output = false;
-        for (int i = 0; i < touchEvent->numTouches; ++i) {
-            if (touchEvent->touches[i].identifier == identifier) {
-                output = true;
-                break;
-            }
-        }
-        return output;
-    }
-
-    EM_BOOL _emscripten_touch_start(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        // if (_pointer1 != -1) touchList.erase (_pointer1);
-        // if (_pointer1 != -2) touchList.erase (_pointer2);
-        // _pointer1 = -1;
-        // _pointer2 = -1;
-        for (int i = 0; i < touchEvent->numTouches; ++i) {
-            long pointer = touchEvent->touches[i].identifier;
-            if (pointer == _pointer1 || pointer == _pointer2) continue;
-            Coord c;
-            c.x = touchEvent->touches[i].targetX * mapView->getScale();
-            c.y = touchEvent->touches[i].targetY * mapView->getScale();
-
-            if (_pointer1 == -1) {
-                _pointer1 = pointer;
-                touchList[pointer] = c;
-
-                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_DOWN, touchList[_pointer1].x, touchList[_pointer1].y, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-                continue;
+                        mapView->rotate(diffX / 1.5, 0);
+                        mapView->tilt(diffY, 0);
+                    } 
+                    
+                    lastPressedX = lastX;
+                    lastPressedY = lastY;
+                } else if (mouseEvent->buttons == 1) {
+                    mapView->onInputEvent(NATIVE_ACTION_MOVE, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                }
             }
             
-            if (_pointer2 == -1) {
-                _pointer2 = pointer;
-                touchList[pointer] = c;
+            return true;
+        }
 
-                mapView->onInputEvent(NATIVE_ACTION_POINTER_2_DOWN, touchList[_pointer1].x, touchList[_pointer1].y, touchList[_pointer2].x, touchList[_pointer2].y);
-                break;
+        EM_BOOL _emscripten_mouse_end(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
+            MapView* mapView = (MapView*)userData;
+
+            isPressed = false;
+            if (mouseEvent->buttons == 0) {
+                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_UP, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
             }
-        }
-        return true;
-    }
 
-    EM_BOOL _emscripten_touch_move(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        for (int i = 0; i < touchEvent->numTouches; ++i) {
-            auto &coord = touchList[touchEvent->touches[i].identifier];
-            coord.x = touchEvent->touches[i].targetX * mapView->getScale();
-            coord.y = touchEvent->touches[i].targetY * mapView->getScale();
+            lastPressedX = 0;
+            lastPressedY = 0;
+
+            return true;
         }
-        if (_pointer1 != -1) {
-            if (_pointer2 != -1) {
-                mapView->onInputEvent(NATIVE_ACTION_MOVE, touchList[_pointer1].x, touchList[_pointer1].y, touchList[_pointer2].x, touchList[_pointer2].y);
-            } else {
-                mapView->onInputEvent(NATIVE_ACTION_MOVE, touchList[_pointer1].x, touchList[_pointer1].y, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+
+
+        EM_BOOL _emscripten_mouse_wheel(int eventType, const EmscriptenWheelEvent *wheelEvent, void *userData) {
+            MapView* mapView = (MapView*)userData;
+            if (wheelEvent->deltaY < -1.0) {
+                mapView->onWheelEvent(1, lastX, lastY);
+            } else if (wheelEvent->deltaY > 1.0) {
+                mapView->onWheelEvent(-1, lastX, lastY);
             }
-        }
-        return true;
-    }
 
-    EM_BOOL _emscripten_touch_end(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        if (touchEvent->timestamp - buttonTimestamp[touchEvent->numTouches-1] < 300) {
+            return true;
+        }
+
+
+        bool isContainEmscriptenEvent(const EmscriptenTouchEvent *touchEvent, long identifier) {
+            bool output = false;
             for (int i = 0; i < touchEvent->numTouches; ++i) {
-                buttonTimestamp[i] = -1;
+                if (touchEvent->touches[i].identifier == identifier) {
+                    output = true;
+                    break;
+                }
             }
+            return output;
+        }
 
-            if (touchEvent->numTouches == 2) {
-                mapView->onWheelEvent(-4, (touchEvent->touches[0].targetX + touchEvent->touches[1].targetX)/2.0, (touchEvent->touches[0].targetY + touchEvent->touches[1].targetY)/2.0);
-            } else if (touchEvent->numTouches == 1) {
-                mapView->onWheelEvent(4, touchEvent->touches[0].targetX, touchEvent->touches[0].targetY);
+        EM_BOOL _emscripten_touch_start(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+            MapView* mapView = (MapView*)userData;
+            // if (_pointer1 != -1) touchList.erase (_pointer1);
+            // if (_pointer1 != -2) touchList.erase (_pointer2);
+            // _pointer1 = -1;
+            // _pointer2 = -1;
+            for (int i = 0; i < touchEvent->numTouches; ++i) {
+                long pointer = touchEvent->touches[i].identifier;
+                if (pointer == _pointer1 || pointer == _pointer2) continue;
+                Coord c;
+                c.x = touchEvent->touches[i].targetX * mapView->getScale();
+                c.y = touchEvent->touches[i].targetY * mapView->getScale();
+
+                if (_pointer1 == -1) {
+                    _pointer1 = pointer;
+                    touchList[pointer] = c;
+
+                    mapView->onInputEvent(NATIVE_ACTION_POINTER_1_DOWN, touchList[_pointer1].x, touchList[_pointer1].y, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                    continue;
+                }
+                
+                if (_pointer2 == -1) {
+                    _pointer2 = pointer;
+                    touchList[pointer] = c;
+
+                    mapView->onInputEvent(NATIVE_ACTION_POINTER_2_DOWN, touchList[_pointer1].x, touchList[_pointer1].y, touchList[_pointer2].x, touchList[_pointer2].y);
+                    break;
+                }
             }
-        } else {
-            buttonTimestamp[touchEvent->numTouches-1] = touchEvent->timestamp;
+            return true;
         }
-        if (_pointer2 != -1 && isContainEmscriptenEvent(touchEvent, _pointer2)) {
-            // Dual pointer, second pointer goes up first
-            mapView->onInputEvent(NATIVE_ACTION_POINTER_2_UP, touchList[_pointer1].x, touchList[_pointer1].y, touchList[_pointer2].x, touchList[_pointer2].y);
-            touchList.erase (_pointer2);
-            _pointer2 = -1;
+
+        EM_BOOL _emscripten_touch_move(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+            MapView* mapView = (MapView*)userData;
+            for (int i = 0; i < touchEvent->numTouches; ++i) {
+                auto &coord = touchList[touchEvent->touches[i].identifier];
+                coord.x = touchEvent->touches[i].targetX * mapView->getScale();
+                coord.y = touchEvent->touches[i].targetY * mapView->getScale();
+            }
+            if (_pointer1 != -1) {
+                if (_pointer2 != -1) {
+                    mapView->onInputEvent(NATIVE_ACTION_MOVE, touchList[_pointer1].x, touchList[_pointer1].y, touchList[_pointer2].x, touchList[_pointer2].y);
+                } else {
+                    mapView->onInputEvent(NATIVE_ACTION_MOVE, touchList[_pointer1].x, touchList[_pointer1].y, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                }
+            }
+            return true;
         }
-        
-        if (_pointer1 != -1 && isContainEmscriptenEvent(touchEvent, _pointer1)) {
-            // Single pointer, pointer goes up
-            if (_pointer2 != -1) {
-                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_UP, touchList[_pointer1].x, touchList[_pointer1].y, touchList[_pointer2].x, touchList[_pointer2].y);
-                touchList.erase (_pointer1);
-                _pointer1 = _pointer2;
+
+        EM_BOOL _emscripten_touch_end(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+            MapView* mapView = (MapView*)userData;
+            if (_pointer2 != -1 && isContainEmscriptenEvent(touchEvent, _pointer2)) {
+                // Dual pointer, second pointer goes up first
+                mapView->onInputEvent(NATIVE_ACTION_POINTER_2_UP, touchList[_pointer1].x, touchList[_pointer1].y, touchList[_pointer2].x, touchList[_pointer2].y);
+                touchList.erase (_pointer2);
                 _pointer2 = -1;
-            } else {
-                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_UP, touchList[_pointer1].x, touchList[_pointer1].y, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-                touchList.erase (_pointer1);
-                _pointer1 = -1;
             }
+            
+            if (_pointer1 != -1 && isContainEmscriptenEvent(touchEvent, _pointer1)) {
+                // Single pointer, pointer goes up
+                if (_pointer2 != -1) {
+                    mapView->onInputEvent(NATIVE_ACTION_POINTER_1_UP, touchList[_pointer1].x, touchList[_pointer1].y, touchList[_pointer2].x, touchList[_pointer2].y);
+                    touchList.erase (_pointer1);
+                    _pointer1 = _pointer2;
+                    _pointer2 = -1;
+                } else {
+                    mapView->onInputEvent(NATIVE_ACTION_POINTER_1_UP, touchList[_pointer1].x, touchList[_pointer1].y, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                    touchList.erase (_pointer1);
+                    _pointer1 = -1;
+                }
+            }
+
+            return true;
         }
 
-        return true;
-    }
+        EM_BOOL _emscripten_touch_cancel(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+            MapView* mapView = (MapView*)userData;
+            mapView->onInputEvent(NATIVE_ACTION_CANCEL, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+            touchList.erase (_pointer1);
+            touchList.erase (_pointer2);
+            _pointer1 = -1;
+            _pointer2 = -1;
 
-    EM_BOOL _emscripten_touch_cancel(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-        MapView* mapView = (MapView*)userData;
-        mapView->onInputEvent(NATIVE_ACTION_CANCEL, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
-        touchList.erase (_pointer1);
-        touchList.erase (_pointer2);
-        _pointer1 = -1;
-        _pointer2 = -1;
-
-        return true;
+            return true;
+        }
     }
 }

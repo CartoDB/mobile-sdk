@@ -1,6 +1,4 @@
 const CartoMobileSDK = {
-    print: function p(text) { console.debug(text); },
-    printErr: function p(text) { console.error(text); },
     onRuntimeInitialized: function onRuntimeInitialized() {
         CartoMobileSDK.FS.mkdir('assets');
         startMap();
@@ -10,15 +8,17 @@ CModule(CartoMobileSDK);
 
 
 function startMap() {
+    CartoMobileSDK.Log.SetShowInfo(false);
     window.mapView = new CartoMobileSDK.MapView('#canvas');
     const options = mapView.getOptions();
     options.setTiltRange(new CartoMobileSDK.MapRange(40, 90));
+    options.setZoomGestures(true);
     // options.setRenderProjectionMode(CartoMobileSDK.RenderProjectionMode.SPHERICAL);
     // setMapListener(mapView);
     mapView.start();
     mapView.setTilt(60, 0);
 
-    addGoogleMap(mapView);
+    addRasterLayer(mapView);
     addMBTiles(mapView);
 
     const pos = new CartoMobileSDK.MapPos(-8238512, 4970883);
@@ -30,15 +30,9 @@ function startMap() {
     addPlane(localDataSource);
 }
 
-function addGoogleMap(mapView) {
-    const googleMapUrl = 'https://mt{s}.google.com/vt/lyrs=m&scale=1&x={x}&y={y}&z={zoom}';
-    const httpDataSource = new CartoMobileSDK.HTTPTileDataSource(0.0, 24.0, googleMapUrl);
-    const subdomains = new CartoMobileSDK.StringVector();
-    subdomains.push_back("0");
-    subdomains.push_back("1");
-    subdomains.push_back("2");
-    subdomains.push_back("3");
-    httpDataSource.setSubdomains(subdomains);
+function addRasterLayer(mapView) {
+    const mapUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{zoom}/{x}/{y}@1x.png';
+    const httpDataSource = new CartoMobileSDK.HTTPTileDataSource(0.0, 24.0, mapUrl);
     // console.log(httpDataSource, httpDataSource.getBaseURL(), httpDataSource.getMinZoom(), httpDataSource.getMaxZoom(), httpDataSource.getSubdomains());
 
     const cacheDataSource = new CartoMobileSDK.MemoryCacheTileDataSource(httpDataSource);

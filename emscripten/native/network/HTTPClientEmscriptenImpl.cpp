@@ -20,9 +20,19 @@ namespace carto {
     bool HTTPClient::EmscriptenImpl::makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const {
         emscripten_fetch_attr_t attr;
         emscripten_fetch_attr_init(&attr);
-        strcpy(attr.requestMethod, "GET");
+        strcpy(attr.requestMethod, request.method.c_str());
         attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS;
         attr.timeoutMSecs = _timeout;
+
+        const char* headersArray[request.headers.size() * 2 + 1];
+        int i = 0;
+        for (const auto& [key, value] : request.headers) {
+            headersArray[i++] = key.c_str();
+            headersArray[i++] = value.c_str();
+        }
+        headersArray[i] = NULL;
+        attr.requestHeaders = headersArray;
+
         emscripten_fetch_t *fetch = emscripten_fetch(&attr, request.url.c_str());
 
         bool cancel = false;

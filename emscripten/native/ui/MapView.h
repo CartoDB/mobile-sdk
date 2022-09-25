@@ -67,7 +67,7 @@ namespace carto {
         void clearAllCaches();
 
     public:
-        bool _needRedraw = false;
+        bool needRedraw();
 
     private:
         std::shared_ptr<BaseMapView> _baseMapView;
@@ -75,6 +75,7 @@ namespace carto {
 
         std::string _canvasId;
         float _scale = 1;
+        std::atomic<bool> _needRedraw = false;
 
         int _canvasWidth = 0;
         int _canvasHeight = 0;
