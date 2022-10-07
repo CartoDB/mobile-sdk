@@ -137,7 +137,7 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
         setLongClickable(longClickable);
 
         if (!isInEditMode()) {
-            // Connect context info and assets manager to native part
+            // Connect context info and asset manager to native part
             AndroidUtils.setContext(context);
             if (assetManager == null) {
                 com.carto.utils.Log.warn("MapView: MapView created before MapView.registerLicense is called");
@@ -145,15 +145,13 @@ public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, Ma
                 assetManager = context.getApplicationContext().getAssets();
                 AssetUtils.setAssetManagerPointer(assetManager);
             }
-        
-            // Set asset manager pointer to allow native access to assets
-            assetManager = context.getApplicationContext().getAssets();
-            AssetUtils.setAssetManagerPointer(assetManager);
-        
+
+            // Initialize native BaseMapView instance
             baseMapView = new BaseMapView();
             baseMapView.getOptions().setDPI(getResources().getDisplayMetrics().densityDpi);
             baseMapView.setRedrawRequestListener(new MapRedrawRequestListener(this));
-        
+
+            // Set up relevant EGL state
             try {
                 Method m = GLSurfaceView.class.getMethod("setPreserveEGLContextOnPause", Boolean.TYPE);
                 m.invoke(this, true);
