@@ -29,6 +29,7 @@ apply from: "publish.gradle"
 
 android {
     compileSdkVersion 31
+    ndkVersion "23.2.8568313"
 
     defaultConfig {
         minSdkVersion 10
