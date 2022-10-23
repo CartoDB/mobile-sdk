@@ -15,6 +15,10 @@
 #include <windows.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace carto {
 
 #ifdef __ANDROID__
@@ -37,6 +41,13 @@ namespace carto {
     static void OutputLog(LogType logType, const std::string& tag, const char* text) {
         OutputDebugStringA(text);
         OutputDebugStringA("\n");
+    }
+#endif
+#ifdef __EMSCRIPTEN__
+    enum LogType { LOG_TYPE_FATAL = EM_LOG_ERROR, LOG_TYPE_ERROR = EM_LOG_ERROR, LOG_TYPE_WARNING = EM_LOG_WARN, LOG_TYPE_INFO = EM_LOG_INFO, LOG_TYPE_DEBUG = EM_LOG_DEBUG };
+
+    static void OutputLog(LogType logType, const std::string& tag, const char* text) {
+        emscripten_log(static_cast<int>(logType), text);
     }
 #endif
 

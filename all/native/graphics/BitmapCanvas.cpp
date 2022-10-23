@@ -9,6 +9,9 @@
 #elif defined(__ANDROID__)
 #define CARTO_BITMAP_CANVAS_IMPL AndroidImpl
 #include "graphics/BitmapCanvasAndroidImpl.h"
+#elif defined(__EMSCRIPTEN__)
+#define CARTO_BITMAP_CANVAS_IMPL EmscriptenImpl
+#include "graphics/BitmapCanvasEmscriptenImpl.h"
 #else
 #error "Unsupported platform"
 #endif

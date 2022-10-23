@@ -78,6 +78,7 @@ namespace carto {
         class AndroidImpl;
         class IOSImpl;
         class WinSockImpl;
+        class EmscriptenImpl;
 
         int makeRequest(Request request, Response& response, HandlerFunc handlerFn, std::uint64_t offset) const;
 
