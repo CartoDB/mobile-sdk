@@ -33,6 +33,8 @@ def build(args):
     "-s", "FETCH=1", "-lworkerfs.js", "-s", "TOTAL_MEMORY=512MB", "-s", "DISABLE_EXCEPTION_CATCHING=0",
     "-s", "WASM=1", "-s", "MODULARIZE=1", "-s", "EXPORT_NAME=\"CModule\"",
     "-s", "RESERVED_FUNCTION_POINTERS=20", "-s", "USE_PTHREADS", "-s", "PTHREAD_POOL_SIZE=2",
+    "-s", "OFFSCREENCANVAS_SUPPORT",
+    # "-s", "OFFSCREEN_FRAMEBUFFER",
     "-s", "EXPORTED_RUNTIME_METHODS=['FS']"
   )
 

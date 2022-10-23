@@ -12,10 +12,12 @@
 #include "core/ScreenPos.h"
 #include "core/ScreenBounds.h"
 #include "utils/Const.h"
+#include "utils/Log.h"
 #include "renderers/MapRenderer.h"
 
 #include <emscripten.h>
 #include <emscripten/html5.h>
+#include <emscripten/threading.h>
 
 #include <cmath>
 
@@ -23,9 +25,11 @@ namespace carto {
     std::vector<MapView*> cartoEmscriptenMapViews;
     bool cartoEmscriptenMainLoopStarted = false;
     bool waitResizeCount = 0;
+    bool _runOnMainThread = true;
 
     void _emscripten_main_loop() {
         for (MapView* mapView : cartoEmscriptenMapViews) {
+            if (mapView->isRenderPaused()) continue;
             if (mapView->needRedraw()) {
                 mapView->onDrawFrame();
             }
@@ -34,26 +38,53 @@ namespace carto {
     }
 
     EM_BOOL _emscripten_resize_callback(int eventType, const EmscriptenUiEvent *uiEvent, void *userData) {
-        if (waitResizeCount == 0) {
-            waitResizeCount = 10; // wait 10 frames
             for (MapView* mapView : cartoEmscriptenMapViews) {
                 mapView->onSurfaceChanged();
             }
-        } 
         
         return true;
     }
 
-    MapView::MapView(std::string canvasId) {
+    void *_thread_on_surface_created(void *arg) {
+        bool runOnMainThread = MapView::getRunOnMainThread();
+        MapView* mapView = (MapView*)arg;
+        EmscriptenWebGLContextAttributes attr;
+        emscripten_webgl_init_context_attributes(&attr);
+        attr.explicitSwapControl = runOnMainThread ? 0 : 1;
+        // attr.renderViaOffscreenBackBuffer = 1;
+        // attr.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_FALLBACK;
+        attr.alpha = 1;
+        attr.depth = 1;
+        attr.stencil = mapView->getStencil() ? 1 : 0;
+        attr.antialias = 1;
+        attr.preserveDrawingBuffer = 0;
+        attr.failIfMajorPerformanceCaveat = 0;
+        attr.premultipliedAlpha = 1;
+        attr.enableExtensionsByDefault = 1;
+        attr.majorVersion = 2;
+        attr.minorVersion = 0;
+        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_create_context(mapView->getCanvasId().c_str(), &attr);
+        emscripten_webgl_make_context_current(ctx);
+
+        mapView->getBaseMapView()->onSurfaceCreated();
+        mapView->onSurfaceChanged();
+
+        if (!cartoEmscriptenMainLoopStarted) {
+            cartoEmscriptenMainLoopStarted = true;
+            emscripten_set_main_loop(_emscripten_main_loop, runOnMainThread ? 0 : 60, runOnMainThread ? 0 : 1);
+        }
+
+        return 0;
+    }
+
+    MapView::MapView(std::string canvasId, bool runOnMainThread, bool stencil) {
+        this->setRunOnMainThread(runOnMainThread);
+        _stencil = stencil;
         _canvasId = canvasId;
         _baseMapView = std::make_shared<BaseMapView>();
-        // _scale = emscripten_get_device_pixel_ratio();
-        // _scale = 2;
+        _scale = emscripten_get_device_pixel_ratio();
 
         _baseMapView->getOptions()->setDPI(Const::UNSCALED_DPI * _scale);
-        // _baseMapView->getOptions()->setTileThreadPoolSize(2);
-        // _baseMapView->getOptions()->setEnvelopeThreadPoolSize(8);
-        // printf("dpi: %lf\n", Const::UNSCALED_DPI * _scale);
 
         _redrawRequestListener = std::make_shared<MapRedrawRequestListener>(this);
         _baseMapView->setRedrawRequestListener(_redrawRequestListener);
@@ -72,20 +103,6 @@ namespace carto {
     }
 
     void MapView::onSurfaceCreated() {
-        // emscripten_set_canvas_element_size("#canvas", 700, 700);
-        EmscriptenWebGLContextAttributes attr;
-        emscripten_webgl_init_context_attributes(&attr);
-        attr.alpha = attr.depth = attr.stencil = 1;
-        attr.antialias = attr.preserveDrawingBuffer = attr.failIfMajorPerformanceCaveat = 0;
-        attr.enableExtensionsByDefault = 1;
-        attr.premultipliedAlpha = 0;
-        attr.majorVersion = 2;
-        attr.minorVersion = 0;
-        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_create_context(_canvasId.c_str(), &attr);
-        emscripten_webgl_make_context_current(ctx);
-
-        _baseMapView->onSurfaceCreated();
-
         emscripten_set_touchstart_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_touch_start);
         emscripten_set_touchmove_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_touch_move);
         emscripten_set_touchend_callback(_canvasId.c_str(), this, true, &EmscriptenInput::_emscripten_touch_end);
@@ -100,10 +117,18 @@ namespace carto {
             cartoEmscriptenMapViews.emplace_back(this);
         }
 
-        if (!cartoEmscriptenMainLoopStarted) {
-            cartoEmscriptenMainLoopStarted = true;
-            emscripten_set_main_loop(_emscripten_main_loop, 0, 0);
-            emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, this, true, _emscripten_resize_callback);
+        emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, true, _emscripten_resize_callback);
+
+        if (!MapView::getRunOnMainThread()) {
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+
+            emscripten_pthread_attr_settransferredcanvases(&attr, _canvasId.substr(1).c_str());
+
+            pthread_t thread;
+            pthread_create(&thread, &attr, _thread_on_surface_created, this);
+        } else {
+            _thread_on_surface_created(this);
         }
     }
     void MapView::onSurfaceChanged() {
@@ -111,25 +136,35 @@ namespace carto {
         emscripten_get_element_css_size(_canvasId.c_str(), &canvasWidthDouble, &canvasHeightDouble);
         int canvasWidthInt = (int)round(canvasWidthDouble);
         int canvasHeightInt = (int)round(canvasHeightDouble);
-        
         if (_canvasWidth != canvasWidthInt || _canvasHeight != canvasHeightInt) {
             _canvasWidth = canvasWidthInt;
             _canvasHeight = canvasHeightInt;
             emscripten_set_canvas_element_size(_canvasId.c_str(), _canvasWidth, _canvasHeight);
-            // printf("canvas width: %lf, canvas height: %lf\n", canvasWidth, canvasHeight);
             _baseMapView->onSurfaceChanged(_canvasWidth, _canvasHeight);
-            _baseMapView->onDrawFrame();
+            _needRedraw = true;
         }
     }
     void MapView::onDrawFrame() {
         _baseMapView->onDrawFrame();
+        // emscripten_webgl_commit_frame();
     }
     void MapView::requestRender() {
         _needRedraw = true;
     }
     void MapView::start() {
         this->onSurfaceCreated();
-        this->onSurfaceChanged();
+    }
+
+    bool MapView::isRenderPaused() {
+        return this->isPaused;
+    }
+    
+    void MapView::setRenderPaused(bool isPaused) {
+        this->isPaused = isPaused;
+    }
+
+    bool MapView::getStencil() {
+        return _stencil;
     }
 
     void MapView::onInputEvent(int event, float x1, float y1, float x2, float y2) {
@@ -150,8 +185,25 @@ namespace carto {
         return _canvasHeight;
     }
 
+    std::string MapView::getCanvasId() {
+        return _canvasId;
+    }
+
+    bool MapView::getRunOnMainThread() {
+        return _runOnMainThread;
+    }
+
+    void MapView::setRunOnMainThread(bool status) {
+        _runOnMainThread = status || !emscripten_supports_offscreencanvas();
+        Log::Infof("runOnMainThread: %s", _runOnMainThread ? "true" : "false");
+    }
+
     bool MapView::needRedraw() {
         return std::atomic_exchange(&_needRedraw, false);
+    }
+
+    std::shared_ptr<BaseMapView> MapView::getBaseMapView() {
+        return _baseMapView;
     }
 
     const std::shared_ptr<Layers>& MapView::getLayers() const {

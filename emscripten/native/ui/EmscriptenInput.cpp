@@ -33,7 +33,7 @@ namespace carto {
         EM_BOOL _emscripten_mouse_start(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
             MapView* mapView = (MapView*)userData;
             if (mouseEvent->buttons == 1) {
-                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_DOWN, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_DOWN, mouseEvent->targetX, mouseEvent->targetY, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
             }
             isPressed = true;
             return true;
@@ -41,8 +41,8 @@ namespace carto {
 
         EM_BOOL _emscripten_mouse_move(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
             MapView* mapView = (MapView*)userData;
-            lastX = mouseEvent->targetX * mapView->getScale();
-            lastY = mouseEvent->targetY * mapView->getScale();
+            lastX = mouseEvent->targetX;
+            lastY = mouseEvent->targetY;
             if (isPressed) {
                 if (mouseEvent->buttons == 2 || (mouseEvent->buttons == 1 && (mouseEvent->ctrlKey || mouseEvent->shiftKey || mouseEvent->altKey || mouseEvent->metaKey))) {
                     if (lastPressedX != 0 && lastPressedY != 0) {
@@ -61,7 +61,7 @@ namespace carto {
                     lastPressedX = lastX;
                     lastPressedY = lastY;
                 } else if (mouseEvent->buttons == 1) {
-                    mapView->onInputEvent(NATIVE_ACTION_MOVE, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                    mapView->onInputEvent(NATIVE_ACTION_MOVE, mouseEvent->targetX, mouseEvent->targetY, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
                 }
             }
             
@@ -73,7 +73,7 @@ namespace carto {
 
             isPressed = false;
             if (mouseEvent->buttons == 0) {
-                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_UP, mouseEvent->targetX * mapView->getScale(), mouseEvent->targetY * mapView->getScale(), NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                mapView->onInputEvent(NATIVE_ACTION_POINTER_1_UP, mouseEvent->targetX, mouseEvent->targetY, NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
             }
 
             lastPressedX = 0;
@@ -116,8 +116,8 @@ namespace carto {
                 long pointer = touchEvent->touches[i].identifier;
                 if (pointer == _pointer1 || pointer == _pointer2) continue;
                 Coord c;
-                c.x = touchEvent->touches[i].targetX * mapView->getScale();
-                c.y = touchEvent->touches[i].targetY * mapView->getScale();
+                c.x = touchEvent->touches[i].targetX;
+                c.y = touchEvent->touches[i].targetY;
 
                 if (_pointer1 == -1) {
                     _pointer1 = pointer;
@@ -142,8 +142,8 @@ namespace carto {
             MapView* mapView = (MapView*)userData;
             for (int i = 0; i < touchEvent->numTouches; ++i) {
                 auto &coord = touchList[touchEvent->touches[i].identifier];
-                coord.x = touchEvent->touches[i].targetX * mapView->getScale();
-                coord.y = touchEvent->touches[i].targetY * mapView->getScale();
+                coord.x = touchEvent->touches[i].targetX;
+                coord.y = touchEvent->touches[i].targetY;
             }
             if (_pointer1 != -1) {
                 if (_pointer2 != -1) {

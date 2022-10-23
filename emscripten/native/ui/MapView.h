@@ -19,7 +19,7 @@ namespace carto {
 
     class MapView {
     public:
-        MapView(std::string canvasId);
+        MapView(std::string canvasId, bool runOnMainThread = false, bool stencil = true);
         ~MapView();
 
         static bool registerLicense(std::string licenseKey);
@@ -29,12 +29,18 @@ namespace carto {
         void onDrawFrame();
         void requestRender();
         void start();
+        bool isRenderPaused();
+        void setRenderPaused(bool isPaused);
+        bool getStencil();
 
         void onInputEvent(int event, float x1, float y1, float x2, float y2);
         void onWheelEvent(int delta, float x, float y);
         float getScale();
         int getCanvasWidth();
         int getCanvasHeight();
+        std::string getCanvasId();
+        bool needRedraw();
+        std::shared_ptr<BaseMapView> getBaseMapView();
 
         const std::shared_ptr<Layers>& getLayers() const;
         const std::shared_ptr<Options>& getOptions() const;
@@ -66,10 +72,11 @@ namespace carto {
         void clearPreloadingCaches();
         void clearAllCaches();
 
-    public:
-        bool needRedraw();
+        static bool getRunOnMainThread();
 
     private:
+        static void setRunOnMainThread(bool status);
+        
         std::shared_ptr<BaseMapView> _baseMapView;
         std::shared_ptr<RedrawRequestListener> _redrawRequestListener;
 
@@ -79,7 +86,9 @@ namespace carto {
 
         int _canvasWidth = 0;
         int _canvasHeight = 0;
+        bool _stencil = true;
 
+        bool isPaused = false;
     };
 }
 

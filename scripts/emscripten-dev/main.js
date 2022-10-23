@@ -6,28 +6,33 @@ const CartoMobileSDK = {
 };
 CModule(CartoMobileSDK);
 
+const imgScale = window.devicePixelRatio > 4 ? 4 : window.devicePixelRatio;
 
 function startMap() {
     CartoMobileSDK.Log.SetShowInfo(false);
-    window.mapView = new CartoMobileSDK.MapView('#canvas');
+    const stencil = !(navigator.vendor === 'Google Inc.' && navigator.userAgentData.mobile);
+    const runOnMainThread = false;
+    mapView = new CartoMobileSDK.MapView('#canvas', runOnMainThread, stencil);
     const options = mapView.getOptions();
     options.setTiltRange(new CartoMobileSDK.MapRange(40, 90));
     options.setZoomGestures(true);
     // options.setRenderProjectionMode(CartoMobileSDK.RenderProjectionMode.SPHERICAL);
     // setMapListener(mapView);
     mapView.start();
-    mapView.setTilt(60, 0);
 
     addRasterLayer(mapView);
     addMBTiles(mapView);
 
     const pos = new CartoMobileSDK.MapPos(-8238512, 4970883);
-    mapView.setZoom(17.0, pos, 2.0);
+    mapView.setZoom(18.0 - window.devicePixelRatio, pos, 2.0);
+    mapView.setTilt(60, 2.0);
 
-    window.localDataSource = createVectorLayer(mapView, new CartoMobileSDK.EPSG3857());
+    localDataSource = createVectorLayer(mapView, new CartoMobileSDK.EPSG3857());
     addMarker(localDataSource);
     addLine(localDataSource);
-    addPlane(localDataSource);
+    addText(localDataSource);
+    addPopup(localDataSource);
+    setTimeout(() => addPlane(localDataSource), 2500);
 }
 
 function addRasterLayer(mapView) {
@@ -57,7 +62,7 @@ function addMBTiles(mapView) {
         const tileDecoder = new CartoMobileSDK.MBVectorTileDecoder(styleset);
         const layer = new CartoMobileSDK.VectorTileLayer(mbDataSource, tileDecoder);
         layer.setLabelRenderOrder(CartoMobileSDK.VectorTileRenderOrder.VECTOR_TILE_RENDER_ORDER_LAST);
-        // setVectorTileListener(layer);
+        setVectorTileListener(layer, tileDecoder);
 
         mapView.getLayers().add(layer);
     });
@@ -94,6 +99,42 @@ function addLine(localDataSource) {
     localDataSource.add(line);
 }
 
+function addText(localDataSource) {
+    const builder = new CartoMobileSDK.TextStyleBuilder();
+    builder.setOrientationMode(CartoMobileSDK.BillboardOrientation.BILLBOARD_ORIENTATION_FACE_CAMERA_GROUND);
+
+    const text = new CartoMobileSDK.Text(new CartoMobileSDK.MapPos(-8238832, 4970287), builder.buildStyle(), "Face camera ground text");
+    localDataSource.add(text);
+}
+
+function addPopup(localDataSource) {
+    const fetches = [
+        fetch(`assets/info@${imgScale}.png`).then(response => response.arrayBuffer()),
+        fetch(`assets/arrow@${imgScale}.png`).then(response => response.arrayBuffer())
+    ];
+    Promise.all(fetches).then(([infoPNG, arrowPNG]) => {
+        CartoMobileSDK.FS.writeFile(`/assets/info@${imgScale}.png`, new Int8Array(infoPNG));
+        CartoMobileSDK.FS.writeFile(`/assets/arrow@${imgScale}.png`, new Int8Array(arrowPNG));
+    }).then(() => {
+        const infoPNG = CartoMobileSDK.BitmapUtils.LoadBitmapFromAssets(`info@${imgScale}.png`);
+        const arrowPNG = CartoMobileSDK.BitmapUtils.LoadBitmapFromAssets(`arrow@${imgScale}.png`);
+    
+        const builder = new CartoMobileSDK.BalloonPopupStyleBuilder();
+        builder.setDescriptionWrap(false);
+        builder.setPlacementPriority(1);
+        builder.setLeftImage(infoPNG);
+        builder.setRightImage(arrowPNG);
+        builder.setRightMargins(new CartoMobileSDK.BalloonPopupMargins(2, 6, 12, 6));
+        // builder.setTitleColor(new CartoMobileSDK.Color(255, 0, 0, 255));
+        // builder.setTitleFontSize(24);
+        // builder.setDescriptionFontSize(24);
+
+        const popup = new CartoMobileSDK.BalloonPopup(new CartoMobileSDK.MapPos(-8237821, 4970287), builder.buildStyle(), "This title will be wrapped if there's not enough space on the screen.", "ActivityData is set to be truncated with three dots, unless the screen is really really big.");
+        localDataSource.add(popup);
+    
+    });
+}
+
 function setMapListener(mapView) {
     const Listener = CartoMobileSDK.MapEventListener.extend("MapEventListener", {
         onMapIdle: function() {
@@ -108,18 +149,20 @@ function setMapListener(mapView) {
         onMapInteraction: function(mapInteractionInfo) {
             console.log('onMapInteraction', mapInteractionInfo.isTiltAction());
         },
-        onMapClicked: function(x, y) {
-            console.log('onMapClicked3', x, y);
+        onMapClicked: function(mapClickInfo) {
+            console.log('onMapClicked');
         },
     });
     const listener = new Listener;
     mapView.setMapEventListener(listener);
 }
 
-function setVectorTileListener(vectorTileLayer) {
+function setVectorTileListener(vectorTileLayer, tileDecoder) {
     const Listener = CartoMobileSDK.VectorTileEventListener.extend("VectorTileEventListener", {
-        onVectorTileClicked: function() {
-            console.log('onVectorTileClicked');
+        onVectorTileClicked: function(c) {
+            const name = c.getFeature().getProperties().getObjectElement("name").getString();
+            tileDecoder.setStyleParameter("selectedRoomName", name);
+            console.log('onVectorTileClicked', name, c.getClickPos().getX());
         },
     });
     const listener = new Listener;
@@ -151,7 +194,7 @@ function animate(model, posX, posY, posZ, pos2X, pos2Y, timeInMs) {
     func = (timestamp) => {
         if (!startTime) {
             startTime = timestamp;
-            window.requestAnimationFrame(func);
+            requestAnimationFrame(func);
             return;
         }
         let totalTime = timestamp - startTime;
@@ -163,9 +206,9 @@ function animate(model, posX, posY, posZ, pos2X, pos2Y, timeInMs) {
         model.setPos(new CartoMobileSDK.MapPos(x, y, posZ));
 
         if (totalTime < timeInMs) {
-            window.requestAnimationFrame(func);
+            requestAnimationFrame(func);
         }
     };
 
-    window.requestAnimationFrame(func);
+    requestAnimationFrame(func);
 }

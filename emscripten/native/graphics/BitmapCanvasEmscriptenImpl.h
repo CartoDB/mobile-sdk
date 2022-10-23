@@ -2,6 +2,7 @@
 #define _CARTO_BITMAPCANVASEMSCRIPTENIMPL_H_
 
 #include "graphics/BitmapCanvas.h"
+#include <emscripten/val.h>
 
 namespace carto {
 
@@ -26,6 +27,26 @@ namespace carto {
         virtual ScreenBounds measureTextSize(std::string text, int maxWidth, bool breakLines) const;
 
         virtual std::shared_ptr<Bitmap> buildBitmap() const;
+
+    protected:
+        void setCanvas(emscripten::val canvas);
+        void setContext(emscripten::val context);
+        void terminate();
+
+    private:
+        ScreenBounds measureTextSizeAndEllipsizeText(std::string &text, int maxWidth, bool breakLines, std::vector<std::string> &textLines, std::vector<int> &textMaxWidths, int &maxAscent, int &maxDescent) const;
+
+        emscripten::val _canvas;
+        emscripten::val _context;
+
+        int _width;
+        int _height;
+        DrawMode _drawMode;
+        float _strokeWidth;
+        std::string _color;
+        std::string _font;
+        int _fontSize;
+        float _lineHeight;
     };
 
 }
