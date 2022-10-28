@@ -126,7 +126,7 @@ namespace carto {
         }
         return *_cachedDataExtent;
     }
-    
+
     std::shared_ptr<TileData> MBTilesTileDataSource::loadTile(const MapTile& mapTile) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         Log::Infof("MBTilesTileDataSource::loadTile: Loading %s", mapTile.toString().c_str());
@@ -134,7 +134,13 @@ namespace carto {
             Log::Errorf("MBTilesTileDataSource::loadTile: Failed to load %s: Couldn't connect to the database", mapTile.toString().c_str());
             return std::shared_ptr<TileData>();
         }
-        
+
+        if (getMaxOverzoomLevel() >= 0 && mapTile.getZoom() > getMaxZoomWithOverzoom()) {
+            // we explicitly return an empty tile to not draw overzoom
+            auto tileData = std::make_shared<TileData>(std::shared_ptr<BinaryData>());
+            tileData->setIsOverZoom(true);
+            return  tileData;
+        }
         try {
             // Make the query and check for database error
             sqlite3pp::query query(*_database, "SELECT tile_data FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");

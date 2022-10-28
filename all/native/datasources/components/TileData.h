@@ -48,6 +48,17 @@ namespace carto {
          * @param flag True when the tile should be replaced with the parent, false otherwise.
          */
         void setReplaceWithParent(bool flag);
+
+        /**
+         * Returns true if the tile data source marked this as over zoom.
+         * @return True if the tile should not be drawn. False otherwise.
+         */
+        bool isOverZoom() const;
+        /**
+         * Set the parent overzoom flag.
+         * @return True if the tile should not be drawn. False otherwise.
+         */
+        void setIsOverZoom(bool flag);
         
         /**
          * Returns tile data as binary data.
@@ -59,6 +70,7 @@ namespace carto {
         const std::shared_ptr<BinaryData> _data;
         std::shared_ptr<std::chrono::steady_clock::time_point> _expirationTime;
         bool _replaceWithParent;
+        bool _overzoom;
         mutable std::mutex _mutex;
     };
 

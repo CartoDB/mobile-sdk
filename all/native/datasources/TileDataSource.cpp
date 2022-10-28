@@ -21,6 +21,28 @@ namespace carto {
         return _maxZoom;
     }
 
+    int TileDataSource::getMaxZoomWithOverzoom() const {
+        if (_maxOverzoomLevel >= 0) {
+            return getMaxZoom() + _maxOverzoomLevel;
+        }
+        return getMaxZoom();
+    }
+
+    int TileDataSource::getMaxOverzoomLevel() const {
+        return _maxOverzoomLevel;
+    }
+    bool TileDataSource::isMaxOverzoomLevelSet() const {
+        return _maxOverzoomLevel >= 0;
+    }
+
+    void TileDataSource::setMaxOverzoomLevel(int overzoomLevel) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _maxOverzoomLevel = overzoomLevel;
+        }
+        notifyTilesChanged(false);
+    }
+
     MapBounds TileDataSource::getDataExtent() const {
         return _projection->getBounds();
     }
@@ -32,7 +54,7 @@ namespace carto {
     void TileDataSource::notifyTilesChanged(bool removeTiles) {
         std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
         {
-            std::lock_guard<std::mutex> lock(_onChangeListenersMutex);
+            std::lock_guard<std::mutex> lock(_mutex);
             onChangeListeners = _onChangeListeners;
         }
         for (const std::shared_ptr<OnChangeListener>& listener : onChangeListeners) {
@@ -41,30 +63,32 @@ namespace carto {
     }
         
     void TileDataSource::registerOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {
-        std::lock_guard<std::mutex> lock(_onChangeListenersMutex);
+        std::lock_guard<std::mutex> lock(_mutex);
         _onChangeListeners.push_back(listener);
     }
     
     void TileDataSource::unregisterOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {
-        std::lock_guard<std::mutex> lock(_onChangeListenersMutex);
+        std::lock_guard<std::mutex> lock(_mutex);
         _onChangeListeners.erase(std::remove(_onChangeListeners.begin(), _onChangeListeners.end(), listener), _onChangeListeners.end());
     }
     
     TileDataSource::TileDataSource() :
         _minZoom(0),
         _maxZoom(Const::MAX_SUPPORTED_ZOOM_LEVEL),
+        _maxOverzoomLevel(-1),
         _projection(std::make_shared<EPSG3857>()),
         _onChangeListeners(),
-        _onChangeListenersMutex()
+        _mutex()
     {
     }
 
     TileDataSource::TileDataSource(int minZoom, int maxZoom) :
         _minZoom(std::max(0, minZoom)),
         _maxZoom(std::min(static_cast<int>(Const::MAX_SUPPORTED_ZOOM_LEVEL), maxZoom)),
+        _maxOverzoomLevel(-1),
         _projection(std::make_shared<EPSG3857>()),
         _onChangeListeners(),
-        _onChangeListenersMutex()
+        _mutex()
     {
     }
     

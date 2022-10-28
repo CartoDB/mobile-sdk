@@ -4,7 +4,7 @@
 namespace carto {
     
     TileData::TileData(const std::shared_ptr<BinaryData>& data) :
-        _data(data), _expirationTime(), _replaceWithParent(false), _mutex()
+        _data(data), _expirationTime(), _replaceWithParent(false), _overzoom(false), _mutex()
     {
     }
 
@@ -40,6 +40,16 @@ namespace carto {
     void TileData::setReplaceWithParent(bool flag) {
         std::lock_guard<std::mutex> lock(_mutex);
         _replaceWithParent = flag;
+    }
+    
+    bool TileData::isOverZoom() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _overzoom;
+    }
+    
+    void TileData::setIsOverZoom(bool flag) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _overzoom = flag;
     }
     
     const std::shared_ptr<BinaryData>& TileData::getData() const {

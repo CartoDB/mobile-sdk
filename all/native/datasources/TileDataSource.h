@@ -53,6 +53,30 @@ namespace carto {
          */
         virtual int getMaxZoom() const;
 
+
+        /**
+         * Returns the maximum zoom level supported by this data source + getMaxOverzoomLevel if >= 0.
+         * @return The maximum zoom level supported (exclusive).
+         */
+        virtual int getMaxZoomWithOverzoom() const;
+
+        /**
+         * Sets the maximum overzoom level for this datasource.
+         * If a tile for the given zoom level Z is not available, SDK will try to use tiles with zoom levels Z-1, ..., Z-MaxOverzoomLevel.
+         * The default is -1 (disabled).
+         * @param overzoomLevel The new maximum overzoom value.
+         */
+        void setMaxOverzoomLevel(int overzoomLevel);
+
+        /**
+         * Gets the current maximum overzoom level for this datasource.
+         * Over it the datasource will not be "drawn"
+         * @return The current maximum overzoom level for this datasource.
+         */
+        int getMaxOverzoomLevel() const;
+
+        bool isMaxOverzoomLevelSet() const;
+
         /**
          * Returns the extent of the tiles in this data source.
          * The bounds are in coordinate system of the projection of the data source.
@@ -117,11 +141,12 @@ namespace carto {
 
         std::atomic<int> _minZoom;
         std::atomic<int> _maxZoom;
+        std::atomic<int> _maxOverzoomLevel;
         const std::shared_ptr<Projection> _projection;
     
     private:
         std::vector<std::shared_ptr<OnChangeListener> > _onChangeListeners;
-        mutable std::mutex _onChangeListenersMutex;
+        mutable std::mutex _mutex;
     };
     
 }
