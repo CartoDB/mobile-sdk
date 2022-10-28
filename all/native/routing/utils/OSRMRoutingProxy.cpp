@@ -43,7 +43,7 @@ namespace carto {
             results.push_back(std::move(result));
         }
 
-        RoutingResultBuilder resultBuilder(proj);
+        RoutingResultBuilder resultBuilder(proj, nullptr);
         for (std::size_t i = 0; i < results.size(); i++) {
             const osrm::Result& result = results[i];
             if (result.getInstructions().empty()) {
@@ -116,7 +116,7 @@ namespace carto {
             throw GenericException("Routing failed", responseDoc["status_message"].GetString());
         }
 
-        RoutingResultBuilder resultBuilder(proj);
+        RoutingResultBuilder resultBuilder(proj, json);
         
         std::vector<MapPos> wgs84Points = DecodeGeometry(responseDoc["route_geometry"].GetString());
         std::vector<MapPos> points;

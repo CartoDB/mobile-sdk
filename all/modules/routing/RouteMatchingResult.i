@@ -29,6 +29,7 @@
 %attributeval(carto::RouteMatchingResult, std::vector<carto::MapPos>, Points, getPoints)
 %attributeval(carto::RouteMatchingResult, std::vector<carto::RouteMatchingEdge>, MatchingEdges, getMatchingEdges)
 %attributeval(carto::RouteMatchingResult, std::vector<carto::RouteMatchingPoint>, MatchingPoints, getMatchingPoints)
+%attributestring(carto::RouteMatchingResult, std::string, RawResult, getRawResult)
 %std_exceptions(carto::RouteMatchingResult::RouteMatchingResult)
 !standard_equals(carto::RouteMatchingResult);
 !custom_tostring(carto::RouteMatchingResult);

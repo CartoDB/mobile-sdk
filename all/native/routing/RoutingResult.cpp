@@ -11,8 +11,9 @@
 
 namespace carto {
 
-    RoutingResult::RoutingResult(const std::shared_ptr<Projection>& projection, std::vector<MapPos> points, std::vector<RoutingInstruction> instructions) :
+    RoutingResult::RoutingResult(const std::shared_ptr<Projection>& projection, std::vector<MapPos> points, std::vector<RoutingInstruction> instructions, const std::string rawResult) :
         _projection(projection),
+        _rawResult(rawResult),
         _points(std::move(points)),
         _instructions(std::move(instructions))
     {
@@ -46,6 +47,10 @@ namespace carto {
         return std::accumulate(_instructions.begin(), _instructions.end(), 0.0, [](double time, const RoutingInstruction& instruction) {
             return time + instruction.getTime();
         });
+    }
+
+    const std::string& RoutingResult::getRawResult() const {
+        return _rawResult;
     }
 
     std::string RoutingResult::toString() const {

@@ -205,6 +205,7 @@ namespace carto {
             lokiworker.trace(api);
             valhalla::thor::thor_worker_t thorworker(configTree, reader);
             resultString = thorworker.trace_attributes(api);
+            lokiworker.cleanup();
         }
         catch (const std::exception& ex) {
             throw GenericException("Exception while matching route", ex.what());
@@ -231,6 +232,9 @@ namespace carto {
             valhalla::odin::odin_worker_t odinworker(configTree);
             odinworker.narrate(api);
             resultString = valhalla::tyr::serializeDirections(api);
+            lokiworker.cleanup();
+            thorworker.cleanup();
+            odinworker.cleanup();
         }
         catch (const std::exception& ex) {
             throw GenericException("Exception while calculating route", ex.what());
@@ -400,47 +404,44 @@ namespace carto {
         if (!err.empty()) {
             throw GenericException("Failed to parse result", err);
         }
-        if (!result.get("matched_points").is<picojson::array>()) {
-            throw GenericException("No matched_points info in the result");
-        }
-        if (!result.get("edges").is<picojson::array>()) {
-            throw GenericException("No edges info in the result");
-        }
 
         std::vector<RouteMatchingPoint> matchingPoints;
         std::vector<RouteMatchingEdge> matchingEdges;
         try {
-            for (const picojson::value& matchedPointInfo : result.get("matched_points").get<picojson::array>()) {
-                RouteMatchingPointType::RouteMatchingPointType type = RouteMatchingPointType::ROUTE_MATCHING_POINT_UNMATCHED;
-                if (matchedPointInfo.get("type").get<std::string>() == "matched") {
-                    type = RouteMatchingPointType::ROUTE_MATCHING_POINT_MATCHED;
-                } else if (matchedPointInfo.get("type").get<std::string>() == "interpolated") {
-                    type = RouteMatchingPointType::ROUTE_MATCHING_POINT_INTERPOLATED;
-                }
-
-                double lat = matchedPointInfo.get("lat").get<double>();
-                double lon = matchedPointInfo.get("lon").get<double>();
-                int edgeIndex = static_cast<int>(matchedPointInfo.get("edge_index").get<std::int64_t>());
-
-                matchingPoints.emplace_back(proj->fromLatLong(lat, lon), type, edgeIndex);
-            }
-
-            for (const picojson::value& edgeInfo : result.get("edges").get<picojson::array>()) {
-                std::map<std::string, Variant> attributes;
-                if (edgeInfo.is<picojson::object>()) {
-                    const picojson::object& edgeInfoObject = edgeInfo.get<picojson::object>();
-                    for (auto it = edgeInfoObject.begin(); it != edgeInfoObject.end(); it++) {
-                        attributes[it->first] = Variant::FromPicoJSON(it->second);
+            if (result.get("matched_points").is<picojson::array>()) {
+                for (const picojson::value& matchedPointInfo : result.get("matched_points").get<picojson::array>()) {
+                    RouteMatchingPointType::RouteMatchingPointType type = RouteMatchingPointType::ROUTE_MATCHING_POINT_UNMATCHED;
+                    if (matchedPointInfo.get("type").get<std::string>() == "matched") {
+                        type = RouteMatchingPointType::ROUTE_MATCHING_POINT_MATCHED;
+                    } else if (matchedPointInfo.get("type").get<std::string>() == "interpolated") {
+                        type = RouteMatchingPointType::ROUTE_MATCHING_POINT_INTERPOLATED;
                     }
-                }
 
-                matchingEdges.emplace_back(attributes);
+                    double lat = matchedPointInfo.get("lat").get<double>();
+                    double lon = matchedPointInfo.get("lon").get<double>();
+                    int edgeIndex = static_cast<int>(matchedPointInfo.get("edge_index").get<std::int64_t>());
+
+                    matchingPoints.emplace_back(proj->fromLatLong(lat, lon), type, edgeIndex);
+                }
+            }
+            if (result.get("edges").is<picojson::array>()) {
+                for (const picojson::value &edgeInfo: result.get("edges").get<picojson::array>()) {
+                    std::map<std::string, Variant> attributes;
+                    if (edgeInfo.is<picojson::object>()) {
+                        const picojson::object &edgeInfoObject = edgeInfo.get<picojson::object>();
+                        for (auto it = edgeInfoObject.begin(); it != edgeInfoObject.end(); it++) {
+                            attributes[it->first] = Variant::FromPicoJSON(it->second);
+                        }
+                    }
+
+                    matchingEdges.emplace_back(attributes);
+                }
             }
         }
         catch (const std::exception& ex) {
             throw GenericException("Exception while translating route", ex.what());
         }
-        return std::make_shared<RouteMatchingResult>(proj, std::move(matchingPoints), std::move(matchingEdges));
+        return std::make_shared<RouteMatchingResult>(proj, std::move(matchingPoints), std::move(matchingEdges), resultString);
     }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::ParseRoutingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString) {
@@ -453,7 +454,7 @@ namespace carto {
             throw GenericException("No trip info in the result");
         }
 
-        RoutingResultBuilder resultBuilder(proj);
+        RoutingResultBuilder resultBuilder(proj, resultString);
         try {
             for (const picojson::value& legInfo : result.get("trip").get("legs").get<picojson::array>()) {
                 std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(legInfo.get("shape").get<std::string>());
