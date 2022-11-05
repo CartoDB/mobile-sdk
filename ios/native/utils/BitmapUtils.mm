@@ -3,6 +3,7 @@
 #include "components/Exceptions.h"
 #include "utils/AssetUtils.h"
 #include "graphics/Bitmap.h"
+#include "utils/CFUniquePtr.h"
 #include "utils/Log.h"
 
 #include <stdext/utf8_filesystem.h>
@@ -33,139 +34,26 @@ namespace carto {
     }
     
     std::shared_ptr<Bitmap> BitmapUtils::CreateBitmapFromUIImage(const UIImage* image) {
-        static const unsigned int ARGB_REMAP[] = { 1, 2, 3, 0 };
-        static const unsigned int ABGR_REMAP[] = { 3, 2, 1, 0 };
-        static const unsigned int RGBA_REMAP[] = { 0, 1, 2, 3 };
-        static const unsigned int BGRA_REMAP[] = { 2, 1, 0, 3 };
-        static const unsigned int RGB_INDEX_REMAP[] = { };
-
         if (!image) {
             throw NullArgumentException("Null image");
         }
-    	
+    
         CGImageRef cgImage = image.CGImage;
-        CGColorSpaceRef colorSpace = CGImageGetColorSpace(cgImage);
         CGBitmapInfo info = CGImageGetBitmapInfo(cgImage);
         unsigned int width = static_cast<unsigned int>(CGImageGetWidth(cgImage));
         unsigned int height = static_cast<unsigned int>(CGImageGetHeight(cgImage));
-        unsigned int bytesPerPixel = static_cast<unsigned int>(CGImageGetBitsPerPixel(cgImage) / 8);
-        unsigned int bytesPerComponent = static_cast<unsigned int>(CGImageGetBitsPerComponent(cgImage) / 8);
-        unsigned int bytesPerRow = static_cast<unsigned int>(CGImageGetBytesPerRow(cgImage));
 
-        std::vector<std::uint8_t> colorTable(CGColorSpaceGetColorTableCount(colorSpace) * 3);
-        if (CGColorSpaceGetModel(colorSpace) == kCGColorSpaceModelIndexed) {
-            CGColorSpaceRef baseColorSpace = CGColorSpaceGetBaseColorSpace(colorSpace);
-            if (bytesPerComponent != 1 || bytesPerPixel != 1 || CGColorSpaceGetModel(baseColorSpace) != kCGColorSpaceModelRGB) {
-                Log::Error("BitmapUtils::CreateBitmapFromUImage: Failed to create Bitmap, unsupported indexed format");
-                return std::shared_ptr<Bitmap>();
-            }
-            CGColorSpaceGetColorTable(colorSpace, colorTable.data());
-        }
-        
-        if (bytesPerComponent != 1 && bytesPerComponent != 2) {
-            Log::Errorf("BitmapUtils::CreateBitmapFromUImage: Failed to create Bitmap, unsupported bytes per component parameter: %u", bytesPerComponent);
+        std::vector<std::uint8_t> bitmapData(width * height * 4);
+        CFUniquePtr<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB(), CGColorSpaceRelease);
+        CFUniquePtr<CGContextRef> context(CGBitmapContextCreate(bitmapData.data(), width, height, 8, width * 4, colorSpace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedLast), CGContextRelease);
+        if (!context) {
+            Log::Errorf("BitmapUtils::CreateBitmapFromUIImage: Failed to create bitmap context");
             return std::shared_ptr<Bitmap>();
         }
-        
-        const unsigned int* rgbaRemap = RGBA_REMAP;
-        ColorFormat::ColorFormat colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
-        bool premultiplyAlpha = false;
-        switch (bytesPerPixel / bytesPerComponent) {
-            case 4:
-                switch(info & kCGBitmapAlphaInfoMask) {
-                    case kCGImageAlphaPremultipliedFirst:
-                    case kCGImageAlphaFirst:
-                    case kCGImageAlphaNoneSkipFirst:
-                        rgbaRemap = (info & kCGBitmapByteOrderMask) == kCGBitmapByteOrder32Big ? ARGB_REMAP : BGRA_REMAP;
-                        break;
-                    default:
-                        rgbaRemap = (info & kCGBitmapByteOrderMask) == kCGBitmapByteOrder32Big ? ABGR_REMAP : RGBA_REMAP;
-                        break;
-                }
-                switch(info & kCGBitmapAlphaInfoMask) {
-                    case kCGImageAlphaFirst:
-                    case kCGImageAlphaLast:
-                        premultiplyAlpha = true;
-                        break;
-                    default:
-                        premultiplyAlpha = false;
-                        break;
-                }
-                colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
-                break;
-            case 3:
-                colorFormat = ColorFormat::COLOR_FORMAT_RGB;
-                break;
-            case 2:
-                colorFormat = ColorFormat::COLOR_FORMAT_GRAYSCALE_ALPHA;
-                break;
-            case 1:
-                if (!colorTable.empty()) {
-                    colorFormat = ColorFormat::COLOR_FORMAT_RGB;
-                    rgbaRemap = RGB_INDEX_REMAP;
-                } else {
-                    colorFormat = ColorFormat::COLOR_FORMAT_GRAYSCALE;
-                }
-                break;
-            default:
-                Log::Errorf("BitmapUtils::CreateBitmapFromUImage: Failed to create Bitmap, unsupported bytes per pixel parameter: %u", bytesPerPixel);
-                return std::shared_ptr<Bitmap>();
-        }
-    	
-        CGDataProviderRef provider = CGImageGetDataProvider(cgImage);
-        CFDataRef data = CGDataProviderCopyData(provider);
-        const unsigned char* bytes = CFDataGetBytePtr(data);
 
-        // Convert data to 8 bit per component, if 16 bit per component
-        std::vector<unsigned char> bytes8Bit;
-        if (bytesPerComponent == 2) {
-            bytes8Bit.resize(width * height * bytesPerPixel / 2);
-            for (std::size_t i = 0; i < width * height * bytesPerPixel / 2; i++) {
-                bytes8Bit[i] = static_cast<unsigned char>(*reinterpret_cast<const unsigned short*>(&bytes[i * 2]) >> 8);
-            }
-            bytes = bytes8Bit.data();
-            bytesPerComponent /= 2;
-            bytesPerRow /= 2;
-            bytesPerPixel /= 2;
-        }
-    	
-        std::shared_ptr<Bitmap> bitmap;
-        if (!premultiplyAlpha && rgbaRemap == RGBA_REMAP) {
-            bitmap = std::make_shared<Bitmap>(bytes, width, height, colorFormat, bytesPerRow);
-        } else if (rgbaRemap == RGB_INDEX_REMAP) {
-            std::vector<unsigned char> bytesUnpacked(width * height * 3);
-            for (unsigned int y = 0; y < height; y++) {
-                for (unsigned int x = 0; x < width; x++) {
-                    unsigned int val = bytes[y * bytesPerRow + x];
-                    for (unsigned int c = 0; c < 3; c++) {
-                        bytesUnpacked[(y * width + x) * 3 + c] = colorTable[val * 3 + c];
-                    }
-                }
-            }
-            bitmap = std::make_shared<Bitmap>(bytesUnpacked.data(), width, height, colorFormat, width * 3);
-        } else {
-            std::vector<unsigned char> bytesPremultiplied(width * height * 4);
-            for (unsigned int y = 0; y < height; y++) {
-                for (unsigned int x = 0; x < width; x++) {
-                    size_t i = y * bytesPerRow + x * 4;
-                    unsigned int alpha = bytes[i + rgbaRemap[3]];
-                    for (unsigned int c = 0; c < 3; c++) {
-                        unsigned int val = bytes[i + rgbaRemap[c]];
-                        if (premultiplyAlpha) {
-                            val = (val * alpha + 255) >> 8;
-                        }
-                        bytesPremultiplied[(y * width + x) * 4 + c] = static_cast<unsigned char>(val);
-                    }
-                    bytesPremultiplied[(y * width + x) * 4 + 3] = static_cast<unsigned char>(alpha);
-                }
-            }
-            bitmap = std::make_shared<Bitmap>(bytesPremultiplied.data(), width, height, colorFormat, width * 4);
-        }
-    	
-        // Cleanup
-        CFRelease(data);
-        
-        return bitmap;
+        CGContextDrawImage(context, CGRectMake(0, 0, width, height), cgImage);
+
+        return std::make_shared<Bitmap>(bitmapData.data(), width, height, ColorFormat::COLOR_FORMAT_RGBA, width * 4);
     }
         
     UIImage* BitmapUtils::CreateUIImageFromBitmap(const std::shared_ptr<Bitmap>& bitmap) {
@@ -174,23 +62,23 @@ namespace carto {
         }
 
         CGBitmapInfo bitmapInfo;
-        CGColorSpaceRef colorSpace;
+        CFUniquePtr<CGColorSpaceRef> colorSpace;
         switch (bitmap->getColorFormat()) {
             case ColorFormat::COLOR_FORMAT_GRAYSCALE:
                 bitmapInfo = kCGImageAlphaNone;
-                colorSpace = CGColorSpaceCreateDeviceGray();
+                colorSpace = CFUniquePtr<CGColorSpaceRef>(CGColorSpaceCreateDeviceGray(), CGColorSpaceRelease);
                 break;
             case ColorFormat::COLOR_FORMAT_GRAYSCALE_ALPHA:
                 bitmapInfo = kCGImageAlphaPremultipliedLast;
-                colorSpace = CGColorSpaceCreateDeviceGray();
+                colorSpace = CFUniquePtr<CGColorSpaceRef>(CGColorSpaceCreateDeviceGray(), CGColorSpaceRelease);
                 break;
             case ColorFormat::COLOR_FORMAT_RGB:
                 bitmapInfo = kCGImageAlphaNone;
-                colorSpace = CGColorSpaceCreateDeviceRGB();
+                colorSpace = CFUniquePtr<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB(), CGColorSpaceRelease);
                 break;
             case ColorFormat::COLOR_FORMAT_RGBA:
                 bitmapInfo = kCGImageAlphaPremultipliedLast;
-                colorSpace = CGColorSpaceCreateDeviceRGB();
+                colorSpace = CFUniquePtr<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB(), CGColorSpaceRelease);
                 break;
             default:
                 Log::Errorf("BitmapUtils::CreateUIImageFromBitmap: Failed to create UIImage, unsupported color format: %d", bitmap->getColorFormat());
@@ -204,15 +92,10 @@ namespace carto {
             std::copy(row, row + bytesPerRow, &pixelData[y * bytesPerRow]);
         }
         
-        CFDataRef data = CFDataCreate(NULL, pixelData.data(), pixelData.size());
-        CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData(data);
-        CGImageRef cgImage = CGImageCreate(bitmap->getWidth(), bitmap->getHeight(), 8, bitmap->getBytesPerPixel() * 8, bytesPerRow, colorSpace, bitmapInfo, dataProvider, NULL, NO, kCGRenderingIntentDefault);
+        CFUniquePtr<CFDataRef> data(CFDataCreate(NULL, pixelData.data(), pixelData.size()), CFRelease);
+        CFUniquePtr<CGDataProviderRef> dataProvider(CGDataProviderCreateWithCFData(data), CGDataProviderRelease);
+        CFUniquePtr<CGImageRef> cgImage(CGImageCreate(bitmap->getWidth(), bitmap->getHeight(), 8, bitmap->getBytesPerPixel() * 8, bytesPerRow, colorSpace, bitmapInfo, dataProvider, NULL, NO, kCGRenderingIntentDefault), CGImageRelease);
         UIImage* image = [UIImage imageWithCGImage:cgImage];
-
-        CGImageRelease(cgImage);
-        CGDataProviderRelease(dataProvider);
-        CFRelease(data);
-        CGColorSpaceRelease(colorSpace);
 
         return image;
     }

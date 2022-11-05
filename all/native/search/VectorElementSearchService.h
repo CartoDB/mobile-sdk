@@ -22,6 +22,7 @@ namespace carto {
 
     /**
      * A search service for finding vector elements from the specified vector data source.
+     * Depending on the datasource, searching may perform network requests and must be executed in non-UI background thread.
      */
     class VectorElementSearchService {
     public:
@@ -52,6 +53,7 @@ namespace carto {
 
         /**
          * Searches for the vector elements specified by search request from the data source bound to the service.
+         * Depending on the data source, this method may perform slow IO operations and may need to be run in background thread.
          * @param request The search request containing search filters.
          * @return The resulting list of vector elements matching the request.
          */

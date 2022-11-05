@@ -13,8 +13,9 @@
 #include "datasources/VectorDataSource.h"
 #include "layers/Layer.h"
 
+#include <atomic>
 #include <memory>
-#include <unordered_map>
+#include <mutex>
 
 namespace carto {
     class CullState;
@@ -37,7 +38,6 @@ namespace carto {
     class BillboardSorter;
     class GeometryCollectionRenderer;
     class LineRenderer;
-    class NMLModelRenderer;
     class PointRenderer;
     class Polygon3DRenderer;
     class PolygonRenderer;
@@ -103,6 +103,7 @@ namespace carto {
         class FetchTask : public CancelableTask {
         public:
             explicit FetchTask(const std::weak_ptr<VectorLayer>& layer);
+
             virtual void cancel();
             virtual void run();
             
@@ -110,10 +111,53 @@ namespace carto {
             std::weak_ptr<VectorLayer> _layer;
             
             bool _started;
-            
-            virtual bool loadElements(const std::shared_ptr<CullState>& cullState);
+
+            virtual bool loadElements(const std::shared_ptr<VectorLayer>& layer, const std::shared_ptr<CullState>& cullState);
         };
         
+        class FetchingTasks {
+        public:
+            FetchingTasks() : _fetchingTasks(), _mutex() { }
+            
+            void insert(const std::shared_ptr<FetchTask>& task) {
+                std::lock_guard<std::mutex> lock(_mutex);
+                auto it = std::find(_fetchingTasks.begin(), _fetchingTasks.end(), task);
+                if (it == _fetchingTasks.end()) {
+                    _fetchingTasks.push_back(task);
+                }
+            }
+            
+            void remove(const std::shared_ptr<FetchTask>& task) {
+                std::lock_guard<std::mutex> lock(_mutex);
+                auto it = std::find(_fetchingTasks.begin(), _fetchingTasks.end(), task);
+                if (it != _fetchingTasks.end()) {
+                    _fetchingTasks.erase(it);
+                }
+            }
+
+            std::shared_ptr<FetchTask> getLast() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                if (!_fetchingTasks.empty()) {
+                    return _fetchingTasks.back();
+                }
+                return std::shared_ptr<FetchTask>();
+            }
+            
+            std::vector<std::shared_ptr<FetchTask> > getAll() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                return _fetchingTasks;
+            }
+
+            int getCount() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                return static_cast<int>(_fetchingTasks.size());
+            }
+
+        private:
+            std::vector<std::shared_ptr<FetchTask> > _fetchingTasks;
+            mutable std::mutex _mutex;
+        };
+
         virtual void setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
                                    const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
                                    const std::weak_ptr<Options>& options,
@@ -127,7 +171,7 @@ namespace carto {
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
-        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
+        virtual bool processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         virtual void refreshElement(const std::shared_ptr<VectorElement>& element, bool remove);
 
@@ -138,15 +182,17 @@ namespace carto {
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
-        virtual std::shared_ptr<CancelableTask> createFetchTask(const std::shared_ptr<CullState>& cullState);
+        virtual std::shared_ptr<FetchTask> createFetchTask(const std::shared_ptr<CullState>& cullState);
 
         const DirectorPtr<VectorDataSource> _dataSource;
         std::shared_ptr<VectorDataSource::OnChangeListener> _dataSourceListener;
         
-        std::atomic<bool> _zBuffering;
+        FetchingTasks _fetchingTasks;
 
     private:
         ThreadSafeDirectorPtr<VectorElementEventListener> _vectorElementEventListener;
+
+        std::atomic<bool> _zBuffering;
 
         std::shared_ptr<BillboardRenderer> _billboardRenderer;
         std::shared_ptr<GeometryCollectionRenderer> _geometryCollectionRenderer;
@@ -154,9 +200,6 @@ namespace carto {
         std::shared_ptr<PointRenderer> _pointRenderer;
         std::shared_ptr<PolygonRenderer> _polygonRenderer;
         std::shared_ptr<Polygon3DRenderer> _polygon3DRenderer;
-        std::shared_ptr<NMLModelRenderer> _nmlModelRenderer;
-    
-        std::shared_ptr<CancelableTask> _lastTask;
     };
     
 }

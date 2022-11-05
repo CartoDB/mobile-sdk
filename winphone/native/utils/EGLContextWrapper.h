@@ -7,6 +7,8 @@
 #ifndef _CARTO_EGLCONTEXTWRAPPER_H_
 #define _CARTO_EGLCONTEXTWRAPPER_H_
 
+#include <set>
+
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
@@ -23,9 +25,9 @@ namespace carto {
         EGLContextWrapper();
         virtual ~EGLContextWrapper();
 
-        EGLSurface createSurface(void* panelPtr, int renderSurfaceWidth, int renderSurfaceHeight);
+        EGLSurface createSurface(void* panelPtr);
         void destroySurface(const EGLSurface surface);
-        void makeCurrent(const EGLSurface surface);
+        bool makeCurrent(const EGLSurface surface);
         bool swapBuffers(const EGLSurface surface);
         void reset();
 
@@ -36,6 +38,7 @@ namespace carto {
         EGLDisplay _eglDisplay;
         EGLContext _eglContext;
         EGLConfig  _eglConfig;
+        std::set<EGLSurface> _eglSurfaces;
     };
 
 }

@@ -51,7 +51,7 @@ namespace carto {
          */
         std::shared_ptr<CustomPopupHandler> getPopupHandler() const;
     
-        virtual bool processClick(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos);
+        virtual bool processClick(const ClickInfo& clickInfo, const MapPos& clickPos, const ScreenPos& elementClickPos);
         
         virtual std::shared_ptr<Bitmap> drawBitmap(const ScreenPos& anchorScreenPos,
                                                    float screenWidth, float screenHeight, float dpToPX);

@@ -1,3 +1,5 @@
+#ifdef _CARTO_GEOCODING_SUPPORT
+
 #include "Address.h"
 
 #include <sstream>
@@ -30,6 +32,9 @@ namespace carto {
         _name(name),
         _categories(categories)
     {
+    }
+
+    Address::~Address() {
     }
 
     const std::string& Address::getCountry() const {
@@ -116,3 +121,5 @@ namespace carto {
     }
     
 }
+
+#endif

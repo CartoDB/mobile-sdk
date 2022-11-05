@@ -16,6 +16,8 @@
 %import "styles/Style.i"
 %import "styles/AnimationStyle.i"
 
+!enum(carto::BillboardOrientation::BillboardOrientation)
+!enum(carto::BillboardScaling::BillboardScaling)
 !polymorphic_shared_ptr(carto::BillboardStyle, styles.BillboardStyle)
 
 %attribute(carto::BillboardStyle, bool, ScaleWithDPI, isScaleWithDPI)

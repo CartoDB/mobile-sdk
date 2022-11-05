@@ -4,9 +4,6 @@
 #include "graphics/ViewState.h"
 #include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
-#include "renderers/cameraevents/CameraPanEvent.h"
-#include "renderers/cameraevents/CameraRotationEvent.h"
-#include "renderers/cameraevents/CameraZoomEvent.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -37,10 +34,24 @@ namespace carto {
     }
     
     void KineticEventHandler::calculate(const ViewState& viewState, float deltaSeconds) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        handlePan(viewState, deltaSeconds);
-        handleRotation(viewState, deltaSeconds);
-        handleZoom(viewState, deltaSeconds);
+        std::optional<CameraPanEvent> cameraPanEvent;
+        std::optional<CameraRotationEvent> cameraRotationEvent;
+        std::optional<CameraZoomEvent> cameraZoomEvent;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            cameraPanEvent = calculatePan(viewState, deltaSeconds);
+            cameraRotationEvent = calculateRotation(viewState, deltaSeconds);
+            cameraZoomEvent = calculateZoom(viewState, deltaSeconds);
+        }
+        if (cameraPanEvent) {
+            _mapRenderer.calculateCameraEvent(*cameraPanEvent, 0, false);
+        }
+        if (cameraRotationEvent) {
+            _mapRenderer.calculateCameraEvent(*cameraRotationEvent, 0, false);
+        }
+        if (cameraZoomEvent) {
+            _mapRenderer.calculateCameraEvent(*cameraZoomEvent, 0, false);
+        }
     }
     
     bool KineticEventHandler::isPanning() const {
@@ -68,8 +79,10 @@ namespace carto {
     }
     
     void KineticEventHandler::startPan() {
-        std::lock_guard<std::mutex> lock(_mutex);
-         _pan = true;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _pan = true;
+        }
         _mapRenderer.requestRedraw();
     }
     
@@ -111,8 +124,10 @@ namespace carto {
     }
     
     void KineticEventHandler::startRotation() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _rotation = true;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _rotation = true;
+        }
         _mapRenderer.requestRedraw();
     }
     
@@ -148,8 +163,10 @@ namespace carto {
     }
     
     void KineticEventHandler::startZoom() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _zoom = true;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _zoom = true;
+        }
         _mapRenderer.requestRedraw();
     }
     
@@ -160,7 +177,7 @@ namespace carto {
         _zoomDeltaSamples.clear();
     }
     
-    void KineticEventHandler::handlePan(const ViewState& viewState, float deltaSeconds) {
+    std::optional<CameraPanEvent> KineticEventHandler::calculatePan(const ViewState& viewState, float deltaSeconds) {
         if (_options.isKineticPan() && _pan) {
             if (_panDelta < KINETIC_PAN_STOP_TOLERANCE) {
                 // Stop kinetic panning
@@ -177,12 +194,13 @@ namespace carto {
                 MapPos newFocusPos = projectionSurface->calculateMapPos(cglib::transform_point(viewState.getFocusPos(), transform));
                 CameraPanEvent cameraEvent;
                 cameraEvent.setPos(newFocusPos);
-                _mapRenderer.calculateCameraEvent(cameraEvent, 0, false);
+                return cameraEvent;
             }
         }
+        return std::optional<CameraPanEvent>();
     }
     
-    void KineticEventHandler::handleRotation(const ViewState& viewState, float deltaSeconds) {
+    std::optional<CameraRotationEvent> KineticEventHandler::calculateRotation(const ViewState& viewState, float deltaSeconds) {
         if (_options.isKineticRotation() && _rotation) {
             if (std::abs(_rotationDelta) < std::abs(KINETIC_ROTATION_STOP_TOLERANCE_ANGLE)) {
                 // Stop kinetic rotation
@@ -197,12 +215,13 @@ namespace carto {
                 CameraRotationEvent cameraEvent;
                 cameraEvent.setRotation(newRotation);
                 cameraEvent.setTargetPos(_rotationTargetPos);
-                _mapRenderer.calculateCameraEvent(cameraEvent, 0, false);
+                return cameraEvent;
             }
         }
+        return std::optional<CameraRotationEvent>();
     }
         
-    void KineticEventHandler::handleZoom(const ViewState& viewState, float deltaSeconds) {
+    std::optional<CameraZoomEvent> KineticEventHandler::calculateZoom(const ViewState& viewState, float deltaSeconds) {
         if (_options.isKineticZoom() && _zoom) {
             if (std::abs(_zoomDelta) < std::abs(KINETIC_ZOOM_STOP_TOLERANCE)) {
                 // Stop kinetic zoom
@@ -217,9 +236,10 @@ namespace carto {
                 CameraZoomEvent cameraEvent;
                 cameraEvent.setZoom(newZoom);
                 cameraEvent.setTargetPos(_zoomTargetPos);
-                _mapRenderer.calculateCameraEvent(cameraEvent, 0, false);
+                return cameraEvent;
             }
         }
+        return std::optional<CameraZoomEvent>();
     }
     
     const float KineticEventHandler::KINETIC_PAN_STOP_TOLERANCE = 0.007f;

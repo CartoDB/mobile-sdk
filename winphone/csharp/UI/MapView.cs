@@ -13,10 +13,11 @@
             public Windows.UI.Input.PointerPoint pointerPoint;
         };
 
-        EGLContextWrapper _eglContext;
-        bool _contentLoaded;
+        static EGLContextWrapper _eglContext; // context wrapper needs to be shared between all instances
+
+        bool _contentLoaded = false;
         System.Collections.Generic.List<PointerState> _pointerStates = new System.Collections.Generic.List<PointerState>();
-        float _resolutionScale;
+        float _resolutionScale = 1.0f;
 
         Windows.UI.Xaml.Controls.SwapChainPanel _swapChainPanel;
         Windows.Foundation.Size _swapChainPanelSize = new Windows.Foundation.Size(0, 0);
@@ -24,9 +25,12 @@
         System.Threading.ManualResetEvent _swapChainEvent = new System.Threading.ManualResetEvent(false);
 
         System.IntPtr _renderSurface;
+        volatile bool _renderSurfaceRedrawPending = false;
         object _renderSurfaceLock = new object();
-        Windows.Foundation.IAsyncAction _renderLoopWorker;
-
+        bool _surfaceCreated = false;
+        int _surfaceWidth = -1;
+        int _surfaceHeight = -1;
+        
         /// <summary>
         /// Registers the SDK license. This class method and must be called before
         /// creating any actual MapView instances.
@@ -49,10 +53,12 @@
             InitializeComponent();
 
             this.Loaded += new Windows.UI.Xaml.RoutedEventHandler(OnPageLoaded);
+            this.Unloaded += new Windows.UI.Xaml.RoutedEventHandler(OnPageUnloaded);
 
             Windows.UI.Core.CoreWindow window = Windows.UI.Xaml.Window.Current.CoreWindow;
             window.VisibilityChanged += new Windows.Foundation.TypedEventHandler<Windows.UI.Core.CoreWindow, Windows.UI.Core.VisibilityChangedEventArgs > (OnVisibilityChanged);
 
+            _swapChainPanel.LayoutUpdated += new System.EventHandler<object>(OnSwapChainPanelLayoutUpdated);
             _swapChainPanel.SizeChanged += new Windows.UI.Xaml.SizeChangedEventHandler(OnSwapChainPanelSizeChanged);
             _swapChainPanelSize = new Windows.Foundation.Size(_swapChainPanel.RenderSize.Width, _swapChainPanel.RenderSize.Height);
 
@@ -64,20 +70,23 @@
         }
 
         ~MapView() {
-            StopRenderLoop();
-            DestroyRenderSurface();
+            lock (_renderSurfaceLock) {
+                DestroyRenderSurface();
+            }
         }
 
         public void InitializeComponent() {
+            if (_eglContext == null) {
+                _eglContext = new EGLContextWrapper();
+            }
+
             if (_contentLoaded) {
                 return;
             }
 
-            _eglContext = new EGLContextWrapper();
-            _contentLoaded = true;
-
             _swapChainPanel = new Windows.UI.Xaml.Controls.SwapChainPanel();
             Content = _swapChainPanel;
+            _contentLoaded = true;
         }
 
         void IComponentConnector.Connect(int connectionId, object target) {
@@ -85,28 +94,74 @@
         }
 
         public void Redraw() {
-            _swapChainEvent.Set();
+            if (_renderSurfaceRedrawPending) {
+                return;
+            }
+            _renderSurfaceRedrawPending = true;
+
+            _swapChainPanel.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, new Windows.UI.Core.DispatchedHandler(() => {
+                _renderSurfaceRedrawPending = false;
+
+                int panelWidth = 0;
+                int panelHeight = 0;
+                GetSwapChainPanelSize(out panelWidth, out panelHeight);
+
+                bool redraw = false;
+                lock (_renderSurfaceLock) {
+                    if (_renderSurface == IntPtr.Zero) {
+                        return;
+                    }
+                    _eglContext.MakeCurrent(_renderSurface);
+
+                    // Signal 'surface created' when needed
+                    if (!_surfaceCreated) {
+                        _baseMapView.OnSurfaceCreated();
+                        _surfaceCreated = true;
+                    }
+
+                    // Signal 'surface changed' when needed
+                    if (panelWidth != _surfaceWidth || panelHeight != _surfaceHeight) {
+                        _baseMapView.OnSurfaceChanged(panelWidth, panelHeight);
+                        _surfaceWidth = panelWidth;
+                        _surfaceHeight = panelHeight;
+                    }
+
+                    // Do actual rendering
+                    _baseMapView.OnDrawFrame();
+
+                    // Display rendered image
+                    if (!_eglContext.SwapBuffers(_renderSurface)) {
+                        DestroyRenderSurface();
+                        CreateRenderSurface();
+                        redraw = true;
+                    }
+                }
+
+                if (redraw) {
+                    Redraw();
+                }
+            }));
         }
 
         void OnPageLoaded(object sender, Windows.UI.Xaml.RoutedEventArgs args) {
-            // The SwapChainPanel has been created and arranged in the page layout, so EGL can be initialized.
-            CreateRenderSurface();
+            lock (_renderSurfaceLock) {
+                CreateRenderSurface();
+            }
+        }
 
-            if (_renderSurface != IntPtr.Zero) {
-                StartRenderLoop();
+        void OnPageUnloaded(object sender, Windows.UI.Xaml.RoutedEventArgs args) {
+            lock (_renderSurfaceLock) {
+                DestroyRenderSurface();
             }
         }
 
         void OnVisibilityChanged(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.VisibilityChangedEventArgs args) {
-            if (args.Visible && _renderSurface == IntPtr.Zero) {
-                CreateRenderSurface();
+            lock (_renderSurfaceLock) {
+                if (args.Visible) {
+                    CreateRenderSurface();
+                }
             }
-
-            if (args.Visible && _renderSurface != IntPtr.Zero) {
-                StartRenderLoop();
-            } else {
-                StopRenderLoop();
-            }
+            Redraw();
         }
 
         protected override void OnPointerPressed(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
@@ -161,6 +216,12 @@
             args.Handled = true;
         }
 
+        protected override void OnPointerExited(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
+            _pointerStates.Clear();
+            UpdateInputCoordinates(NativeActionCancel);
+            base.OnPointerExited(args);
+        }
+
         protected override void OnPointerWheelChanged(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
             Windows.UI.Input.PointerPoint currentPoint = args.GetCurrentPoint(this);
             int delta = currentPoint.Properties.MouseWheelDelta / 120;
@@ -170,11 +231,18 @@
             }
         }
 
+        void OnSwapChainPanelLayoutUpdated(object sender, object args) {
+            Redraw();
+        }
+
         void OnSwapChainPanelSizeChanged(object sender, Windows.UI.Xaml.SizeChangedEventArgs args) {
             lock (_swapChainPanelSizeLock) {
                 _swapChainPanelSize = new Windows.Foundation.Size(args.NewSize.Width, args.NewSize.Height);
             }
-            RecoverFromLostDevice();
+            lock (_renderSurfaceLock) {
+                CreateRenderSurface();
+            }
+            Redraw();
         }
 
         void GetSwapChainPanelSize(out int width, out int height) {
@@ -189,9 +257,10 @@
                 int width = (int)(ConvertDipsToPixels(_swapChainPanelSize.Width) + 0.5f);
                 int height = (int)(ConvertDipsToPixels(_swapChainPanelSize.Height) + 0.5f);
                 if (width > 0 && height > 0) {
-                    _renderSurface = _eglContext.CreateSurface(_swapChainPanel, width, height);
-                    _eglContext.MakeCurrent(_renderSurface);
-                    _baseMapView.OnSurfaceCreated();
+                    _renderSurface = _eglContext.CreateSurface(_swapChainPanel);
+                    _surfaceCreated = false;
+                    _surfaceWidth = -1;
+                    _surfaceHeight = -1;
                 }
             }
         }
@@ -199,76 +268,7 @@
         void DestroyRenderSurface() {
             if (_renderSurface != IntPtr.Zero) {
                 _eglContext.DestroySurface(_renderSurface);
-            }
-            _renderSurface = IntPtr.Zero;
-        }
-
-        void RecoverFromLostDevice() {
-            StopRenderLoop();
-
-            lock (_renderSurfaceLock) {
-                DestroyRenderSurface();
-                _eglContext.Reset();
-                CreateRenderSurface();
-            }
-
-            if (_renderSurface != IntPtr.Zero) {
-                StartRenderLoop();
-            }
-        }
-
-        void StartRenderLoop() {
-            // If the render loop is already running then do not start another thread.
-            if (_renderLoopWorker != null && _renderLoopWorker.Status == Windows.Foundation.AsyncStatus.Started) {
-                return;
-            }
-
-            // Create a task for rendering that will be run on a background thread.
-            var workItemHandler = new Windows.System.Threading.WorkItemHandler((Windows.Foundation.IAsyncAction action) => {
-                lock (_renderSurfaceLock) {
-                    _eglContext.MakeCurrent(_renderSurface);
-
-                    int oldPanelWidth = -1;
-                    int oldPanelHeight = -1;
-
-                    while (action.Status == Windows.Foundation.AsyncStatus.Started) {
-                        int panelWidth = 0;
-                        int panelHeight = 0;
-                        GetSwapChainPanelSize(out panelWidth, out panelHeight);
-                        if (panelWidth != oldPanelWidth || panelHeight != oldPanelHeight) {
-                            _baseMapView.OnSurfaceChanged(panelWidth, panelHeight);
-                            oldPanelWidth = panelWidth;
-                            oldPanelHeight = panelHeight;
-                        }
-
-                        _baseMapView.OnDrawFrame();
-
-                        // The call to eglSwapBuffers might not be successful (i.e. due to Device Lost)
-                        // If the call fails, then we must reinitialize EGL and the GL resources.
-                        if (!_eglContext.SwapBuffers(_renderSurface)) {
-                            // XAML objects like the SwapChainPanel must only be manipulated on the UI thread.
-                            var worker = _swapChainPanel.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() => {
-                                RecoverFromLostDevice();
-                            }));
-                            worker.Close();
-                            return;
-                        }
-
-                        _swapChainEvent.WaitOne();
-                        _swapChainEvent.Reset();
-                    }
-                }
-            });
-
-            // Run task on a dedicated high priority background thread.
-            _renderLoopWorker = Windows.System.Threading.ThreadPool.RunAsync(workItemHandler, Windows.System.Threading.WorkItemPriority.Normal, Windows.System.Threading.WorkItemOptions.TimeSliced);
-        }
-
-        void StopRenderLoop() {
-            if (_renderLoopWorker != null) {
-                _swapChainEvent.Set();
-                _renderLoopWorker.Cancel();
-                _renderLoopWorker = null;
+                _renderSurface = IntPtr.Zero;
             }
         }
 

@@ -12,6 +12,7 @@
 #include "renderers/cameraevents/CameraTiltEvent.h"
 #include "renderers/cameraevents/CameraZoomEvent.h"
 #include "ui/MapClickInfo.h"
+#include "ui/MapInteractionInfo.h"
 #include "ui/MapEventListener.h"
 #include "ui/workers/ClickHandlerWorker.h"
 #include "utils/Const.h"
@@ -27,8 +28,9 @@ namespace carto {
         _prevScreenPos2(0, 0),
         _swipe1(0, 0),
         _swipe2(0, 0),
+        _cameraEvents(0),
         _pointersDown(0),
-        _mapMoving(false),
+        _idling(true),
         _noDualPointerYet(true),
         _dualPointerReleaseTime(),
         _mapEventListener(),
@@ -82,6 +84,7 @@ namespace carto {
             }
         }
 
+        std::unique_lock<std::recursive_mutex> lock(_mutex);
         ViewState viewState = _mapRenderer->getViewState();
         switch (action) {
         case ACTION_POINTER_1_DOWN:
@@ -99,11 +102,8 @@ namespace carto {
             _noDualPointerYet = false;
             switch (_gestureMode) {
             case SINGLE_POINTER_CLICK_GUESS:
-                {
-                    std::lock_guard<std::mutex> lock(_mutex);
-                    _clickHandlerWorker->pointer2Down(screenPos2);
-                    _gestureMode = DUAL_POINTER_CLICK_GUESS;
-                }
+                _clickHandlerWorker->pointer2Down(screenPos2);
+                _gestureMode = DUAL_POINTER_CLICK_GUESS;
                 break;
             case SINGLE_POINTER_PAN:
             case SINGLE_POINTER_ZOOM:
@@ -158,58 +158,43 @@ namespace carto {
             }
             break;
     
-        case ACTION_CANCEL: {
-                std::lock_guard<std::mutex> lock(_mutex);
-                _pointersDown = 0;
-                _clickHandlerWorker->cancel();
-                _gestureMode = SINGLE_POINTER_CLICK_GUESS;
-            }
+        case ACTION_CANCEL:
+            _pointersDown = 0;
+            _clickHandlerWorker->cancel();
+            _gestureMode = SINGLE_POINTER_CLICK_GUESS;
             break;
+
         case ACTION_POINTER_1_UP:
             switch (_gestureMode) {
             case SINGLE_POINTER_CLICK_GUESS:
                 _clickHandlerWorker->pointer1Up();
                 break;
             case DUAL_POINTER_CLICK_GUESS: {
-                std::lock_guard<std::mutex> lock(_mutex);
                 _clickHandlerWorker->pointer1Up();
                 _gestureMode = SINGLE_POINTER_CLICK_GUESS;
                 break;
             }
             case SINGLE_POINTER_PAN:
-                {
-                    {
-                        std::lock_guard<std::mutex> lock(_mutex);
-                        _gestureMode = SINGLE_POINTER_CLICK_GUESS;
-                    }
-                    if (_noDualPointerYet) {
-                        _mapRenderer->getKineticEventHandler().startPan();
-                    } else {
-                        auto deltaTime = std::chrono::steady_clock::now() - _dualPointerReleaseTime;
-                        if (deltaTime < DUAL_KINETIC_HOLD_DURATION) {
-                            _mapRenderer->getKineticEventHandler().startRotation();
-                            _mapRenderer->getKineticEventHandler().startZoom();
-                        }
+                _gestureMode = SINGLE_POINTER_CLICK_GUESS;
+                if (_noDualPointerYet) {
+                    _mapRenderer->getKineticEventHandler().startPan();
+                } else {
+                    auto deltaTime = std::chrono::steady_clock::now() - _dualPointerReleaseTime;
+                    if (deltaTime < DUAL_KINETIC_HOLD_DURATION) {
+                        _mapRenderer->getKineticEventHandler().startRotation();
+                        _mapRenderer->getKineticEventHandler().startZoom();
                     }
                 }
                 break;
             case SINGLE_POINTER_ZOOM:
-                {
-                    {
-                        std::lock_guard<std::mutex> lock(_mutex);
-                        _gestureMode = SINGLE_POINTER_CLICK_GUESS;
-                        if (cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD && isValidScreenPosition(screenPos1, viewState)) {
-                            MapPos targetPos = mapScreenPosition(screenPos1, viewState);
-
-                            CameraZoomEvent cameraZoomTargetEvent;
-                            cameraZoomTargetEvent.setZoomDelta(1.0f);
-                            cameraZoomTargetEvent.setTargetPos(targetPos);
-                            _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
-                        }
-                    }
-                    if (_noDualPointerYet) {
-                        _mapRenderer->getKineticEventHandler().startZoom();
-                    }
+                if (singlePointerZoomStop(screenPos1, viewState)) {
+                    lock.unlock();
+                    doubleTapZoom(screenPos1, viewState);
+                    lock.lock();
+                }
+                _gestureMode = SINGLE_POINTER_CLICK_GUESS;
+                if (_noDualPointerYet) {
+                    _mapRenderer->getKineticEventHandler().startZoom();
                 }
                 break;
             case DUAL_POINTER_GUESS:
@@ -217,12 +202,9 @@ namespace carto {
             case DUAL_POINTER_ROTATE:
             case DUAL_POINTER_SCALE:
             case DUAL_POINTER_FREE:
-                {
-                    std::lock_guard<std::mutex> lock(_mutex);
-                    _dualPointerReleaseTime = std::chrono::steady_clock::now();
-                    _prevScreenPos1 = screenPos2;
-                    _gestureMode = SINGLE_POINTER_PAN;
-                }
+                _dualPointerReleaseTime = std::chrono::steady_clock::now();
+                _prevScreenPos1 = screenPos2;
+                _gestureMode = SINGLE_POINTER_PAN;
                 break;
             }
             break;
@@ -230,23 +212,17 @@ namespace carto {
         case ACTION_POINTER_2_UP:
             switch (_gestureMode) {
             case DUAL_POINTER_CLICK_GUESS:
-                {
-                    std::lock_guard<std::mutex> lock(_mutex);
-                    _clickHandlerWorker->pointer2Up();
-                    _gestureMode = SINGLE_POINTER_CLICK_GUESS;
-                }
+                _clickHandlerWorker->pointer2Up();
+                _gestureMode = SINGLE_POINTER_CLICK_GUESS;
                 break;
             case DUAL_POINTER_GUESS:
             case DUAL_POINTER_TILT:
             case DUAL_POINTER_ROTATE:
             case DUAL_POINTER_SCALE:
             case DUAL_POINTER_FREE:
-                {
-                     std::lock_guard<std::mutex> lock(_mutex);
-                     _dualPointerReleaseTime = std::chrono::steady_clock::now();
-                     _prevScreenPos1 = screenPos1;
-                     _gestureMode = SINGLE_POINTER_PAN;
-                 }
+                 _dualPointerReleaseTime = std::chrono::steady_clock::now();
+                 _prevScreenPos1 = screenPos1;
+                 _gestureMode = SINGLE_POINTER_PAN;
                  break;
             default:
                 break;
@@ -255,43 +231,76 @@ namespace carto {
         }
 
         if (action == ACTION_POINTER_1_DOWN || action == ACTION_POINTER_2_DOWN) {
-            std::lock_guard<std::mutex> lock(_mutex);
             _pointersDown = std::min(2, _pointersDown + 1);
         } else if (action == ACTION_POINTER_1_UP || action == ACTION_POINTER_2_UP) {
-            std::lock_guard<std::mutex> lock(_mutex);
             _pointersDown = std::max(0, _pointersDown - 1);
         }
 
-        if (!_mapRenderer->getKineticEventHandler().isPanning() && !_mapRenderer->getKineticEventHandler().isRotating() && !_mapRenderer->getKineticEventHandler().isZooming()) {
-            checkMapStable();
-        }
+        lock.unlock();
+
+        // Call event handlers
+        checkCameraEvents();
+        checkMapStable();
     }
 
     void TouchHandler::onWheelEvent(int delta, const ScreenPos& screenPos) {
         if (_options->isUserInput()) {
+            ViewState viewState = _mapRenderer->getViewState();
+            std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+            if (!projectionSurface) {
+                return;
+            }
+
             _mapRenderer->getAnimationHandler().stopPan();
             _mapRenderer->getAnimationHandler().stopRotation();
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
             
-            ViewState viewState = _mapRenderer->getViewState();
-            if (isValidScreenPosition(screenPos, viewState)) {
-                MapPos targetPos(mapScreenPosition(screenPos, viewState));
+            if (_options->getPivotMode() != PivotMode::PIVOT_MODE_TOUCHPOINT || isValidScreenPosition(screenPos, viewState)) {
+                MapPos targetPos = (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT ? mapScreenPosition(screenPos, viewState) : projectionSurface->calculateMapPos(viewState.getFocusPos()));
 
                 CameraZoomEvent cameraZoomTargetEvent;
                 cameraZoomTargetEvent.setZoomDelta(delta * WHEEL_TICK_TO_ZOOM_DELTA);
                 cameraZoomTargetEvent.setTargetPos(targetPos);
                 _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, 0, true);
+
+                DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
+
+                if (mapEventListener) {
+                    mapEventListener->onMapInteraction(std::make_shared<MapInteractionInfo>(false, true, false, false));
+                }
+            }
+        }
+    }
+
+    void TouchHandler::checkCameraEvents() {
+        int cameraEvents = 0;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            std::swap(cameraEvents, _cameraEvents);
+        }
+
+        if (cameraEvents) {
+            DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
+
+            if (mapEventListener) {
+                mapEventListener->onMapMoved();
+
+                bool pan = (cameraEvents & CAMERA_PAN) != 0;
+                bool zoom = (cameraEvents & CAMERA_ZOOM) != 0;
+                bool rotate = (cameraEvents & CAMERA_ROTATE) != 0;
+                bool tilt = (cameraEvents & CAMERA_TILT) != 0;
+                mapEventListener->onMapInteraction(std::make_shared<MapInteractionInfo>(pan, zoom, rotate, tilt));
             }
         }
     }
     
     void TouchHandler::checkMapStable() {
-        bool stable = false;
+        bool stable = !_mapRenderer->getKineticEventHandler().isPanning() && !_mapRenderer->getKineticEventHandler().isRotating() && !_mapRenderer->getKineticEventHandler().isZooming();
         {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_pointersDown == 0 && !_mapMoving) {
-                stable = true;
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            if (_pointersDown > 0 || !_idling) {
+                stable = false;
             }
         }
 
@@ -339,6 +348,7 @@ namespace carto {
 
                 CameraPanEvent cameraEvent;
                 cameraEvent.setPosDelta(std::make_pair(currentPos, prevPos));
+                _cameraEvents |= CAMERA_PAN;
                 _mapRenderer->calculateCameraEvent(cameraEvent, 0, true);
             }
         }
@@ -352,16 +362,38 @@ namespace carto {
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
             
-            float dpi = _options->getDPI();
-            cglib::vec2<float> tempSwipe1(screenPos.getX() - _prevScreenPos1.getX(), screenPos.getY() - _prevScreenPos1.getY());
-            _swipe1 += tempSwipe1 * (1.0f / dpi);
+            if (isValidScreenPosition(screenPos, viewState) && isValidScreenPosition(_prevScreenPos1, viewState)) {
+                float dpi = _options->getDPI();
+                cglib::vec2<float> tempSwipe1(screenPos.getX() - _prevScreenPos1.getX(), screenPos.getY() - _prevScreenPos1.getY());
+                _swipe1 += tempSwipe1 * (1.0f / dpi);
 
-            float delta = INCHES_TO_ZOOM_DELTA * (screenPos.getY() - _prevScreenPos1.getY()) / _options->getDPI();
-            CameraZoomEvent cameraEvent;
-            cameraEvent.setZoomDelta(delta);
-            _mapRenderer->calculateCameraEvent(cameraEvent, 0, true);
+                float delta = INCHES_TO_ZOOM_DELTA * (screenPos.getY() - _prevScreenPos1.getY()) / _options->getDPI();
+
+                CameraZoomEvent cameraEvent;
+                cameraEvent.setZoomDelta(delta);
+                _cameraEvents |= CAMERA_ZOOM;
+                _mapRenderer->calculateCameraEvent(cameraEvent, 0, true);
+            }
         }
         _prevScreenPos1 = screenPos;
+    }
+
+    bool TouchHandler::singlePointerZoomStop(const ScreenPos& screenPos, const ViewState& viewState) {
+        bool zoom = false;
+        if (_options->isUserInput()) {
+            std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+            if (!projectionSurface) {
+                return false;
+            }
+
+            if (cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD) {
+                if (_options->getPivotMode() != PivotMode::PIVOT_MODE_TOUCHPOINT || isValidScreenPosition(screenPos, viewState)) {
+                    zoom = true;
+                }
+            }
+        }
+        _prevScreenPos1 = screenPos;
+        return zoom;
     }
     
     void TouchHandler::dualPointerGuess(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const ViewState& viewState) {
@@ -443,8 +475,10 @@ namespace carto {
             if (_options->isTiltGestureReversed()) {
                 scale = -scale;
             }
+
             CameraTiltEvent cameraEvent;
             cameraEvent.setTiltDelta((screenPos.getY() - _prevScreenPos1.getY()) * scale);
+            _cameraEvents |= CAMERA_TILT;
             _mapRenderer->calculateCameraEvent(cameraEvent, 0, false);
         }
         _prevScreenPos1 = screenPos;
@@ -461,7 +495,7 @@ namespace carto {
             _mapRenderer->getAnimationHandler().stopRotation();
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
-            
+
             if (isValidScreenPosition(screenPos1, viewState) && isValidScreenPosition(_prevScreenPos1, viewState)
             &&  isValidScreenPosition(screenPos2, viewState) && isValidScreenPosition(_prevScreenPos2, viewState)) {
                 cglib::vec3<double> currentPos1 = projectionSurface->calculatePosition(mapScreenPosition(screenPos1, viewState));
@@ -483,6 +517,7 @@ namespace carto {
                 if (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT) {
                     CameraPanEvent cameraPanEvent;
                     cameraPanEvent.setPosDelta(std::make_pair(currentMiddlePos, prevMiddlePos));
+                    _cameraEvents |= CAMERA_PAN;
                     _mapRenderer->calculateCameraEvent(cameraPanEvent, 0, true);
                 }
             
@@ -491,6 +526,7 @@ namespace carto {
                     CameraZoomEvent cameraZoomTargetEvent;
                     cameraZoomTargetEvent.setScale(ratio);
                     cameraZoomTargetEvent.setTargetPos(pivotPos);
+                    _cameraEvents |= CAMERA_ZOOM;
                     _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, 0, true);
                 }
     
@@ -501,6 +537,7 @@ namespace carto {
                     CameraRotationEvent cameraRotateTargetEvent;
                     cameraRotateTargetEvent.setRotationDelta(static_cast<float>(angle * dir * Const::RAD_TO_DEG));
                     cameraRotateTargetEvent.setTargetPos(pivotPos);
+                    _cameraEvents |= CAMERA_ROTATE;
                     _mapRenderer->calculateCameraEvent(cameraRotateTargetEvent, 0, true);
                 }
             }
@@ -509,8 +546,33 @@ namespace carto {
         _prevScreenPos1 = screenPos1;
         _prevScreenPos2 = screenPos2;
     }
+
+    void TouchHandler::doubleTapZoom(const ScreenPos& screenPos, const ViewState& viewState) {
+        if (!_options->isUserInput()) {
+            return;
+        }
+
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+
+        MapPos targetPos = (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT ? mapScreenPosition(screenPos, viewState) : projectionSurface->calculateMapPos(viewState.getFocusPos()));
+
+        CameraZoomEvent cameraZoomTargetEvent;
+        cameraZoomTargetEvent.setZoomDelta(1.0f);
+        cameraZoomTargetEvent.setTargetPos(targetPos);
+        _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
+
+        DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
+
+        if (mapEventListener) {
+            // NOTE: animated action
+            mapEventListener->onMapInteraction(std::make_shared<MapInteractionInfo>(false, true, false, false, true));
+        }
+    }
     
-    void TouchHandler::click(const ScreenPos& screenPos) {
+    void TouchHandler::click(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -520,13 +582,11 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopTilt();
         _mapRenderer->getAnimationHandler().stopZoom();
         
-        handleClick(ClickType::CLICK_TYPE_SINGLE, screenPos);
+        ClickInfo clickInfo(ClickType::CLICK_TYPE_SINGLE, static_cast<float>(duration.count()) / 1000.0f);
+        handleClick(clickInfo, screenPos);
     }
     
-    
-    void TouchHandler::longClick(const ScreenPos& screenPos) {
-        startSinglePointer(screenPos);
-        
+    void TouchHandler::longClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -535,11 +595,19 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopRotation();
         _mapRenderer->getAnimationHandler().stopTilt();
         _mapRenderer->getAnimationHandler().stopZoom();
-    
-        handleClick(ClickType::CLICK_TYPE_LONG, screenPos);
+
+        auto longClickDuration = std::chrono::milliseconds(static_cast<int>(_options->getLongClickDuration() * 1000.0f));
+        if (_options->isClickTypeDetection() && duration >= longClickDuration) {
+            startSinglePointer(screenPos);
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_LONG, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos);
+        } else {
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_SINGLE, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos);
+        }
     }
     
-    void TouchHandler::doubleClick(const ScreenPos& screenPos) {
+    void TouchHandler::doubleClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -550,15 +618,20 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopZoom();
 
         if (_options->isZoomGestures()) {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _swipe1 = cglib::vec2<float>(0, 0);
             _prevScreenPos1 = screenPos;
             _gestureMode = SINGLE_POINTER_ZOOM;
+        } else if (_options->isClickTypeDetection()) {
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_DOUBLE, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos);
         } else {
-            handleClick(ClickType::CLICK_TYPE_DOUBLE, screenPos);
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_SINGLE, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos);
         }
     }
     
-    void TouchHandler::dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2) {
+    void TouchHandler::dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const std::chrono::milliseconds& duration) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -573,9 +646,20 @@ namespace carto {
             cameraZoomTargetEvent.setZoomDelta(-1.0f);
             cameraZoomTargetEvent.setTargetPos(_mapRenderer->getProjectionSurface()->calculateMapPos(_mapRenderer->getViewState().getFocusPos()));
             _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
-        } else {
+
+            DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
+
+            if (mapEventListener) {
+                // NOTE: animated action
+                mapEventListener->onMapInteraction(std::make_shared<MapInteractionInfo>(false, true, false, false, true));
+            }
+        } else if (_options->isClickTypeDetection()) {
             ScreenPos centreScreenPos((screenPos1.getX() + screenPos2.getX()) / 2, (screenPos1.getY() + screenPos2.getY()) / 2);
-            handleClick(ClickType::CLICK_TYPE_DUAL, centreScreenPos);
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_DUAL, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, centreScreenPos);
+        } else {
+            ClickInfo clickInfo(ClickType::CLICK_TYPE_SINGLE, static_cast<float>(duration.count()) / 1000.0f);
+            handleClick(clickInfo, screenPos1);
         }
     }
     
@@ -597,7 +681,7 @@ namespace carto {
         return viewState.getProjectionSurface()->calculateMapPos(pos);
     }
 
-    void TouchHandler::handleClick(ClickType::ClickType clickType, const ScreenPos& screenPos) {
+    void TouchHandler::handleClick(const ClickInfo& clickInfo, const ScreenPos& screenPos) {
         ViewState viewState = _mapRenderer->getViewState();
         if (!isValidScreenPosition(screenPos, viewState)) {
             return;
@@ -614,7 +698,7 @@ namespace carto {
 
         // Process the results
         for (const RayIntersectedElement& intersectedElement : results) {
-            if (intersectedElement.getLayer()->processClick(clickType, intersectedElement, viewState)) {
+            if (intersectedElement.getLayer()->processClick(clickInfo, intersectedElement, viewState)) {
                 return;
             }
         }
@@ -623,18 +707,18 @@ namespace carto {
         DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
 
         if (mapEventListener) {
-            mapEventListener->onMapClicked(std::make_shared<MapClickInfo>(clickType, _options->getBaseProjection()->fromInternal(mapPos)));
+            mapEventListener->onMapClicked(std::make_shared<MapClickInfo>(clickInfo, _options->getBaseProjection()->fromInternal(mapPos)));
         }
     }
 
     void TouchHandler::startSinglePointer(const ScreenPos& screenPos) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _prevScreenPos1 = screenPos;
         _gestureMode = SINGLE_POINTER_PAN;
     }
     
     void TouchHandler::startDualPointer(const ScreenPos& screenPos1, const ScreenPos& screenPos2) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _swipe1 = cglib::vec2<float>(0, 0);
         _swipe2 = cglib::vec2<float>(0, 0);
         _prevScreenPos1 = screenPos1;
@@ -662,8 +746,11 @@ namespace carto {
     void TouchHandler::MapRendererListener::onMapChanged() {
         if (auto touchHandler = _touchHandler.lock()) {
             {
-                std::lock_guard<std::mutex> lock(touchHandler->_mutex);
-                touchHandler->_mapMoving = true;
+                std::lock_guard<std::recursive_mutex> lock(touchHandler->_mutex);
+                touchHandler->_idling = false;
+                if (touchHandler->_cameraEvents) {
+                    return; // postpone listener call, will be called together with onMapInteraction
+                }
             }
 
             DirectorPtr<MapEventListener> mapEventListener = touchHandler->_mapEventListener;
@@ -677,8 +764,8 @@ namespace carto {
     void TouchHandler::MapRendererListener::onMapIdle() {
         if (auto touchHandler = _touchHandler.lock()) {
             {
-                std::lock_guard<std::mutex> lock(touchHandler->_mutex);
-                touchHandler->_mapMoving = false;
+                std::lock_guard<std::recursive_mutex> lock(touchHandler->_mutex);
+                touchHandler->_idling = true;
             }
 
             DirectorPtr<MapEventListener> mapEventListener = touchHandler->_mapEventListener;

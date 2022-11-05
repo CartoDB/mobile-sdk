@@ -14,8 +14,7 @@
 #include <map>
 #include <vector>
 #include <string>
-
-#include <boost/variant.hpp>
+#include <variant>
 
 #include <mapnikvt/Value.h>
 
@@ -133,8 +132,10 @@ namespace carto {
          */
         void setLayerNameOverride(const std::string& name);
 
-        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
-    
+        virtual std::shared_ptr<const mvt::Map::Settings> getMapSettings() const;
+
+        virtual std::shared_ptr<const mvt::SymbolizerContext::Settings> getSymbolizerContextSettings() const;
+
         virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
 
         virtual int getMinZoom() const;
@@ -148,7 +149,7 @@ namespace carto {
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const;
     
     protected:
-        void updateCurrentStyleSet(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet);
+        void updateCurrentStyleSet(const std::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet);
 
         static const int DEFAULT_TILE_SIZE;
         static const int STROKEMAP_SIZE;
@@ -161,11 +162,12 @@ namespace carto {
         std::string _layerNameOverride;
         std::map<std::string, mvt::Value> _parameterValueMap;
         std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
-        boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
-        std::shared_ptr<mvt::Map> _map;
-        std::shared_ptr<mvt::Map::Settings> _mapSettings;
-        std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
-        std::map<std::pair<std::string, std::shared_ptr<AssetPackage> >, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
+        std::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
+        std::shared_ptr<const mvt::Map> _map;
+        std::shared_ptr<const mvt::Map::Settings> _mapSettings;
+        std::shared_ptr<const mvt::SymbolizerContext> _symbolizerContext;
+        std::shared_ptr<const mvt::SymbolizerContext::Settings> _symbolizerContextSettings;
+        std::map<std::pair<std::string, std::shared_ptr<AssetPackage> >, std::shared_ptr<const mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
 
         mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     

@@ -2,7 +2,7 @@
 
 #include "ValhallaOfflineRoutingService.h"
 #include "components/Exceptions.h"
-#include "routing/ValhallaRoutingProxy.h"
+#include "routing/utils/ValhallaRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -13,15 +13,15 @@
 namespace carto {
 
     ValhallaOfflineRoutingService::ValhallaOfflineRoutingService(const std::string& path) :
-        _database(),
+        _database(std::make_unique<sqlite3pp::database>()),
         _profile("pedestrian"),
         _configuration(ValhallaRoutingProxy::GetDefaultConfiguration()),
         _mutex()
     {
-        _database.reset(new sqlite3pp::database());
-        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) != SQLITE_OK) {
             throw FileException("Failed to open routing database", path);
         }
+        _database->execute("PRAGMA temp_store=MEMORY");
     }
 
     ValhallaOfflineRoutingService::~ValhallaOfflineRoutingService() {
@@ -72,8 +72,15 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        std::lock_guard<std::mutex> lock(_mutex);
-        return ValhallaRoutingProxy::MatchRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, _profile, _configuration, request);
+        std::string profile;
+        Variant configuration;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+
+            profile = _profile;
+            configuration = _configuration;
+        }
+        return ValhallaRoutingProxy::MatchRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, profile, configuration, request);
     }
 
     std::shared_ptr<RoutingResult> ValhallaOfflineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
@@ -81,8 +88,16 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        std::lock_guard<std::mutex> lock(_mutex);
-        return ValhallaRoutingProxy::CalculateRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, _profile, _configuration, request);
+        std::string profile;
+        Variant configuration;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+
+            profile = _profile;
+            configuration = _configuration;
+        }
+
+        return ValhallaRoutingProxy::CalculateRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, profile, configuration, request);
     }
 
 }

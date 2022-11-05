@@ -18,6 +18,7 @@
 #include <cglib/mat.h>
 
 #include <mapnikvt/Map.h>
+#include <mapnikvt/SymbolizerContext.h>
 
 namespace carto {
     namespace vt {
@@ -56,7 +57,13 @@ namespace carto {
          * Returns map settings.
          * @return Map settings.
          */
-        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const = 0;
+        virtual std::shared_ptr<const mvt::Map::Settings> getMapSettings() const = 0;
+
+        /**
+         * Returns symbolizer context settings.
+         * @return Symbolizer context settings.
+         */
+        virtual std::shared_ptr<const mvt::SymbolizerContext::Settings> getSymbolizerContextSettings() const = 0;
 
         /**
          * Adds a fallback font. The font should be TTF or OTF font. It is used for glyphs not found in style defined fonts.

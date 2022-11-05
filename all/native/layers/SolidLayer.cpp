@@ -24,21 +24,20 @@ namespace carto {
         _bitmapScale(1.0f),
         _solidRenderer(std::make_shared<SolidRenderer>())
     {
+        if (!bitmap) {
+            throw NullArgumentException("Null bitmap");
+        }
     }
 
     SolidLayer::~SolidLayer() {
     }
         
     Color SolidLayer::getColor() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _color;
+        return _color.load();
     }
     
     void SolidLayer::setColor(const Color& color) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _color = color;
-        }
+        _color.store(color);
         redraw();
     }
 
@@ -56,15 +55,11 @@ namespace carto {
     }
 
     float SolidLayer::getBitmapScale() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _bitmapScale;
+        return _bitmapScale.load();
     }
 
     void SolidLayer::setBitmapScale(float scale) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _bitmapScale = scale;
-        }
+        _bitmapScale.store(scale);
         redraw();
     }
 
@@ -96,19 +91,19 @@ namespace carto {
         return false;
     }
     
-    std::shared_ptr<Bitmap> SolidLayer::getBackgroundBitmap() const {
+    std::shared_ptr<Bitmap> SolidLayer::getBackgroundBitmap(const ViewState& viewState) const {
         return std::shared_ptr<Bitmap>();
     }
     
-    std::shared_ptr<Bitmap> SolidLayer::getSkyBitmap() const {
+    std::shared_ptr<Bitmap> SolidLayer::getSkyBitmap(const ViewState& viewState) const {
         return std::shared_ptr<Bitmap>();
     }
     
     void SolidLayer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
     }
 
-    bool SolidLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
-        return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
+    bool SolidLayer::processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        return clickInfo.getClickType() == ClickType::CLICK_TYPE_SINGLE || clickInfo.getClickType() == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
     }
     
     void SolidLayer::registerDataSourceListener() {

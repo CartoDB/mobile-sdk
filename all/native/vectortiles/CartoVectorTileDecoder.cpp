@@ -16,9 +16,9 @@
 #include "geometry/VectorTileFeatureCollection.h"
 #include "graphics/Bitmap.h"
 #include "styles/CartoCSSStyleSet.h"
-#include "vectortiles/utils/MapnikVTLogger.h"
-#include "vectortiles/utils/GeometryConverter.h"
-#include "vectortiles/utils/ValueConverter.h"
+#include "vectortiles/utils/MVTGeometryConverter.h"
+#include "vectortiles/utils/MVTValueConverter.h"
+#include "vectortiles/utils/MVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
 #include "utils/AssetPackage.h"
@@ -43,7 +43,7 @@
 namespace carto {
     
     CartoVectorTileDecoder::CartoVectorTileDecoder(const std::vector<std::string>& layerIds, const std::map<std::string, std::shared_ptr<CartoCSSStyleSet> >& layerStyleSets) :
-        _logger(std::make_shared<MapnikVTLogger>("CartoVectorTileDecoder")),
+        _logger(std::make_shared<MVTLogger>("CartoVectorTileDecoder")),
         _layerIds(layerIds),
         _layerInvisibleSet(),
         _fallbackFonts(),
@@ -51,7 +51,8 @@ namespace carto {
         _layerMaps(),
         _layerSymbolizerContexts(),
         _assetPackageSymbolizerContexts(),
-        _mapSettings()
+        _mapSettings(std::make_shared<mvt::Map::Settings>()),
+        _symbolizerContextSettings(std::make_shared<mvt::SymbolizerContext::Settings>(0.0f, std::make_shared<std::map<std::string, mvt::Value>>(), std::shared_ptr<const vt::Font>()))
     {
         for (auto it = layerStyleSets.begin(); it != layerStyleSets.end(); it++) {
             updateLayerStyleSet(it->first, it->second);
@@ -114,11 +115,16 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    std::shared_ptr<mvt::Map::Settings> CartoVectorTileDecoder::getMapSettings() const {
+    std::shared_ptr<const mvt::Map::Settings> CartoVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
     }
-    
+
+    std::shared_ptr<const mvt::SymbolizerContext::Settings> CartoVectorTileDecoder::getSymbolizerContextSettings() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _symbolizerContextSettings;
+    }
+
     void CartoVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -171,22 +177,17 @@ namespace carto {
             if (!mvtGeometry) {
                 return std::shared_ptr<VectorTileFeature>();
             }
+            std::shared_ptr<Geometry> geometry = std::visit(MVTGeometryConverter(tileBounds), *mvtGeometry);
 
             std::map<std::string, Variant> featureData;
             if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature.getFeatureData()) {
-                for (const std::string& varName : mvtFeatureData->getVariableNames()) {
-                    mvt::Value mvtValue;
-                    if (mvtFeatureData->getVariable(varName, mvtValue)) {
-                        featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
-                    }
+                for (const std::pair<std::string, mvt::Value>& var : mvtFeatureData->getVariables()) {
+                    featureData[var.first] = std::visit(MVTValueConverter(), var.second);
                 }
             }
 
-            auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
-                return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
-            };
-
-            return std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+            auto feature = std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, geometry, Variant(featureData));
+            return feature;
         }
         catch (const std::exception& ex) {
             Log::Errorf("CartoVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
@@ -216,27 +217,21 @@ namespace carto {
             }
 
             for (const std::string& mvtLayerName : decoder->getLayerNames()) {
-                for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName); mvtIt->valid(); mvtIt->advance()) {
+                for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName, nullptr); mvtIt->valid(); mvtIt->advance()) {
                     std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtIt->getGeometry();
                     if (!mvtGeometry) {
                         continue;
                     }
+                    std::shared_ptr<Geometry> geometry = std::visit(MVTGeometryConverter(tileBounds), *mvtGeometry);
 
                     std::map<std::string, Variant> featureData;
-                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData()) {
-                        for (const std::string& varName : mvtFeatureData->getVariableNames()) {
-                            mvt::Value mvtValue;
-                            if (mvtFeatureData->getVariable(varName, mvtValue)) {
-                                featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
-                            }
+                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData(false, nullptr)) {
+                        for (const std::pair<std::string, mvt::Value>& var : mvtFeatureData->getVariables()) {
+                            featureData[var.first] = std::visit(MVTValueConverter(), var.second);
                         }
                     }
 
-                    auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
-                        return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
-                    };
-
-                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getFeatureId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, geometry, Variant(featureData));
                     tileFeatures.push_back(feature);
                 }
             }
@@ -255,8 +250,8 @@ namespace carto {
         }
 
         std::set<std::string> layerInvisibleSet;
-        std::map<std::string, std::shared_ptr<mvt::Map> > layerMaps;
-        std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > layerSymbolizerContexts;
+        std::map<std::string, std::shared_ptr<const mvt::Map> > layerMaps;
+        std::map<std::string, std::shared_ptr<const mvt::SymbolizerContext> > layerSymbolizerContexts;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             layerInvisibleSet = _layerInvisibleSet;
@@ -267,7 +262,7 @@ namespace carto {
         try {
             mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
-            decoder.setGlobalIdOverride(true, MapTile(tile.x, tile.y, tile.zoom, 0).getTileId());
+            decoder.setFeatureIdOverride(true, MapTile(tile.x, tile.y, tile.zoom, 0).getTileId());
 
             std::vector<std::shared_ptr<vt::Tile> > tiles(_layerIds.size());
             for (auto it = layerMaps.begin(); it != layerMaps.end(); it++) {
@@ -280,29 +275,27 @@ namespace carto {
                     continue;
                 }
 
-                mvt::MBVTTileReader reader(it->second, tileTransformer, *layerSymbolizerContexts[it->first], decoder);
+                mvt::MBVTTileReader reader(it->second, tileTransformer, *layerSymbolizerContexts[it->first], decoder, _logger);
                 reader.setLayerNameOverride(it->first);
                 tiles[index] = reader.readTile(targetTile);
             }
 
             float tileSize = 256.0f;
-            std::shared_ptr<vt::TileBackground> tileBackground;
             std::vector<std::shared_ptr<vt::TileLayer> > tileLayers;
             for (std::size_t i = 0; i < tiles.size(); i++) {
                 if (std::shared_ptr<vt::Tile> tile = tiles[i]) {
                     if (i == 0) {
                         tileSize = tile->getTileSize();
-                        tileBackground = tile->getBackground();
                     }
                     for (const std::shared_ptr<vt::TileLayer>& tileLayer : tile->getLayers()) {
                         int layerIdx = static_cast<int>(i * 65536) + tileLayer->getLayerIndex();
-                        tileLayers.push_back(std::make_shared<vt::TileLayer>(layerIdx, tileLayer->getCompOp(), tileLayer->getOpacityFunc(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
+                        tileLayers.push_back(std::make_shared<vt::TileLayer>(tileLayer->getLayerName(), layerIdx, tileLayer->getCompOp(), tileLayer->getOpacityFunc(), tileLayer->getBackgrounds(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
                     }
                 }
             }
 
             auto tileMap = std::make_shared<TileMap>();
-            (*tileMap)[0] = std::make_shared<vt::Tile>(targetTile, tileSize, tileBackground, tileLayers);
+            (*tileMap)[0] = std::make_shared<vt::Tile>(targetTile, tileSize, tileLayers);
             return tileMap;
         }
         catch (const std::exception& ex) {
@@ -321,7 +314,7 @@ namespace carto {
         if (_assetPackageSymbolizerContexts.find(assetPackage) == _assetPackageSymbolizerContexts.end() && _assetPackageSymbolizerContexts.size() >= MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS) {
             _assetPackageSymbolizerContexts.clear();
         }
-        std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
+        std::shared_ptr<const mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
         if (!symbolizerContext) {
             auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
             auto bitmapLoader = std::make_shared<VTBitmapLoader>("", assetPackage);
@@ -329,13 +322,13 @@ namespace carto {
             auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
             auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
 
-            std::shared_ptr<vt::Font> fallbackFont;
+            std::shared_ptr<const vt::Font> fallbackFont;
             for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
                 std::shared_ptr<BinaryData> fontData = *it;
                 std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
                 fallbackFont = fontManager->getFont(fontName, fallbackFont);
             }
-            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
+            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::make_shared<std::map<std::string, mvt::Value>>(), fallbackFont);
             symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
             if (assetPackage) {
@@ -364,6 +357,7 @@ namespace carto {
 
         if (!_layerIds.empty() && _layerIds.front() == layerId) {
             _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
+            _symbolizerContextSettings = std::make_shared<mvt::SymbolizerContext::Settings>(symbolizerContext->getSettings());
         }
 
         _layerStyleSets[layerId] = styleSet;
@@ -375,4 +369,5 @@ namespace carto {
     const int CartoVectorTileDecoder::STROKEMAP_SIZE = 512;
     const int CartoVectorTileDecoder::GLYPHMAP_SIZE = 2048;
     const std::size_t CartoVectorTileDecoder::MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS = 4;
+
 }

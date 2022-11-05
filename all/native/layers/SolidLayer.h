@@ -14,6 +14,7 @@
 #include "graphics/Color.h"
 #include "layers/Layer.h"
 
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 
@@ -26,7 +27,8 @@ namespace carto {
     class SolidRenderer;
     
     /**
-     * A solid layer that displays predefined color or bitmap and does not depend on actual view settings.
+     * A solid layer that displays predefined color or bitmap.
+     * @deprecated
      */
     class SolidLayer : public Layer {
     public:
@@ -90,19 +92,19 @@ namespace carto {
         
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         
-        virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
-        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
+        virtual std::shared_ptr<Bitmap> getBackgroundBitmap(const ViewState& viewState) const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap(const ViewState& viewState) const;
 
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
-        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
+        virtual bool processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
     private:
-        Color _color;
+        std::atomic<Color> _color;
         std::shared_ptr<Bitmap> _bitmap;
-        float _bitmapScale;
+        std::atomic<float> _bitmapScale;
         std::shared_ptr<SolidRenderer> _solidRenderer;
     };
     

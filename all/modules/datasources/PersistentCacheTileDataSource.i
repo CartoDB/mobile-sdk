@@ -3,6 +3,8 @@
 
 %module(directors="1") PersistentCacheTileDataSource
 
+#ifdef _CARTO_OFFLINE_SUPPORT
+
 !proxy_imports(carto::PersistentCacheTileDataSource, core.MapBounds, core.MapTile, core.MapBounds, core.StringMap, datasources.CacheTileDataSource, datasources.TileDownloadListener, datasources.components.TileData)
 
 %{
@@ -28,5 +30,7 @@
 %feature("director") carto::PersistentCacheTileDataSource;
 
 %include "datasources/PersistentCacheTileDataSource.h"
+
+#endif
 
 #endif

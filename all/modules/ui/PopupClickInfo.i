@@ -3,7 +3,7 @@
 
 %module PopupClickInfo
 
-!proxy_imports(carto::PopupClickInfo, core.MapPos, core.ScreenPos, vectorelements.Popup, ui.ClickType)
+!proxy_imports(carto::PopupClickInfo, core.MapPos, core.ScreenPos, vectorelements.Popup, ui.ClickInfo)
 
 %{
 #include "ui/PopupClickInfo.h"
@@ -13,7 +13,7 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
-%import "ui/ClickType.i"
+%import "ui/ClickInfo.i"
 %import "core/MapPos.i"
 %import "core/ScreenPos.i"
 %import "vectorelements/Popup.i"
@@ -21,6 +21,7 @@
 !shared_ptr(carto::PopupClickInfo, ui.PopupClickInfo)
 
 %attribute(carto::PopupClickInfo, carto::ClickType::ClickType, ClickType, getClickType)
+%attributeval(carto::PopupClickInfo, carto::ClickInfo, ClickInfo, getClickInfo)
 %attributeval(carto::PopupClickInfo, carto::MapPos, ClickPos, getClickPos)
 %attributeval(carto::PopupClickInfo, carto::ScreenPos, ElementClickPos, getElementClickPos)
 !attributestring_polymorphic(carto::PopupClickInfo, vectorelements.Popup, Popup, getPopup)

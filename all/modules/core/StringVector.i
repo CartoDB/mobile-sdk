@@ -10,10 +10,6 @@
 
 !value_type(std::vector<std::string>, core.StringVector)
 
-#ifdef SWIGOBJECTIVEC
-%template(NTStringVector) std::vector<std::string>;
-#else
-%template(StringVector) std::vector<std::string>;
-#endif
+!value_template(std::vector<std::string>, core.StringVector)
 
 #endif

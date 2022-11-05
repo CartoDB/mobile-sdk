@@ -19,14 +19,12 @@
 
 #include <stdext/timed_lru_cache.h>
 
+#include <vt/Tile.h>
 #include <vt/Styles.h>
 
 namespace carto {
     class TileDrawData;
     class RasterTileEventListener;
-    namespace vt {
-        class Tile;
-    }
     
     namespace RasterTileFilterMode {
         /**
@@ -91,6 +89,17 @@ namespace carto {
         void setTileFilterMode(RasterTileFilterMode::RasterTileFilterMode filterMode);
 
         /**
+         * Returns the current relative tile blending speed.
+         * @return The current relative tile blending speed. Default is 1.0.
+         */
+        float getTileBlendingSpeed() const;
+        /**
+         * Sets the relative tile blending speed.
+         * @param speed The new relative speed value. Default is 1.0. Use zero or negative values to disable blending.
+         */
+        void setTileBlendingSpeed(float speed);
+
+        /**
          * Returns the raster tile event listener.
          * @return The raster tile event listener.
          */
@@ -102,36 +111,27 @@ namespace carto {
         void setRasterTileEventListener(const std::shared_ptr<RasterTileEventListener>& eventListener);
     
     protected:
-        class FetchTask : public TileLayer::FetchTaskBase {
-        public:
-            FetchTask(const std::shared_ptr<RasterTileLayer>& layer, const MapTile& tile, bool preloadingTile);
-    
-        protected:
-            bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
-            
-        private:
-            static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
-        };
-    
-        virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
-        virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
-        virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
+        virtual long long getTileId(const MapTile& tile) const;
+        virtual bool tileExists(long long tileId, bool preloadingCache) const;
+        virtual bool tileValid(long long tileId, bool preloadingCache) const;
+        virtual bool prefetchTile(long long tileId, bool preloadingTile);
+        virtual void fetchTile(long long tileId, const MapTile& mapTile, bool preloadingTile, int priorityDelta);
         virtual void clearTiles(bool preloadingTiles);
-        virtual void tilesChanged(bool removeTiles);
+        virtual void invalidateTiles(bool preloadingTiles);
 
         virtual vt::RasterFilterMode getRasterFilterMode() const;
 
-        virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) const;
+        virtual std::shared_ptr<vt::Tile> createVectorTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
-        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
+        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState, bool tilesChanged);
         
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;
         virtual std::vector<long long> getVisibleTileIds() const;
         
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
-        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
+        virtual bool processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         virtual void offsetLayerHorizontally(double offset);
         
@@ -141,22 +141,47 @@ namespace carto {
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
-        RasterTileFilterMode::RasterTileFilterMode _tileFilterMode;
+        static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
 
     private:    
+        class FetchTask : public TileLayer::FetchTaskBase {
+        public:
+            FetchTask(const std::shared_ptr<RasterTileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile);
+    
+        protected:
+            bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
+        };
+    
+        class TileInfo {
+        public:
+            TileInfo() : _tile() { }
+            TileInfo(const MapBounds& tileBounds, const std::shared_ptr<const vt::Tile>& tile) : _tileBounds(tileBounds), _tile(tile) { }
+
+            const MapBounds& getTileBounds() const { return _tileBounds; }
+            const std::shared_ptr<const vt::Tile>& getTile() const { return _tile; }
+
+            std::size_t getSize() const;
+
+        private:
+            MapBounds _tileBounds;
+            std::shared_ptr<const vt::Tile> _tile;
+        };
+
         static const int DEFAULT_CULL_DELAY;
-        static const int PRELOADING_PRIORITY_OFFSET;
 
         static const unsigned int EXTRA_TILE_FOOTPRINT;
         static const unsigned int DEFAULT_PRELOADING_CACHE_SIZE;
         
         ThreadSafeDirectorPtr<RasterTileEventListener> _rasterTileEventListener;
 
+        std::atomic<RasterTileFilterMode::RasterTileFilterMode> _tileFilterMode;
+        std::atomic<float> _tileBlendingSpeed;
+
         std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
         
-        cache::timed_lru_cache<long long, std::shared_ptr<const vt::Tile> > _visibleCache;
-        cache::timed_lru_cache<long long, std::shared_ptr<const vt::Tile> > _preloadingCache;
+        cache::timed_lru_cache<long long, TileInfo> _visibleCache;
+        cache::timed_lru_cache<long long, TileInfo> _preloadingCache;
     };
     
 }

@@ -37,13 +37,13 @@ namespace carto {
             }
 
             // If either element is 3D, order 3D on top of 2D and use distance from camera
-            if (element1.is3D() != element2.is3D()) {
-                return element1.is3D() < element2.is3D();
+            if (element1.is3DElement() != element2.is3DElement()) {
+                return element1.is3DElement() < element2.is3DElement();
             }
-            if (element1.is3D()) {
+            if (element1.is3DElement()) {
                 double deltaDistance = element1.getDistance(_viewState.getCameraPos()) - element2.getDistance(_viewState.getCameraPos());
                 if (deltaDistance != 0) {
-                    return deltaDistance < 0;
+                    return deltaDistance > 0;
                 }
             }
 

@@ -903,4 +903,4 @@ This method enables you to create two in one: optimized vector tiles and suitabl
         VectorTileLayer mbLayer = new VectorTileLayer(mbDataSource,decoder);
         mapView.getLayers().add(mbLayer);
 
- {% endhighlight %}
+  {% endhighlight %}

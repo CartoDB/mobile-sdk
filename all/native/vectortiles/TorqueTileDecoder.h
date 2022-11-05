@@ -43,6 +43,18 @@ namespace carto {
         int getFrameCount() const;
 
         /**
+         * Returns the tile resolution, in pixels.
+         * @return The tile resolution in pixels.
+         */
+        int getResolution() const;
+
+        /**
+         * Returns the animation duration, in seconds.
+         * @return The animation duration, in seconds.
+         */
+        float getAnimationDuration() const;
+
+        /**
          * Returns the current style set used by the decoder.
          * @return The current style set.
          */
@@ -54,18 +66,9 @@ namespace carto {
          */
         void setStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
-        /**
-         * Returns the tile resolution, in pixels. Default is 256.
-         * @return The tile resolution in pixels.
-         */
-        int getResolution() const;
-        /**
-         * Sets the tile resolution in pixels. Default is 256.
-         * @param resolution The new resolution value.
-         */
-        void setResolution(int resolution);
+        virtual std::shared_ptr<const mvt::Map::Settings> getMapSettings() const;
 
-        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
+        virtual std::shared_ptr<const mvt::SymbolizerContext::Settings> getSymbolizerContextSettings() const;
 
         virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
 
@@ -86,11 +89,11 @@ namespace carto {
         static const int GLYPHMAP_SIZE;
 
         const std::shared_ptr<mvt::Logger> _logger;
-        int _resolution;
         std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
-        std::shared_ptr<mvt::TorqueMap> _map;
-        std::shared_ptr<mvt::Map::Settings> _mapSettings;
-        std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
+        std::shared_ptr<const mvt::TorqueMap> _map;
+        std::shared_ptr<const mvt::Map::Settings> _mapSettings;
+        std::shared_ptr<const mvt::SymbolizerContext> _symbolizerContext;
+        std::shared_ptr<const mvt::SymbolizerContext::Settings> _symbolizerContextSettings;
         std::shared_ptr<CartoCSSStyleSet> _styleSet;
 
         mutable std::mutex _mutex;

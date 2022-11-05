@@ -2,9 +2,8 @@
 
 namespace carto {
 
-    PopupClickInfo::PopupClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos,
-                                                   const std::shared_ptr<Popup>& popup) :
-        _clickType(clickType),
+    PopupClickInfo::PopupClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const ScreenPos& elementClickPos, const std::shared_ptr<Popup>& popup) :
+        _clickInfo(clickInfo),
         _clickPos(clickPos),
         _elementClickPos(elementClickPos),
         _popup(popup)
@@ -15,9 +14,13 @@ namespace carto {
     }
 
     ClickType::ClickType PopupClickInfo::getClickType() const {
-        return _clickType;
+        return _clickInfo.getClickType();
     }
     
+    const ClickInfo& PopupClickInfo::getClickInfo() const {
+        return _clickInfo;
+    }
+
     const MapPos& PopupClickInfo::getClickPos() const {
         return _clickPos;
     }

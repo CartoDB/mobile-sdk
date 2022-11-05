@@ -15,6 +15,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
+#include <mutex>
 #include <vector>
 
 #include <cglib/vec.h>
@@ -54,10 +55,10 @@ namespace carto {
         void onTouchEvent(int action, const ScreenPos& screenPos1, const ScreenPos& screenPos2);
         void onWheelEvent(int delta, const ScreenPos& screenPos);
     
-        void click(const ScreenPos& screenPos);
-        void longClick(const ScreenPos& screenPos);
-        void doubleClick(const ScreenPos& screenPos);
-        void dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2);
+        void click(const ScreenPos& screenPos, const std::chrono::milliseconds& duration);
+        void longClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration);
+        void doubleClick(const ScreenPos& screenPos, const std::chrono::milliseconds& duration);
+        void dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const std::chrono::milliseconds& duration);
         void startSinglePointer(const ScreenPos& screenPos);
         void startDualPointer(const ScreenPos& screenPos1, const ScreenPos& screenPos2);
 
@@ -68,7 +69,24 @@ namespace carto {
         friend class BaseMapView;
     
     private:
-        enum GestureMode { SINGLE_POINTER_CLICK_GUESS, DUAL_POINTER_CLICK_GUESS, SINGLE_POINTER_PAN, SINGLE_POINTER_ZOOM, DUAL_POINTER_GUESS, DUAL_POINTER_TILT, DUAL_POINTER_ROTATE, DUAL_POINTER_SCALE, DUAL_POINTER_FREE };
+        enum GestureMode {
+            SINGLE_POINTER_CLICK_GUESS,
+            DUAL_POINTER_CLICK_GUESS,
+            SINGLE_POINTER_PAN,
+            SINGLE_POINTER_ZOOM,
+            DUAL_POINTER_GUESS,
+            DUAL_POINTER_TILT,
+            DUAL_POINTER_ROTATE,
+            DUAL_POINTER_SCALE,
+            DUAL_POINTER_FREE
+        };
+
+        enum {
+            CAMERA_PAN = 1,
+            CAMERA_ZOOM = 2,
+            CAMERA_ROTATE = 4,
+            CAMERA_TILT = 8
+        };
     
         class MapRendererListener : public MapRenderer::OnChangeListener {
         public:
@@ -81,19 +99,23 @@ namespace carto {
             std::weak_ptr<TouchHandler> _touchHandler;
         };
         
+        void checkCameraEvents();
         void checkMapStable();
 
         float calculateRotatingScalingFactor(const ScreenPos& screenPos1, const ScreenPos& screenPos2) const;
 
         void singlePointerPan(const ScreenPos& screenPos, const ViewState& viewState);
         void singlePointerZoom(const ScreenPos& screenPos, const ViewState& viewState);
+        bool singlePointerZoomStop(const ScreenPos& screenPos, const ViewState& viewState);
         void dualPointerGuess(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const ViewState& viewState);
         void dualPointerTilt(const ScreenPos& screenPos, const ViewState& viewState);
         void dualPointerPan(const ScreenPos& screenPos1, const ScreenPos& screenPos2, bool rotate, bool scale, const ViewState& viewState);
+        void doubleTapZoom(const ScreenPos& screenPos, const ViewState& viewState);
 
         bool isValidScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
         MapPos mapScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
-        void handleClick(ClickType::ClickType clickType, const ScreenPos& screenPos);
+
+        void handleClick(const ClickInfo& clickInfo, const ScreenPos& screenPos);
     
         static const float GUESS_MAX_DELTA_Y_INCHES;
         static const float GUESS_MIN_SWIPE_LENGTH_SAME_INCHES;
@@ -142,8 +164,9 @@ namespace carto {
         cglib::vec2<float> _swipe1;
         cglib::vec2<float> _swipe2;
     
+        int _cameraEvents;
         int _pointersDown;
-        bool _mapMoving;
+        bool _idling;
         bool _noDualPointerYet;
         std::chrono::steady_clock::time_point _dualPointerReleaseTime;
     
@@ -156,7 +179,7 @@ namespace carto {
         std::shared_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<MapRendererListener> _mapRendererListener;
     
-        mutable std::mutex _mutex;
+        mutable std::recursive_mutex _mutex;
 
         std::vector<std::shared_ptr<OnTouchListener> > _onTouchListeners;
         mutable std::mutex _onTouchListenersMutex;

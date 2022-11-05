@@ -14,9 +14,9 @@
 #include "components/DirectorPtr.h"
 #include "datasources/TileDataSource.h"
 #include "layers/Layer.h"
-#include "layers/components/FetchingTileTasks.h"
 
 #include <atomic>
+#include <mutex>
 #include <unordered_map>
 
 namespace carto {
@@ -233,11 +233,15 @@ namespace carto {
         
         class FetchTaskBase : public CancelableTask {
         public:
-            FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile);
+            FetchTaskBase(const std::shared_ptr<TileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile);
             
-            bool isPreloading() const;
+            long long getTileId() const;
+            MapTile getMapTile() const;
+            bool isPreloadingTile() const;
+
             bool isInvalidated() const;
             void invalidate();
+
             virtual void cancel();
             virtual void run();
             
@@ -245,17 +249,90 @@ namespace carto {
             virtual bool loadTile(const std::shared_ptr<TileLayer>& layer) = 0;
             
             std::weak_ptr<TileLayer> _layer;
+            long long _tileId;
             MapTile _tile; // original tile
+            bool _preloadingTile;
             std::vector<MapTile> _dataSourceTiles; // tiles in valid datasource range, ordered to top
 
         private:
             bool loadUTFGridTile(const std::shared_ptr<TileLayer>& layer);
 
-            bool _preloadingTile;
             bool _started;
-            bool _invalidated;
+            std::atomic<bool> _invalidated;
         };
         
+        class FetchingTileTasks {
+        public:
+            FetchingTileTasks() : _fetchingTiles(), _mutex() { }
+            
+            std::vector<std::shared_ptr<FetchTaskBase> > get(long long tileId) const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                auto it = _fetchingTiles.find(tileId);
+                return it != _fetchingTiles.end() ? it->second : std::vector<std::shared_ptr<FetchTaskBase> >();
+            }
+            
+            void insert(long long tileId, const std::shared_ptr<FetchTaskBase>& task) {
+                std::lock_guard<std::mutex> lock(_mutex);
+                _fetchingTiles[tileId].push_back(task);
+            }
+            
+            void remove(long long tileId, const std::shared_ptr<FetchTaskBase>& task) {
+                std::lock_guard<std::mutex> lock(_mutex);
+                auto it = _fetchingTiles.find(tileId);
+                if (it == _fetchingTiles.end()) {
+                    return;
+                }
+                std::vector<std::shared_ptr<FetchTaskBase> >& tasks = it->second;
+                auto it2 = std::find(tasks.begin(), tasks.end(), task);
+                if (it2 == tasks.end()) {
+                    return;
+                }
+                tasks.erase(it2);
+                if (tasks.empty()) {
+                    _fetchingTiles.erase(it);
+                }
+            }
+            
+            std::vector<std::shared_ptr<FetchTaskBase> > getAll() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                std::vector<std::shared_ptr<FetchTaskBase> > tasks;
+                for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                    tasks.insert(tasks.end(), it->second.begin(), it->second.end());
+                }
+                return tasks;
+            }
+            
+            int getPreloadingCount() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                int count = 0;
+                for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                    for (const std::shared_ptr<FetchTaskBase>& task : it->second) {
+                        if (task->isPreloadingTile()) {
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            }
+            
+            int getVisibleCount() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                int count = 0;
+                for (auto it = _fetchingTiles.begin(); it != _fetchingTiles.end(); it++) {
+                    for (const std::shared_ptr<FetchTaskBase>& task : it->second) {
+                        if (!task->isPreloadingTile()) {
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            }
+
+        private:
+            std::unordered_map<long long, std::vector<std::shared_ptr<FetchTaskBase> > > _fetchingTiles;
+            mutable std::mutex _mutex;
+        };
+
         explicit TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
 
         virtual void setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
@@ -266,47 +343,77 @@ namespace carto {
 
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
 
+        virtual void updateTiles(bool removeTiles);
+
         virtual void updateTileLoadListener();
 
-        virtual bool tileExists(const MapTile& tile, bool preloadingCache) const = 0;
-        virtual bool tileValid(const MapTile& tile, bool preloadingCache) const = 0;
-        virtual void fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) = 0;
+        virtual long long getTileId(const MapTile& tile) const = 0;
+        virtual bool tileExists(long long tileId, bool preloadingCache) const = 0;
+        virtual bool tileValid(long long tileId, bool preloadingCache) const = 0;
+        virtual bool prefetchTile(long long tileId, bool preloadingTile) = 0;
+        virtual void fetchTile(long long tileId, const MapTile& mapTile, bool preloadingTile, int priorityDelta) = 0;
         virtual void clearTiles(bool preloadingTiles) = 0;
-        virtual void tilesChanged(bool removeTiles) = 0;
+        virtual void invalidateTiles(bool preloadingTiles) = 0;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) = 0;
-        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState) = 0;
+        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState, bool tilesChanged) = 0;
         
         virtual int getMinZoom() const = 0;
         virtual int getMaxZoom() const = 0;
         virtual std::vector<long long> getVisibleTileIds() const = 0;
         
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
-        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
+        virtual bool processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
 
         std::shared_ptr<vt::TileTransformer> getTileTransformer() const;
         void resetTileTransformer();
 
-        static const float DISCRETE_ZOOM_LEVEL_BIAS;
-
-        std::atomic<bool> _synchronizedRefresh;
-
-        std::atomic<bool> _calculatingTiles;
-        std::atomic<bool> _refreshedTiles;
-        
         const DirectorPtr<TileDataSource> _dataSource;
         std::shared_ptr<DataSourceListener> _dataSourceListener;
 
+        std::shared_ptr<TileRenderer> _tileRenderer;
+    
+        FetchingTileTasks _fetchingTileTasks;
+        
+    private:
+        struct FetchTileInfo {
+            MapTile tile;
+            bool preloading;
+            int priorityDelta;
+        };
+
+        void calculateVisibleTiles(const std::shared_ptr<CullState>& cullState);
+        void calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& mapTile, const MapBounds& dataExtent);
+
+        void sortTiles(std::vector<MapTile>& tiles, const ViewState& viewState, bool preloadingTiles);
+        void buildFetchTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles, std::vector<FetchTileInfo>& fetchTileList);
+
+        bool findParentTile(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
+        int findChildTiles(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
+
+        static const float DISCRETE_ZOOM_LEVEL_BIAS;
+
+        static const int MAX_PARENT_SEARCH_DEPTH;
+        static const int MAX_CHILD_SEARCH_DEPTH;
+
+        static const int PARENT_PRIORITY_OFFSET;
+        static const int PRELOADING_PRIORITY_OFFSET;
+        static const double PRELOADING_TILE_SCALE;
+        static const float SUBDIVISION_THRESHOLD;
+        
+        std::atomic<bool> _calculatingTiles;
+        std::atomic<bool> _refreshedTiles;
+        
         ThreadSafeDirectorPtr<TileDataSource> _utfGridDataSource;
         
         ThreadSafeDirectorPtr<TileLoadListener> _tileLoadListener;
     
         ThreadSafeDirectorPtr<UTFGridEventListener> _utfGridEventListener;
 
-        FetchingTileTasks<FetchTaskBase> _fetchingTiles;
-        
+        std::atomic<bool> _synchronizedRefresh;
+
         int _frameNr;
         int _lastFrameNr;
     
@@ -318,26 +425,10 @@ namespace carto {
         int _maxOverzoomLevel;
         int _maxUnderzoomLevel;
 
-        std::shared_ptr<TileRenderer> _tileRenderer;
-    
-    private:
-        void calculateVisibleTiles(const std::shared_ptr<CullState>& cullState);
-        void calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& mapTile, const MapBounds& dataExtent);
-
-        void sortTiles(std::vector<MapTile>& tiles, const ViewState& viewState, bool preloadingTiles);
-        void findTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles);
-        bool findParentTile(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
-        int findChildTiles(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
-    
-        static const int MAX_PARENT_SEARCH_DEPTH;
-        static const int MAX_CHILD_SEARCH_DEPTH;
-        
-        static const double PRELOADING_TILE_SCALE;
-        static const float SUBDIVISION_THRESHOLD;
-        
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
+        std::shared_ptr<CullState> _tileCullState;
 
         std::weak_ptr<GLResourceManager> _glResourceManager;
         std::weak_ptr<ProjectionSurface> _projectionSurface;

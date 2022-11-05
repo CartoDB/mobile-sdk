@@ -41,7 +41,7 @@ namespace carto {
         static const float MIN_HEIGHT;
         static const float MAX_HEIGHT;
 
-        std::unique_ptr<sqlite3pp::database> _db;
+        std::unique_ptr<sqlite3pp::database> _database;
     };
 
 }

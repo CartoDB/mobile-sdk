@@ -1,5 +1,8 @@
 #include "PlatformUtils.h"
 
+#define EXPAND(str) #str
+#define STRINGIFY(str) EXPAND(str)
+
 namespace carto {
 
     std::string PlatformUtils::GetPlatformId() {
@@ -20,7 +23,7 @@ namespace carto {
     }
 
     std::string PlatformUtils::GetSDKVersion() {
-        return _CARTO_MOBILE_SDK_VERSION;
+        return STRINGIFY(_CARTO_MOBILE_SDK_VERSION);
     }
 
 }

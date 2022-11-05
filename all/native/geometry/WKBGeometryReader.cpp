@@ -11,7 +11,7 @@
 #include "geometry/MultiPointGeometry.h"
 #include "geometry/MultiLineGeometry.h"
 #include "geometry/MultiPolygonGeometry.h"
-#include "geometry/WKBGeometryEnums.h"
+#include "geometry/utils/WKBGeometryEnums.h"
 #include "utils/Log.h"
 
 #include <stdexcept>

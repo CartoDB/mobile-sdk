@@ -197,6 +197,8 @@ namespace Carto.Ui {
                         _baseMapView.OnInputEvent(NativeActionCancel, 
                             NativeNoCoordinate, NativeNoCoordinate, 
                             NativeNoCoordinate, NativeNoCoordinate);
+                        _pointer1Id = InvalidPointerId;
+                        _pointer2Id = InvalidPointerId;
                         break;
                     case MotionEventActions.Up:
                     case MotionEventActions.PointerUp:

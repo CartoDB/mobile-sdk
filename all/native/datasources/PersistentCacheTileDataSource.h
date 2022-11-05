@@ -7,12 +7,17 @@
 #ifndef _CARTO_PERSISTENTCACHETILEDATASOURCE_H_
 #define _CARTO_PERSISTENTCACHETILEDATASOURCE_H_
 
+#ifdef _CARTO_OFFLINE_SUPPORT
+
 #include "core/MapBounds.h"
 #include "components/CancelableThreadPool.h"
 #include "components/DirectorPtr.h"
 #include "datasources/CacheTileDataSource.h"
 
+#include <mutex>
+#include <memory>
 #include <string>
+#include <set>
 
 #include <stdext/timed_lru_cache.h>
 
@@ -126,6 +131,7 @@ namespace carto {
         
         bool _cacheOnlyMode;
 
+        std::set<std::shared_ptr<DownloadTask> > _downloadTasks;
         std::shared_ptr<CancelableThreadPool> _downloadThreadPool;
         
         cache::timed_lru_cache<long long, std::shared_ptr<long long> > _cache;
@@ -133,5 +139,7 @@ namespace carto {
     };
 
 }
+
+#endif
 
 #endif

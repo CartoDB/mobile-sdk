@@ -84,6 +84,17 @@ namespace carto {
         void setMaxAgeHeaderCheck(bool maxAgeCheck);
         
         /**
+         * Returns the current timeout value.
+         * @return The current timeout value in seconds. If negative, then default platform-specific timeout is used.
+         */
+        int getTimeout() const;
+        /**
+         * Sets the current timeout value.
+         * @param timeout The new timeout value in seconds. If negative, then default platform-specific timeout is used.
+         */
+        void setTimeout(int timeout);
+
+        /**
          * Returns the current set of HTTP headers used. Initially this set is empty and can be changed with setHTTPHeaders.
          * @returns The current set of custom HTTP headers.
          */
@@ -104,6 +115,7 @@ namespace carto {
         std::vector<std::string> _subdomains;
         bool _tmsScheme;
         bool _maxAgeHeaderCheck;
+        int _timeout;
         std::map<std::string, std::string> _headers;
         HTTPClient _httpClient;
         mutable std::default_random_engine _randomGenerator;

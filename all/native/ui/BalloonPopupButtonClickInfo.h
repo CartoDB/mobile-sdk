@@ -7,7 +7,7 @@
 #ifndef _CARTO_BALLOONPOPUPBUTTONCLICKINFO_H_
 #define _CARTO_BALLOONPOPUPBUTTONCLICKINFO_H_
 
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 
 #include <memory>
 
@@ -23,12 +23,12 @@ namespace carto {
     class BalloonPopupButtonClickInfo {
     public:
         /**
-         * Constructs a BalloonPopupButtonClickInfo object from a click type and a button element.
-         * @param clickType The click type (SINGLE, DUAL, etc)
+         * Constructs a BalloonPopupButtonClickInfo object from a click info and a button element.
+         * @param clickInfo The click attributes.
          * @param button The button on which the click was performed.
          * @param vectorElement The vector element on which the click was performed.
          */
-        BalloonPopupButtonClickInfo(ClickType::ClickType clickType, const std::shared_ptr<BalloonPopupButton>& button, const std::shared_ptr<VectorElement>& vectorElement);
+        BalloonPopupButtonClickInfo(const ClickInfo& clickInfo, const std::shared_ptr<BalloonPopupButton>& button, const std::shared_ptr<VectorElement>& vectorElement);
         virtual ~BalloonPopupButtonClickInfo();
     
         /**
@@ -36,6 +36,12 @@ namespace carto {
          * @return The type of the click performed.
          */
         ClickType::ClickType getClickType() const;
+
+        /**
+         * Returns the click info.
+         * @return The attributes of the click.
+         */
+        const ClickInfo& getClickInfo() const;
 
         /**
          * Returns the clicked button.
@@ -50,7 +56,7 @@ namespace carto {
         std::shared_ptr<VectorElement> getVectorElement() const;
 
     private:
-        ClickType::ClickType _clickType;
+        ClickInfo _clickInfo;
     
         std::shared_ptr<BalloonPopupButton> _button;
         std::shared_ptr<VectorElement> _vectorElement;

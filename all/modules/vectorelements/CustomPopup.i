@@ -3,7 +3,8 @@
 
 %module CustomPopup
 
-!proxy_imports(carto::CustomPopup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, geometry.PointGeometry, styles.PopupStyle, ui.ClickType, ui.PopupDrawInfo, ui.PopupClickInfo, vectorelements.Billboard, vectorelements.CustomPopupHandler)
+!proxy_imports(carto::CustomPopup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, geometry.PointGeometry, styles.PopupStyle, ui.ClickInfo, ui.PopupDrawInfo, ui.PopupClickInfo, vectorelements.Billboard, vectorelements.CustomPopupHandler)
+!java_imports(carto::CustomPopup, com.carto.ui.ClickType)
 
 %{
 #include "vectorelements/CustomPopup.h"

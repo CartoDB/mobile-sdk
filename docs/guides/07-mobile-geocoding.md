@@ -341,6 +341,3 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
     {% endhighlight %}
   </div>
 </div>
-
-
-

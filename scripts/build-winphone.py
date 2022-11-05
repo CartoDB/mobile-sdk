@@ -43,28 +43,25 @@ def buildWinPhoneNativeDLL(args, arch):
   defines = ["-D%s" % define for define in args.defines.split(';') if define]
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
 
-  copyfile('%s/scripts/winphone10/packages.config' % baseDir, '%s/packages.config' % buildDir)
-  if not nuget(args, buildDir, 'restore', '-PackagesDirectory', '%s/packages' % buildDir):
-    print("Failed to restore required nuget packages")
-    return False
-
   if not cmake(args, buildDir, options + [
-    '-G', 'Visual Studio 16 2019',
+    '-G', 'Visual Studio 17 2022',
     '-DCMAKE_SYSTEM_NAME=WindowsStore',
     '-DCMAKE_SYSTEM_VERSION=10.0',
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,
     '-DCMAKE_BUILD_TYPE=%s' % args.nativeconfiguration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/winphone-csharp/wrappers' % baseDir),
-    "-DWINPHONE_ARCH=%s" % arch,
+    '-DSINGLE_LIBRARY:BOOL=ON',
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Windows Phone 10'",
+    "-DSDK_WINPHONE_ARCH='%s'" % arch,
     '%s/scripts/build' % baseDir
   ]):
     return False
   patchVcxprojFile(baseDir, '%s/carto_mobile_sdk.vcxproj' % buildDir)
   return cmake(args, buildDir, [
     '--build', '.',
+    '--parallel', '4',
     '--config', args.nativeconfiguration
   ])
 
@@ -79,8 +76,9 @@ def buildWinPhoneManagedDLL(args, arch):
   with open('%s/CartoMobileSDK.WinPhone.csproj' % buildDir, 'w') as f:
     f.write(csProjFile)
 
-  copyfile('%s/scripts/winphone10/project.json' % baseDir, '%s/project.json' % buildDir)
-  copyfile('%s/scripts/winphone10/project.lock.json' % baseDir, '%s/project.lock.json' % buildDir)
+  if not nuget(args, buildDir, 'restore', '%s/CartoMobileSDK.WinPhone.csproj' % buildDir):
+    print("Failed to restore required nuget packages")
+    return False
 
   return msbuild(args, buildDir,
     '/t:Build',
@@ -105,10 +103,11 @@ def buildWinPhoneVSIX(args):
     '%s/CartoMobileSDK.WinPhone.VSIX.csproj' % buildDir
   ):
     return False
-  if copyfile('%s/bin/%s/CartoMobileSDK.WinPhone.VSIX.vsix' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone10.VSIX.vsix' % distDir):
-    print("Output available in:\n%s" % distDir)
-    return True
-  return False
+  if not copyfile('%s/bin/%s/CartoMobileSDK.WinPhone.VSIX.vsix' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone10.VSIX.vsix' % distDir):
+    return False
+
+  print("VSIX output available in:\n%s" % distDir)
+  return True
 
 def buildWinPhoneNuget(args):
   baseDir = getBaseDir()
@@ -117,12 +116,19 @@ def buildWinPhoneNuget(args):
   version = args.buildversion
 
   with open('%s/scripts/nuget/CartoMobileSDK.WinPhone.nuspec.template' % baseDir, 'r') as f:
-    nuspecFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration, 'version': version })
+    nuspecFile = string.Template(f.read()).safe_substitute({
+      'baseDir': baseDir,
+      'buildDir': buildDir,
+      'configuration': args.configuration,
+      'nativeConfiguration': args.nativeconfiguration,
+      'version': version
+    })
   with open('%s/CartoMobileSDK.WinPhone.nuspec' % buildDir, 'w') as f:
     f.write(nuspecFile)
 
   # A hack to generate non-arch dependent assembly, this is nuget peculiarity
-  if not copyfile('%s/../winphone_managed10-x86/bin/%s/CartoMobileSDK.WinPhone.dll' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone.dll' % buildDir):
+  arch = 'x86' if 'x86' in args.winphonearch else args.winphonearch[0]
+  if not copyfile('%s/../winphone_managed10-%s/bin/%s/CartoMobileSDK.WinPhone.dll' % (buildDir, arch, args.configuration), '%s/CartoMobileSDK.WinPhone.dll' % buildDir):
     return False
   if not corflags(args, buildDir,
     '/32BITREQ-',
@@ -139,7 +145,8 @@ def buildWinPhoneNuget(args):
 
   if not copyfile('%s/CartoMobileSDK.UWP.%s.nupkg' % (buildDir, version), '%s/CartoMobileSDK.UWP.%s.nupkg' % (distDir, version)):
     return False
-  print("Output available in:\n%s\n\nTo publish, use:\nnuget.exe push %s/CartoMobileSDK.UWP.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, version))
+
+  print("Nuget output available in:\n%s" % distDir)
   return True
 
 parser = argparse.ArgumentParser()
@@ -166,6 +173,10 @@ args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = 'RelWithDebInfo' if args.configuration == 'Debug' else args.configuration
 
+if not os.path.exists("%s/generated/winphone-csharp/proxies" % getBaseDir()):
+  print("Proxies/wrappers not generated yet, run swigpp script first.")
+  sys.exit(-1)
+
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')
   sys.exit(-1)
@@ -181,6 +192,9 @@ if not checkExecutable(args.nuget, 'help'):
 if args.buildnuget:
   if not checkExecutable(args.corflags, '/?'):
     print('Failed to find corflags executable. Use --corflags to specify its location')
+    sys.exit(-1)
+  if 'x86' not in args.winphonearch:
+    print('Nuget package requires x86 architecture')
     sys.exit(-1)
 
 for arch in args.winphonearch:

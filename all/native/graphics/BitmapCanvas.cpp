@@ -16,7 +16,7 @@
 namespace carto {
 
     BitmapCanvas::BitmapCanvas(int width, int height) :
-        _impl(new CARTO_BITMAP_CANVAS_IMPL(width, height))
+        _impl(std::make_unique<CARTO_BITMAP_CANVAS_IMPL>(width, height))
     {
     }
 

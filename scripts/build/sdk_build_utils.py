@@ -6,7 +6,7 @@ import argparse
 import shutil
 import json
 
-SDK_VERSION = '4.3.3'
+SDK_VERSION = '4.4.7'
 
 def makedirs(dir):
   try:
@@ -26,6 +26,14 @@ def copyfile(source, target):
     print("Exception %s while copying %s -> %s" % (str(e), source, target))
     return False
   return True
+
+def checksumSHA256(filename):
+  import hashlib
+  sha256_hash = hashlib.sha256()
+  with open(filename, 'rb') as f:
+    for block in iter(lambda: f.read(4096), b''):
+      sha256_hash.update(block)
+  return sha256_hash.hexdigest() 
 
 def makesymlink(dir, source, target):
   currentDir = os.getcwd()
@@ -96,7 +104,7 @@ def getProfile(profileIds):
   defines = set()
   cmakeOptions = set()
   allProfileIds = profileIds.split('+')
-  if 'lite' not in profileIds:
+  if 'lite' not in allProfileIds:
     allProfileIds.append(getDefaultProfileId())
   for profileId in allProfileIds:
     profile = getProfiles()[profileId]
@@ -168,6 +176,11 @@ def readUncommentedLines(fileName):
         line = match.group(1)
       lines_out.append(line)
   return lines_out
+
+def readLicense():
+  with open('%s/LICENSE' % getBaseDir(), 'r') as f:
+    licenseText = f.read()
+  return licenseText
 
 def applyTemplate(template, valueMap):
   result = template

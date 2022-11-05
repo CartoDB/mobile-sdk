@@ -17,6 +17,7 @@
 
 %import "core/BinaryData.i"
 
+!enum(carto::ColorFormat::ColorFormat)
 !shared_ptr(carto::Bitmap, graphics.Bitmap)
 
 %attribute(carto::Bitmap, unsigned int, Width, getWidth)
@@ -26,7 +27,7 @@
 %std_exceptions(carto::Bitmap::Bitmap)
 %std_exceptions(carto::Bitmap::CreateFromCompressed)
 %ignore carto::Bitmap::Bitmap(const unsigned char*, std::size_t);
-%ignore carto::Bitmap::Bitmap(const unsigned char*, unsigned int, unsigned int, ColorFormat::ColorFormat, unsigned int);
+%ignore carto::Bitmap::Bitmap(const unsigned char*, unsigned int, unsigned int, ColorFormat::ColorFormat, int);
 %ignore carto::Bitmap::getPixelData;
 %rename(getPixelData) carto::Bitmap::getPixelDataPtr;
 %ignore carto::Bitmap::CreateFromCompressed(const unsigned char*, std::size_t);

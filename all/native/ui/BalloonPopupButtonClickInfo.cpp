@@ -4,10 +4,10 @@
 
 namespace carto {
 
-    BalloonPopupButtonClickInfo::BalloonPopupButtonClickInfo(ClickType::ClickType clickType,
+    BalloonPopupButtonClickInfo::BalloonPopupButtonClickInfo(const ClickInfo& clickInfo,
                                                    const std::shared_ptr<BalloonPopupButton>& button,
                                                    const std::shared_ptr<VectorElement>& vectorElement) :
-        _clickType(clickType),
+        _clickInfo(clickInfo),
         _button(button),
         _vectorElement(vectorElement)
     {
@@ -17,7 +17,11 @@ namespace carto {
     }
 
     ClickType::ClickType BalloonPopupButtonClickInfo::getClickType() const {
-        return _clickType;
+        return _clickInfo.getClickType();
+    }
+    
+    const ClickInfo& BalloonPopupButtonClickInfo::getClickInfo() const {
+        return _clickInfo;
     }
     
     std::shared_ptr<BalloonPopupButton> BalloonPopupButtonClickInfo::getButton() const {

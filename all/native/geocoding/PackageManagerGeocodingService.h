@@ -49,7 +49,7 @@ namespace carto {
         public:
             explicit PackageManagerListener(PackageManagerGeocodingService& service);
 
-            virtual void onPackagesChanged();
+            virtual void onPackagesChanged(PackageChangeType changeType);
             virtual void onStylesChanged();
 
         private:

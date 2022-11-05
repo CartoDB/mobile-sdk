@@ -9,6 +9,7 @@ namespace carto {
 
     Polygon::Polygon(const std::shared_ptr<PolygonGeometry>& geometry, const std::shared_ptr<PolygonStyle>& style) :
         VectorElement(geometry),
+        _drawData(),
         _style(style)
     {
         if (!geometry) {
@@ -21,6 +22,7 @@ namespace carto {
         
     Polygon::Polygon(std::vector<MapPos> poses, const std::shared_ptr<PolygonStyle>& style)  :
         VectorElement(std::make_shared<PolygonGeometry>(std::move(poses))),
+        _drawData(),
         _style(style)
     {
         if (!style) {
@@ -31,6 +33,7 @@ namespace carto {
     Polygon::Polygon(std::vector<MapPos> poses, std::vector<std::vector<MapPos> > holes,
                      const std::shared_ptr<PolygonStyle>& style)  :
         VectorElement(std::make_shared<PolygonGeometry>(std::move(poses), std::move(holes))),
+        _drawData(),
         _style(style)
     {
         if (!style) {

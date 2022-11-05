@@ -5,8 +5,8 @@
         <title>CARTO Mobile SDK for UWP and Windows Phone 10</title>
         <version>$version</version>
         <authors>CARTO</authors>
-        <iconUrl>https://cartodb-libs.global.ssl.fastly.net/cartodb.com/files/img/logo/carto-for-twitter.5f35eb94.png</iconUrl>
-        <licenseUrl>https://carto.com/terms/</licenseUrl>
+        <icon>images\CARTO.png</icon>
+        <license type="expression">BSD-3-Clause</license>
         <projectUrl>https://carto.com</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>CARTO Maps SDK for UWP and Windows Phone 10</description>
@@ -19,6 +19,7 @@
         </dependencies>
     </metadata>
     <files>
+        <file src="$baseDir\scripts\nuget\CARTO.png" target="images\" />
         <!-- This is hack - we use Win32 assembly and remove reference to Win32 using corflags -->
         <file src="$buildDir\CartoMobileSDK.WinPhone.dll" target="lib\uap10.0\CartoMobileSDK.WinPhone.dll" />
         <file src="$baseDir\build\winphone_managed10-ARM64\bin\$configuration\CartoMobileSDK.WinPhone.xml" target="lib\uap10.0\CartoMobileSDK.WinPhone.xml" />

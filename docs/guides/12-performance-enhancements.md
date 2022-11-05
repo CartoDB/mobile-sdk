@@ -116,7 +116,8 @@ All this is can be applied with just one line of code - as shown in the followin
   <div id="tab-objectivec">
     {% highlight objc linenos %}
     [vectorDataSource2 setGeometrySimplifier:
-      [[NTDouglasPeuckerGeometrySimplifier alloc] initWithTolerance: 1.0f / 320.0f]];
+        [[NTDouglasPeuckerGeometrySimplifier alloc] initWithTolerance: 1.0f / 320.0f]
+    ];
     {% endhighlight %}
   </div>
 

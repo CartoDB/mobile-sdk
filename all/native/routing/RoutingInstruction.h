@@ -115,12 +115,14 @@ namespace carto {
          * @param action Action to take.
          * @param pointIndex Instruction starting point index in the point list.
          * @param streetName Street name.
+         * @param instruction The optional instruction description.
          * @param turnAngle Turn angle in degrees.
          * @param azimuth Azimuth in degrees.
          * @param distance The distance to move along the given street in meters.
          * @param time The approximate duration of the instruction in seconds.
+         * @param geometryTag The geometry tag associated with the instruction.
          */
-        RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, float turnAngle, float azimuth, double distance, double time);
+        RoutingInstruction(RoutingAction::RoutingAction action, int pointIndex, const std::string& streetName, const std::string& instruction, float turnAngle, float azimuth, double distance, double time, const Variant& geometryTag);
         virtual ~RoutingInstruction();
         
         /**
@@ -139,6 +141,11 @@ namespace carto {
          */
         const std::string& getStreetName() const;
         /**
+         * Returns the optional instruction description. This info is dependent on the routing engine (can be empty) and may be localized.
+         * @return The optional instruction description.
+         */
+        const std::string& getInstruction() const;
+        /**
          * Returns the turn angle of the action.
          * @return The turn angle in degrees.
          */
@@ -154,31 +161,15 @@ namespace carto {
          */
         double getDistance() const;
         /**
-         * Sets the distance to move along the given street.
-         * @param distance The new distance in meters.
-         */
-        void setDistance(double distance);
-        /**
          * Returns the time approximate duration of the instruction.
          * @return The approximate duration of the instruction in seconds.
          */
         double getTime() const;
         /**
-         * Sets the approximate duration of the instruction.
-         * @param time The duration of the instruction in seconds.
-         */
-        void setTime(double time);
-        /**
          * Returns the geometry tag associated with the instructions.
          * @return The geometry tag associated with the instructions.
          */
         const Variant& getGeometryTag() const;
-        /**
-         * Sets the geometry tag of the instruction.
-         * This is currently supported by SGRE routing engine only.
-         * @param geometryTag The geometry tag of the instruction.
-         */
-        void setGeometryTag(const Variant& variant);
 
         /**
          * Creates a string representation of this instruction, useful for logging.
@@ -190,6 +181,7 @@ namespace carto {
         RoutingAction::RoutingAction _action;
         int _pointIndex;
         std::string _streetName;
+        std::string _instruction;
         float _turnAngle;
         float _azimuth;
         double _distance;

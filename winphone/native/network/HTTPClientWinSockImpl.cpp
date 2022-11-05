@@ -276,8 +276,9 @@ namespace carto {
         httpRequest3->SetProperty(XHR_PROP_NO_AUTH, XHR_AUTH_NONE);
         httpRequest3->SetProperty(XHR_PROP_NO_DEFAULT_HEADERS, FALSE);
         httpRequest3->SetProperty(XHR_PROP_QUERY_STRING_UTF8, TRUE);
-        if (_timeout > 0) {
-            httpRequest3->SetProperty(XHR_PROP_TIMEOUT, _timeout);
+        int timeout = _timeout.load();
+        if (timeout > 0) {
+            httpRequest3->SetProperty(XHR_PROP_TIMEOUT, timeout);
         }
 
         hr = httpRequest3->Open(to_wstring(request.method).c_str(),
@@ -298,7 +299,7 @@ namespace carto {
 
         if (!request.contentType.empty()) {
             Microsoft::WRL::ComPtr<HTTPPostStream> postStream;
-            hr = Microsoft::WRL::MakeAndInitialize<HTTPPostStream>(&postStream, request.body.data(), request.body.size());
+            hr = Microsoft::WRL::MakeAndInitialize<HTTPPostStream>(&postStream, request.body.data(), static_cast<ULONG>(request.body.size()));
             if (FAILED(hr)) {
                 throw NetworkException("Failed to initialize HTTP POST stream", request.url);
             }

@@ -14,10 +14,12 @@ def nuget(args, dir, *cmdArgs):
   return execute(args.nuget, dir, *cmdArgs)
 
 def detectAndroidAPIs(args):
-  api32, api64 = None, None
-  for name in os.listdir('%s/platforms' % args.androidndkpath):
-    if name.startswith('android-'):
-      api = int(name[8:])
+  api32, api64 = None, None  
+  with open('%s/meta/platforms.json' % args.androidndkpath, 'rb') as f:
+    platforms = json.load(f)
+    minapi = platforms.get('min', 1)
+    maxapi = platforms.get('max', 0)
+    for api in range(minapi, maxapi + 1):
       if api >= 9:
         api32 = min(api32 or api, api)
       if api >= 21:
@@ -33,6 +35,7 @@ def buildAndroidSO(args, abi):
   api32, api64 = detectAndroidAPIs(args)
   if api32 is None or api64 is None:
     print('Failed to detect available platform APIs')
+    return False
   print('Using API-%d for 32-bit builds, API-%d for 64-bit builds' % (api32, api64))
 
   if not cmake(args, buildDir, options + [
@@ -42,6 +45,7 @@ def buildAndroidSO(args, abi):
     "-DCMAKE_BUILD_TYPE=%s" % args.configuration,
     "-DCMAKE_MAKE_PROGRAM='%s'" % args.make,
     "-DWRAPPER_DIR=%s" % ('%s/generated/android-csharp/wrappers' % baseDir),
+    "-DSINGLE_LIBRARY:BOOL=ON",
     "-DANDROID_STL='c++_static'",
     "-DANDROID_ABI='%s'" % abi,
     "-DANDROID_PLATFORM='%d'" % (api64 if '64' in abi else api32),
@@ -52,10 +56,13 @@ def buildAndroidSO(args, abi):
   ]):
     return False
   return cmake(args, buildDir, [
-    '--build', '.', '--', '-j4'
+    '--build', '.',
+    '--parallel', '4',
+    '--config', args.configuration
   ])
 
 def buildIOSLib(args, arch):
+  baseArch = arch
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   platform = 'OS' if arch.startswith('arm') else 'SIMULATOR'
   baseDir = getBaseDir()
@@ -69,30 +76,47 @@ def buildIOSLib(args, arch):
     '-DWRAPPER_DIR=%s' % ('%s/generated/ios-csharp/wrappers' % baseDir),
     '-DINCLUDE_OBJC:BOOL=OFF',
     '-DSINGLE_LIBRARY:BOOL=ON',
-    '-DENABLE_BITCODE:BOOL=OFF',
+    '-DSHARED_LIBRARY:BOOL=OFF',
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
-    '-DCMAKE_OSX_DEPLOYMENT_TARGET=7.0',
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('10.0' if arch == 'i386' else '9.0'),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Xamarin iOS'",
+    "-DSDK_IOS_ARCH='%s'" % arch,
+    "-DSDK_IOS_BASEARCH='%s'" % baseArch,
     '%s/scripts/build' % baseDir
   ]):
     return False
-  return cmake(args, buildDir, [
-    '--build', '.',
-    '--config', args.configuration
-  ])
+
+  bitcodeOptions = ['ENABLE_BITCODE=NO']
+  return execute('xcodebuild', buildDir,
+    '-project', 'carto_mobile_sdk.xcodeproj', '-arch', arch, '-configuration', args.configuration, 'archive',
+    *list(bitcodeOptions)
+  )
 
 def buildIOSFatLib(args, archs):
   platformArchs = [('OS' if arch.startswith('arm') else 'SIMULATOR', arch) for arch in archs]
   baseDir = getBaseDir()
   buildDir = getBuildDir('xamarin_ios_unified')
 
+  libFilePaths = []
+  for platform, arch in platformArchs:
+    libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('xamarin_ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else 'iphonesimulator', 'a')
+    if args.metalangle:
+      mergedLibFilePath = '%s_merged.%s' % tuple(libFilePath.rsplit('.', 1))
+      angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, arch)
+      if not execute('libtool', baseDir,
+        '-o', mergedLibFilePath, libFilePath, angleLibFilePath
+      ):
+        return False
+      libFilePath = mergedLibFilePath
+    libFilePaths.append(libFilePath)
+
   return execute('lipo', baseDir,
     '-output', '%s/libcarto_mobile_sdk.a' % buildDir,
-    '-create', *["%s/%s-%s/libcarto_mobile_sdk.a" % (getBuildDir('xamarin_ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else "iphonesimulator") for platform, arch in platformArchs]
+    '-create', *libFilePaths
   )
 
 def buildXamarinDLL(args, target):
@@ -117,8 +141,8 @@ def buildXamarinDLL(args, target):
   ):
     return False
   return makedirs(distDir) and \
-    copyfile('%s/bin/%s/CartoMobileSDK.%s.dll' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.dll' % (distDir, target)) and \
-    copyfile('%s/bin/%s/CartoMobileSDK.%s.xml' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.xml' % (distDir, target))
+         copyfile('%s/bin/%s/CartoMobileSDK.%s.dll' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.dll' % (distDir, target)) and \
+         copyfile('%s/bin/%s/CartoMobileSDK.%s.xml' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.xml' % (distDir, target))
 
 def buildXamarinNuget(args, target):
   baseDir = getBaseDir()
@@ -127,7 +151,13 @@ def buildXamarinNuget(args, target):
   version = args.buildversion
 
   with open('%s/scripts/nuget/CartoMobileSDK.%s.nuspec.template' % (baseDir, target), 'r') as f:
-    nuspecFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration, 'version': version })
+    nuspecFile = string.Template(f.read()).safe_substitute({
+      'baseDir': baseDir,
+      'buildDir': buildDir,
+      'configuration': args.configuration,
+      'nativeConfiguration': args.nativeconfiguration,
+      'version': version
+    })
   with open('%s/CartoMobileSDK.%s.nuspec' % (buildDir, target), 'w') as f:
     f.write(nuspecFile)
 
@@ -140,7 +170,8 @@ def buildXamarinNuget(args, target):
 
   if not copyfile('%s/CartoMobileSDK.%s.%s.nupkg' % (buildDir, target, version), '%s/CartoMobileSDK.%s.%s.nupkg' % (distDir, target, version)):
     return False
-  print("Output available in:\n%s\n\nTo publish, use:\nnuget push %s/CartoMobileSDK.%s.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, target, version))
+
+  print("Nuget output available in:\n%s" % distDir)
   return True
 
 parser = argparse.ArgumentParser()
@@ -159,6 +190,7 @@ parser.add_argument('--configuration', dest='configuration', default='Release', 
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='store_true', help='Build Nuget package')
+parser.add_argument('--use-metalangle', dest='metalangle', default=False, action='store_true', help='Use MetalANGLE instead of Apple GL')
 parser.add_argument(dest='target', choices=['android', 'ios'], help='Target platform')
 
 args = parser.parse_args()
@@ -178,17 +210,30 @@ if args.androidndkpath == 'auto' and args.target == 'android':
   if args.androidndkpath is None:
     args.androidndkpath = os.path.join(args.androidsdkpath, 'ndk-bundle')
 args.defines += ';' + getProfile(args.profile).get('defines', '')
-args.defines += ';TARGET_XAMARIN'
+args.defines += ';' + 'TARGET_XAMARIN'
+if args.metalangle and args.target == 'ios':
+  args.defines += ';' + '_CARTO_USE_METALANGLE'
+  print('Metal ANGLE rendering backend currently not supported for Xamarin/iOS')
+  sys.exit(-1)
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = args.configuration
+
+if not os.path.exists("%s/generated/%s-csharp/proxies" % (getBaseDir(), args.target)):
+  print("Proxies/wrappers not generated yet, run swigpp script first.")
+  sys.exit(-1)
 
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')
   sys.exit(-1)
 
-if args.target == 'android' and not checkExecutable(args.make, '--help'):
-  print('Failed to find make executable. Use --make to specify its location')
-  sys.exit(-1)
+if args.target == 'android':
+  if not checkExecutable(args.make, '--help'):
+    print('Failed to find make executable. Use --make to specify its location')
+    sys.exit(-1)
+  for abi in ANDROID_ABIS:
+    if not (abi in args.androidabi or os.path.exists('%s/libcarto_mobile_sdk.so' % getBuildDir('xamarin_android', abi))):
+      print('Android build requires %s in specified list' % abi)
+      sys.exit(-1)
 
 if not checkExecutable(args.msbuild, '/?'):
   print('Failed to find msbuild executable. Use --msbuild to specify its location')

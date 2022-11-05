@@ -8,7 +8,7 @@
 #define _CARTO_POPUP_H_
 
 #include "core/ScreenPos.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 #include "vectorelements/Billboard.h"
 
 namespace carto {
@@ -90,12 +90,12 @@ namespace carto {
         
         /**
          * Handles the click events for this Popup.
-         * @param clickType The type of the click.
+         * @param clickInfo The click attributes.
          * @param clickPos The position of the click.
          * @param elementClickPos The 2D position of the click on the popup.
          * @return True if the click was handled. False otherwise.
          */
-        virtual bool processClick(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos) = 0;
+        virtual bool processClick(const ClickInfo& clickInfo, const MapPos& clickPos, const ScreenPos& elementClickPos) = 0;
         
         /**
          * Draws a custom bitmap for this Popup that will be used for drawing the Popup on the map.

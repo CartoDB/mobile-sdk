@@ -8,6 +8,7 @@ namespace carto {
 
     GeometryCollection::GeometryCollection(const std::shared_ptr<MultiGeometry>& geometry, const std::shared_ptr<GeometryCollectionStyle>& style) :
         VectorElement(geometry),
+        _drawData(),
         _style(style)
     {
         if (!geometry) {

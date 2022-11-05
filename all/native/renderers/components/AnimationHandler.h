@@ -8,7 +8,12 @@
 #define _CARTO_ANIMATIONHANDLER_H_
 
 #include "core/MapPos.h"
+#include "renderers/cameraevents/CameraPanEvent.h"
+#include "renderers/cameraevents/CameraRotationEvent.h"
+#include "renderers/cameraevents/CameraTiltEvent.h"
+#include "renderers/cameraevents/CameraZoomEvent.h"
 
+#include <optional>
 #include <memory>
 #include <mutex>
 
@@ -37,10 +42,10 @@ namespace carto {
         void stopZoom();
     
     private:
-        void calculatePan(const ViewState& viewState, float deltaSeconds);
-        void calculateRotation(const ViewState& viewState, float deltaSeconds);
-        void calculateTilt(const ViewState& viewState, float deltaSeconds);
-        void calculateZoom(const ViewState& viewState, float deltaSeconds);
+        std::optional<CameraPanEvent> calculatePan(const ViewState& viewState, float deltaSeconds);
+        std::optional<CameraRotationEvent> calculateRotation(const ViewState& viewState, float deltaSeconds);
+        std::optional<CameraTiltEvent> calculateTilt(const ViewState& viewState, float deltaSeconds);
+        std::optional<CameraZoomEvent> calculateZoom(const ViewState& viewState, float deltaSeconds);
     
         bool _panStarted;
         float _panDurationSeconds;
@@ -51,7 +56,7 @@ namespace carto {
         bool _rotationStarted;
         float _rotationDurationSeconds;
         float _rotationTarget;
-        std::unique_ptr<MapPos> _rotationTargetPos;
+        std::optional<MapPos> _rotationTargetPos;
     
         bool _tiltStarted;
         float _tiltDurationSeconds;
@@ -60,7 +65,7 @@ namespace carto {
         bool _zoomStarted;
         float _zoomDurationSeconds;
         float _zoomTarget;
-        std::unique_ptr<MapPos> _zoomTargetPos;
+        std::optional<MapPos> _zoomTargetPos;
     
         MapRenderer& _mapRenderer;
     

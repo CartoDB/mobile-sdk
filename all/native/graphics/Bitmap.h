@@ -86,10 +86,10 @@ namespace carto {
          * @param width The width of the bitmap.
          * @param height The height of the bitmap.
          * @param colorFormat The color format of the bitmap.
-         * @param bytesPerRow The total number of bytes per row. Some bitmaps have additional padding at the end of each row.
+         * @param bytesPerRow The total number of bytes per row. Some bitmaps have additional padding at the end of each row. If the value is negative, then bitmap is assumed to be vertically flipped. In this case absolute value of the bytesPerRow value is used.
          */
         Bitmap(const unsigned char* pixelData, unsigned int width, unsigned int height,
-                   ColorFormat::ColorFormat colorFormat, unsigned int bytesPerRow);
+                   ColorFormat::ColorFormat colorFormat, int bytesPerRow);
         virtual ~Bitmap();
     
         /**
@@ -126,13 +126,6 @@ namespace carto {
          */
         std::shared_ptr<BinaryData> getPixelDataPtr() const;
         
-        /**
-         * Compresses this bitmap to a png.
-         * @return A byte vector of the png's data.
-         * @deprecated Use compressToPNG.
-         */
-        std::shared_ptr<BinaryData> compressToPng() const;
-    
         /**
          * Compresses this bitmap to a PNG format.
          * @return A byte vector of the PNG's data.
@@ -209,6 +202,7 @@ namespace carto {
         static bool IsNUTI(const unsigned char* compressedData, std::size_t dataSize);
     
         bool loadJPEG(const unsigned char* compressedData, std::size_t dataSize);
+        bool loadExtendedPNG(const unsigned char* compressedData, std::size_t dataSize);
         bool loadPNG(const unsigned char* compressedData, std::size_t dataSize);
         bool loadWEBP(const unsigned char* compressedData, std::size_t dataSize);
         bool loadNUTI(const unsigned char* compressedData, std::size_t dataSize);

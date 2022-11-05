@@ -9,6 +9,7 @@
 
 #include "core/Variant.h"
 
+#include <string>
 #include <memory>
 #include <mutex>
 

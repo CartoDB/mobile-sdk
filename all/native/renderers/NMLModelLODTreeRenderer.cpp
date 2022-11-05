@@ -70,12 +70,13 @@ namespace carto {
 
         // Calculate lighting state
         Color optionsAmbientLightColor = options->getAmbientLightColor();
+        cglib::vec4<float> modelColor = cglib::vec4<float>(1.0f, 1.0f, 1.0f, 1.0f);
         cglib::vec4<float> ambientLightColor = cglib::vec4<float>(optionsAmbientLightColor.getR(), optionsAmbientLightColor.getG(), optionsAmbientLightColor.getB(), optionsAmbientLightColor.getA()) * (1.0f / 255.0f);
         Color optionsMainLightColor = options->getMainLightColor();
         cglib::vec4<float> mainLightColor = cglib::vec4<float>(optionsMainLightColor.getR(), optionsMainLightColor.getG(), optionsMainLightColor.getB(), optionsMainLightColor.getA()) * (1.0f / 255.0f);
         MapVec optionsMainLightDirection = options->getMainLightDirection();
         MapPos internalFocusPos = viewState.getProjectionSurface()->calculateMapPos(viewState.getFocusPos());
-        cglib::vec3<float> mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(internalFocusPos, optionsMainLightDirection)));
+        cglib::vec3<float> mainLightDir = -cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(internalFocusPos, optionsMainLightDirection)));
 
         // Create new models
         cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());
@@ -127,7 +128,7 @@ namespace carto {
             }
 
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * record.drawData.getLocalMat());
-            nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, mainLightDir);
+            nml::RenderState renderState(projMat, mvMat, modelColor, ambientLightColor, mainLightColor, mainLightDir);
 
             record.drawData.getGLModel()->draw(*resourceManager, renderState);
         }
@@ -181,7 +182,7 @@ namespace carto {
         for (auto it = _tempDrawDatas.begin(); it != _tempDrawDatas.end(); it++) {
             std::shared_ptr<ModelNodeDrawRecord>& record = _drawRecordMap[(*it)->getNodeId()];
             if (!record) {
-                record.reset(new ModelNodeDrawRecord(**it));
+                record = std::make_shared<ModelNodeDrawRecord>(**it);
             } else {
                 record->drawData = **it;
             }

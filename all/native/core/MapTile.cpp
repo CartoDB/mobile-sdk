@@ -50,7 +50,7 @@ namespace carto {
         if (_zoom <= 0) {
             return *this;
         }
-        return MapTile(_x / 2, _y / 2, _zoom - 1, _frameNr);
+        return MapTile((_x < 0 ? _x - 1 : _x) / 2, (_y < 0 ? _y - 1 : _y) / 2, _zoom - 1, _frameNr);
     }
     
     MapTile MapTile::getChild(int index) const {

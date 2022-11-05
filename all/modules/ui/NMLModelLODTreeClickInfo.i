@@ -5,7 +5,7 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-!proxy_imports(carto::NMLModelLODTreeClickInfo, core.MapPos, core.StringMap, layers.Layer, ui.ClickType)
+!proxy_imports(carto::NMLModelLODTreeClickInfo, core.MapPos, core.StringMap, layers.Layer, ui.ClickInfo)
 
 %{
 #include "ui/NMLModelLODTreeClickInfo.h"
@@ -16,7 +16,7 @@
 %include <std_string.i>
 %include <cartoswig.i>
 
-%import "ui/ClickType.i"
+%import "ui/ClickInfo.i"
 %import "core/MapPos.i"
 %import "core/StringMap.i"
 %import "layers/Layer.i"
@@ -24,6 +24,7 @@
 !shared_ptr(carto::NMLModelLODTreeClickInfo, ui.NMLModelLODTreeClickInfo)
 
 %attribute(carto::NMLModelLODTreeClickInfo, carto::ClickType::ClickType, ClickType, getClickType)
+%attributeval(carto::NMLModelLODTreeClickInfo, carto::ClickInfo, ClickInfo, getClickInfo)
 %attributeval(carto::NMLModelLODTreeClickInfo, carto::MapPos, ClickPos, getClickPos)
 %attributeval(carto::NMLModelLODTreeClickInfo, carto::MapPos, ElementClickPos, getElementClickPos)
 %attributeval(carto::NMLModelLODTreeClickInfo, %arg(std::map<std::string, std::string>), MetaData, getMetaData)

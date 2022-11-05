@@ -25,6 +25,7 @@
 %import "geometry/MultiPolygonGeometry.i"
 %import "projections/Projection.i"
 
+!enum(carto::PackageTileStatus::PackageTileStatus)
 !shared_ptr(carto::PackageTileMask, packagemanager.PackageTileMask)
 
 %attributestring(carto::PackageTileMask, std::string, StringValue, getStringValue)

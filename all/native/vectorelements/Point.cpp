@@ -8,6 +8,7 @@ namespace carto {
 
     Point::Point(const std::shared_ptr<PointGeometry>& geometry, const std::shared_ptr<PointStyle>& style) :
         VectorElement(geometry),
+        _drawData(),
         _style(style)
     {
         if (!geometry) {
@@ -20,6 +21,7 @@ namespace carto {
         
     Point::Point(const MapPos& pos, const std::shared_ptr<PointStyle>& style) :
         VectorElement(std::make_shared<PointGeometry>(pos)),
+        _drawData(),
         _style(style)
     {
         if (!style) {

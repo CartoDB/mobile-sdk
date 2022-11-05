@@ -3,7 +3,7 @@
 
 %module VectorElementClickInfo
 
-!proxy_imports(carto::VectorElementClickInfo, core.MapPos, vectorelements.VectorElement, layers.Layer, ui.ClickType)
+!proxy_imports(carto::VectorElementClickInfo, core.MapPos, vectorelements.VectorElement, layers.Layer, ui.ClickInfo)
 
 %{
 #include "ui/VectorElementClickInfo.h"
@@ -13,7 +13,7 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
-%import "ui/ClickType.i"
+%import "ui/ClickInfo.i"
 %import "core/MapPos.i"
 %import "layers/Layer.i"
 %import "vectorelements/VectorElement.i"
@@ -21,6 +21,7 @@
 !shared_ptr(carto::VectorElementClickInfo, ui.VectorElementClickInfo)
 
 %attribute(carto::VectorElementClickInfo, carto::ClickType::ClickType, ClickType, getClickType)
+%attributeval(carto::VectorElementClickInfo, carto::ClickInfo, ClickInfo, getClickInfo)
 %attributeval(carto::VectorElementClickInfo, carto::MapPos, ClickPos, getClickPos)
 %attributeval(carto::VectorElementClickInfo, carto::MapPos, ElementClickPos, getElementClickPos)
 !attributestring_polymorphic(carto::VectorElementClickInfo, vectorelements.VectorElement, VectorElement, getVectorElement)

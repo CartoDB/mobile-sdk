@@ -14,7 +14,6 @@
 #include "renderers/BillboardRenderer.h"
 #include "renderers/LineRenderer.h"
 #include "renderers/MapRenderer.h"
-#include "renderers/NMLModelRenderer.h"
 #include "renderers/PointRenderer.h"
 #include "renderers/Polygon3DRenderer.h"
 #include "renderers/PolygonRenderer.h"

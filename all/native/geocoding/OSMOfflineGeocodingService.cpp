@@ -2,7 +2,7 @@
 
 #include "OSMOfflineGeocodingService.h"
 #include "components/Exceptions.h"
-#include "geocoding/GeocodingProxy.h"
+#include "geocoding/utils/CartoGeocodingProxy.h"
 
 #include <geocoding/Geocoder.h>
 
@@ -14,9 +14,11 @@ namespace carto {
         _geocoder()
     {
         auto database = std::make_shared<sqlite3pp::database>();
-        if (database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+        if (database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) != SQLITE_OK) {
             throw FileException("Failed to open geocoding database", path);
         }
+        database->execute("PRAGMA temp_store=MEMORY");
+
         _geocoder = std::make_shared<geocoding::Geocoder>();
         if (!_geocoder->import(database)) {
             throw GenericException("Failed to import geocoding database", path);
@@ -55,7 +57,7 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        return GeocodingProxy::CalculateAddresses(_geocoder, request);
+        return CartoGeocodingProxy::CalculateAddresses(_geocoder, request);
     }
     
 }

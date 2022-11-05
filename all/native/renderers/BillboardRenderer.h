@@ -11,13 +11,14 @@
 #include "renderers/utils/GLContext.h"
 #include "renderers/utils/BitmapTextureCache.h"
 
-#include <deque>
 #include <memory>
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <map>
 
 #include <cglib/vec.h>
+#include <cglib/mat.h>
 #include <cglib/ray.h>
 
 namespace carto {
@@ -28,15 +29,20 @@ namespace carto {
     class Options;
     class MapRenderer;
     class Shader;
+    class NMLModel;
+    class NMLModelDrawData;
+    class NMLResources;
     class RayIntersectedElement;
     class VectorLayer;
     class ViewState;
     
+    namespace nml {
+        class Model;
+        class GLModel;
+    }
+    
     class BillboardRenderer : public std::enable_shared_from_this<BillboardRenderer> {
     public:
-        static void CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis);
-        static bool CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState, std::vector<float>& coordBuf, std::size_t drawDataIndex, float sizeScale = 1.0f);
-        
         BillboardRenderer();
         virtual ~BillboardRenderer();
     
@@ -54,7 +60,13 @@ namespace carto {
         void removeElement(const std::shared_ptr<Billboard>& element);
 
         void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
-    
+
+        static bool UpdateBillboardAnimationState(BillboardDrawData& drawData, float deltaSeconds);
+        static void CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis);
+        static bool CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState, std::vector<float>& coordBuf, std::size_t drawDataIndex, float sizeScale = 1.0f);
+        static bool CalculateBaseBillboardDrawData(BillboardDrawData& drawData, const ViewState& viewState);
+        static bool CalculateNMLModelMatrix(const NMLModelDrawData& drawData, const ViewState& viewState, cglib::mat4x4<double>& modelMat, float sizeScale = 1.0f);
+        
     private:
         static void BuildAndDrawBuffers(GLuint a_color,
                                         GLuint a_coord,
@@ -67,11 +79,13 @@ namespace carto {
                                         const cglib::vec2<float>& texCoordScale,
                                         float opacity,
                                         const ViewState& viewState);
-        
-        bool calculateBaseBillboardDrawData(const std::shared_ptr<BillboardDrawData>& drawData, const ViewState& viewState);
-        
+
         bool initializeRenderer();
         void drawBatch(float opacity, const ViewState& viewState);
+
+        bool initializeNMLRenderer();
+        void drawNMLBatch(float opacity, const ViewState& viewState);
+        void calculateNMLRayIntersections(const std::shared_ptr<NMLModel>& element, const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         
         static const std::string BILLBOARD_VERTEX_SHADER;
         static const std::string BILLBOARD_FRAGMENT_SHADER;
@@ -80,11 +94,13 @@ namespace carto {
         
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<VectorLayer> _layer;
+        std::weak_ptr<Options> _options;
     
         std::vector<std::shared_ptr<Billboard> > _elements;
         std::vector<std::shared_ptr<Billboard> > _tempElements;
         
         std::vector<std::shared_ptr<BillboardDrawData> > _drawDataBuffer;
+        std::vector<std::shared_ptr<NMLModelDrawData> > _nmlDrawDataBuffer;
         
         std::vector<unsigned char> _colorBuf;
         std::vector<float> _coordBuf;
@@ -99,6 +115,9 @@ namespace carto {
         GLuint _u_mvpMat;
         GLuint _u_tex;
     
+        std::shared_ptr<NMLResources> _nmlResources;
+        std::map<std::weak_ptr<nml::Model>, std::shared_ptr<nml::GLModel>, std::owner_less<std::weak_ptr<nml::Model> > > _nmlModelMap;
+
         mutable std::recursive_mutex _mutex;
     };
     

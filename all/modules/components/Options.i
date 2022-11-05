@@ -17,6 +17,9 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+!enum(carto::RenderProjectionMode::RenderProjectionMode)
+!enum(carto::PanningMode::PanningMode)
+!enum(carto::PivotMode::PivotMode)
 !shared_ptr(carto::Options, components.Options)
 
 %import "core/MapBounds.i"
@@ -32,6 +35,9 @@
 %attribute(carto::Options, bool, Rotatable, isRotatable, setRotatable)
 %attribute(carto::Options, bool, UserInput, isUserInput, setUserInput)
 %attribute(carto::Options, bool, ClickTypeDetection, isClickTypeDetection, setClickTypeDetection)
+%attribute(carto::Options, bool, DoubleClickDetection, isDoubleClickDetection, setDoubleClickDetection)
+%attribute(carto::Options, float, LongClickDuration, getLongClickDuration, setLongClickDuration)
+%attribute(carto::Options, float, DoubleClickMaxDuration, getDoubleClickMaxDuration, setDoubleClickMaxDuration)
 %attribute(carto::Options, bool, KineticPan, isKineticPan, setKineticPan)
 %attribute(carto::Options, bool, KineticRotation, isKineticRotation, setKineticRotation)
 %attribute(carto::Options, bool, SeamlessPanning, isSeamlessPanning, setSeamlessPanning)

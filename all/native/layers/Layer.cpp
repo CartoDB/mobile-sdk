@@ -46,36 +46,36 @@ namespace carto {
     }
     
     int Layer::getUpdatePriority() const {
-        return _updatePriority;
+        return _updatePriority.load();
     }
     
     void Layer::setUpdatePriority(int priority) {
-        _updatePriority = priority;
+        _updatePriority.store(priority);
     }
     
     int Layer::getCullDelay() const {
-        return _cullDelay;
+        return _cullDelay.load();
     }
 
     void Layer::setCullDelay(int cullDelay) {
-        _cullDelay = std::max(0, cullDelay);
+        _cullDelay.store(std::max(0, cullDelay));
     }
         
     float Layer::getOpacity() const {
-        return _opacity;
+        return _opacity.load();
     }
     
     void Layer::setOpacity(float opacity) {
-        _opacity = std::max(0.0f, std::min(1.0f, opacity));
+        _opacity.store(std::max(0.0f, std::min(1.0f, opacity)));
         refresh();
     }
     
     bool Layer::isVisible() const {
-        return _visible;
+        return _visible.load();
     }
     
     void Layer::setVisible(bool visible) {
-        _visible = visible;
+        _visible.store(visible);
         refresh();
     }
     
@@ -102,10 +102,16 @@ namespace carto {
     }
     
     void Layer::refresh() {
-        // Reload data using the last known cull state
-        const std::shared_ptr<CullState>& cullState = getLastCullState();
+        std::shared_ptr<CullState> cullState = getLastCullState();
         if (cullState) {
+            // Reload data using the last known cull state.
             loadData(cullState);
+        } else {
+            // Last cullstate not known yet. Let renderer do async update.
+            if (auto mapRenderer = getMapRenderer()) {
+                mapRenderer->layerChanged(shared_from_this(), false);
+                mapRenderer->requestRedraw();
+            }
         }
     }
 
@@ -137,7 +143,8 @@ namespace carto {
 
         // Send click events
         for (const RayIntersectedElement& intersectedElement : results) {
-            if (intersectedElement.getLayer()->processClick(clickType, intersectedElement, viewState)) {
+            ClickInfo clickInfo(clickType, 0);
+            if (intersectedElement.getLayer()->processClick(clickInfo, intersectedElement, viewState)) {
                 return;
             }
         }
@@ -146,14 +153,14 @@ namespace carto {
     Layer::Layer() :
         _envelopeThreadPool(),
         _tileThreadPool(),
-        _lastCullState(),
+        _mutex(),
         _updatePriority(0),
         _cullDelay(DEFAULT_CULL_DELAY),
         _opacity(1.0f),
         _visible(true),
         _visibleZoomRange(0, std::numeric_limits<float>::infinity()),
-        _mutex(),
         _metaData(),
+        _lastCullState(),
         _options(),
         _mapRenderer(),
         _touchHandler()
@@ -220,11 +227,11 @@ namespace carto {
         return false;
     }
     
-    std::shared_ptr<Bitmap> Layer::getBackgroundBitmap() const {
+    std::shared_ptr<Bitmap> Layer::getBackgroundBitmap(const ViewState& viewState) const {
         return std::shared_ptr<Bitmap>();
     }
 
-    std::shared_ptr<Bitmap> Layer::getSkyBitmap() const {
+    std::shared_ptr<Bitmap> Layer::getSkyBitmap(const ViewState& viewState) const {
         return std::shared_ptr<Bitmap>();
     }
 

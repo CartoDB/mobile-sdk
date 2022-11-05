@@ -131,9 +131,10 @@ namespace carto {
         jenv->CallVoidMethod(conn, GetHttpURLConnectionClass()->setUseCaches, (jboolean)false);
         jenv->CallVoidMethod(conn, GetHttpURLConnectionClass()->setAllowUserInteraction, (jboolean)false);
         jenv->CallVoidMethod(conn, GetHttpURLConnectionClass()->setInstanceFollowRedirects, (jboolean)true);
-        if (_timeout > 0) {
-            jenv->CallVoidMethod(conn, GetHttpURLConnectionClass()->setConnectTimeout, _timeout);
-            jenv->CallVoidMethod(conn, GetHttpURLConnectionClass()->setReadTimeout, _timeout);
+        int timeout = _timeout.load();
+        if (timeout > 0) {
+            jenv->CallVoidMethod(conn, GetHttpURLConnectionClass()->setConnectTimeout, timeout);
+            jenv->CallVoidMethod(conn, GetHttpURLConnectionClass()->setReadTimeout, timeout);
         }
         
         // Set request headers

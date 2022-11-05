@@ -10,7 +10,6 @@
 
 #define NTGLContext MGLContext
 #define NTGLKView MGLKView
-#define NTGLKViewDelegate MGLKViewDelegate
 
 #else
 
@@ -18,7 +17,6 @@
 
 #define NTGLContext EAGLContext
 #define NTGLKView GLKView
-#define NTGLKViewDelegate GLKViewDelegate
 
 #endif
 
@@ -39,8 +37,6 @@
  * MapView is a view class supporting map rendering and interaction.
  */
 __attribute__ ((visibility("default"))) @interface NTMapView : NTGLKView
-
-@property (readonly, assign, nonatomic) void* nativeMapView;
 
 -(id)init;
 -(id)initWithCoder:(NSCoder *)aDecoder;

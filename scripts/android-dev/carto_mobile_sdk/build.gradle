@@ -1,22 +1,54 @@
 apply plugin: 'com.android.library'
 
+// IMPORTANT!
+// This variable should normally reflect the value of '--profile' argument when generating wrappers via 'swigpp-java.py' script!
+def profiles = "valhalla+nmlmodellodtree"
+
+def cmakeOptions = {
+    def jsonFile = file('$projectDir/../../../build/sdk_profiles.json')
+    def parsedJson = new groovy.json.JsonSlurper().parseText(jsonFile.text)
+
+    def profileList = profiles.split('\\+')
+    if (!profileList.contains('lite')) {
+        profileList += ['standard'];
+    }
+
+    def options = []
+    def defines = ''
+    for (profile in profileList) {
+        if (!parsedJson.containsKey(profile)) {
+            throw new java.lang.Exception("The profile ${profile} is not valid!")
+        }
+        if (parsedJson[profile].containsKey('cmake-options')) {
+            for (option in parsedJson[profile]['cmake-options'].split(';')) {
+                options += ['-D' + option]
+            }
+        }
+        if (parsedJson[profile].containsKey('defines')) {
+            for (define in parsedJson[profile]['defines'].split(';')) {
+                defines += '-D' + define + ' '
+            }
+        }
+    }
+
+    options + ['-DSDK_CPP_DEFINES=' + defines.trim()]
+}
+
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    compileSdkVersion 31
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 29
+        minSdkVersion 15
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
-//        ndk {
-//            abiFilters 'arm64-v8a', 'x86_64'
-//            abiFilters 'x86'
-//        }
-
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+            abiFilters 'x86', 'armeabi-v7a'
+        }
     }
 
     buildTypes {
@@ -25,13 +57,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     defaultConfig {
         externalNativeBuild {
             cmake {
-                arguments "-DSINGLE_LIBRARY:BOOL=ON", "-DANDROID_STL=c++_static", "-DSDK_CPP_DEFINES=''", "-DWRAPPER_DIR=${projectDir.absolutePath.replaceAll('\\\\', '/')}/../../../generated/android-java/wrappers"
+                arguments "-DANDROID_STL=c++_static", "-DWRAPPER_DIR=${projectDir.absolutePath.replaceAll('\\\\', '/')}/../../../generated/android-java/wrappers"
+                cmakeOptions().each {option -> arguments option }
             }
         }
     }
+
     externalNativeBuild {
         cmake {
             path file("$projectDir/../../build/CMakeLists.txt")
@@ -40,19 +75,16 @@ android {
 
     sourceSets {
         main {
-            // Changes the directory for Java sources. The default directory is
-            // 'src/main/java'.
             java.srcDirs = ["$projectDir/../../../generated/android-java/proxies", "$projectDir/../../../android/java"]
         }
     }
-
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.3.0'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }

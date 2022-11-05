@@ -2,7 +2,7 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "styles/CartoCSSStyleSet.h"
-#include "vectortiles/utils/MapnikVTLogger.h"
+#include "vectortiles/utils/MVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
 #include "utils/Const.h"
@@ -20,12 +20,12 @@
 namespace carto {
     
     TorqueTileDecoder::TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet) :
-        _logger(std::make_shared<MapnikVTLogger>("TorqueTileDecoder")),
-        _resolution(256),
+        _logger(std::make_shared<MVTLogger>("TorqueTileDecoder")),
         _fallbackFonts(),
         _map(),
         _mapSettings(),
         _symbolizerContext(),
+        _symbolizerContextSettings(),
         _styleSet(),
         _mutex()
     {
@@ -41,14 +41,24 @@ namespace carto {
 
     int TorqueTileDecoder::getFrameCount() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().frameCount;
+        return _map->getTorqueSettings().frameCount;
+    }
+
+    int TorqueTileDecoder::getResolution() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _map->getTorqueSettings().resolution;
+    }
+
+    float TorqueTileDecoder::getAnimationDuration() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _map->getTorqueSettings().animationDuration;
     }
 
     std::shared_ptr<CartoCSSStyleSet> TorqueTileDecoder::getStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _styleSet;
     }
-    
+
     void TorqueTileDecoder::setStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
         if (!styleSet) {
             throw NullArgumentException("Null styleSet");
@@ -61,24 +71,16 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    int TorqueTileDecoder::getResolution() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _resolution;
-    }
-    
-    void TorqueTileDecoder::setResolution(int resolution) {
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _resolution = resolution;
-        }
-        notifyDecoderChanged();
-    }
-    
-    std::shared_ptr<mvt::Map::Settings> TorqueTileDecoder::getMapSettings() const  {
+    std::shared_ptr<const mvt::Map::Settings> TorqueTileDecoder::getMapSettings() const  {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
     }
-    
+
+    std::shared_ptr<const mvt::SymbolizerContext::Settings> TorqueTileDecoder::getSymbolizerContextSettings() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _symbolizerContextSettings;
+    }
+
     void TorqueTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -97,7 +99,7 @@ namespace carto {
     int TorqueTileDecoder::getMaxZoom() const {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
-        
+
     std::shared_ptr<VectorTileFeature> TorqueTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
         Log::Warn("TorqueTileDecoder::decodeFeature: Not implemented");
         return std::shared_ptr<VectorTileFeature>();
@@ -117,23 +119,26 @@ namespace carto {
             return std::shared_ptr<TileMap>();
         }
 
-        int resolution;
-        std::shared_ptr<mvt::TorqueMap> map;
-        std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
+        std::shared_ptr<const mvt::TorqueMap> map;
+        std::shared_ptr<const mvt::SymbolizerContext> symbolizerContext;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            resolution = _resolution;
             map = _map;
             symbolizerContext = _symbolizerContext;
         }
-    
+
         try {
-            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, _logger);
+            float resolution = map->getTorqueSettings().resolution;
+            int frameCount = map->getTorqueSettings().frameCount;
+            std::string dataAggregation = map->getTorqueSettings().dataAggregation;
+            int tileSize = static_cast<int>(DEFAULT_TILE_SIZE / (resolution > 0.0f ? resolution : 1.0f));
+
+            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), tileSize, frameCount, dataAggregation, _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
 
             auto tileMap = std::make_shared<TileMap>();
-            for (int frame = 0; frame < map->getTorqueSettings().frameCount; frame++) {
-                mvt::TorqueTileReader reader(map, frame, true, tileTransformer, *symbolizerContext, decoder);
+            for (int frame = 0; frame < frameCount; frame++) {
+                mvt::TorqueTileReader reader(map, frame, true, tileTransformer, *symbolizerContext, decoder, _logger);
                 if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                     (*tileMap)[frame] = tile;
                 }
@@ -148,11 +153,14 @@ namespace carto {
 
     void TorqueTileDecoder::updateCurrentStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
         std::shared_ptr<mvt::TorqueMap> map;
+        std::shared_ptr<mvt::Map::Settings> mapSettings;
         try {
             auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", std::shared_ptr<AssetPackage>());
             css::TorqueCartoCSSMapLoader mapLoader(assetLoader, _logger);
             mapLoader.setIgnoreLayerPredicates(true);
             map = mapLoader.loadMap(styleSet->getCartoCSS());
+            mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
+            mapSettings->backgroundColor = map->getTorqueSettings().clearColor;
         }
         catch (const std::exception& ex) {
             throw ParseException(std::string("Style parsing failed: ") + ex.what(), styleSet->getCartoCSS());
@@ -164,22 +172,23 @@ namespace carto {
         auto strokeMap = std::make_shared<vt::StrokeMap>(1, 1);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
 
-        std::shared_ptr<vt::Font> fallbackFont;
+        std::shared_ptr<const vt::Font> fallbackFont;
         for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
             std::shared_ptr<BinaryData> fontData = *it;
             std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
             fallbackFont = fontManager->getFont(fontName, fallbackFont);
         }
-        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
-        auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
+        auto symbolizerContextSettings = std::make_shared<mvt::SymbolizerContext::Settings>(DEFAULT_TILE_SIZE, std::make_shared<std::map<std::string, mvt::Value>>(), fallbackFont);
+        auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, *symbolizerContextSettings);
 
         _map = map;
-        _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
-        _mapSettings->backgroundColor = std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().clearColor;
+        _mapSettings = mapSettings;
         _symbolizerContext = symbolizerContext;
+        _symbolizerContextSettings = symbolizerContextSettings;
         _styleSet = styleSet;
     }
-    
+
     const int TorqueTileDecoder::DEFAULT_TILE_SIZE = 256;
     const int TorqueTileDecoder::GLYPHMAP_SIZE = 2048;
+
 }

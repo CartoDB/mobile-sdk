@@ -71,12 +71,10 @@ namespace carto {
                             }
                         }
 
-                        mapHandler->openDatabase();
                         data = mapHandler->loadTile(mapTileFlipped);
                         if (data || tileMask) {
                             _cachedOpenPackageHandlers.insert(_cachedOpenPackageHandlers.begin(), std::make_pair(packageInfo, mapHandler));
                             if (_cachedOpenPackageHandlers.size() > MAX_OPEN_PACKAGES) {
-                                _cachedOpenPackageHandlers.back().second->closeDatabase();
                                 _cachedOpenPackageHandlers.pop_back();
                             }
                             return;
@@ -108,15 +106,12 @@ namespace carto {
     {
     }
         
-    void PackageManagerTileDataSource::PackageManagerListener::onPackagesChanged() {
+    void PackageManagerTileDataSource::PackageManagerListener::onPackagesChanged(PackageChangeType changeType) {
         {
             std::lock_guard<std::mutex> lock(_dataSource._mutex);
-            for (auto it = _dataSource._cachedOpenPackageHandlers.begin(); it != _dataSource._cachedOpenPackageHandlers.end(); it++) {
-                it->second->closeDatabase();
-            }
             _dataSource._cachedOpenPackageHandlers.clear();
         }
-        _dataSource.notifyTilesChanged(_dataSource._packageManager->getLocalPackages().empty()); // we need to remove all tiles only if there are no more packages left
+        _dataSource.notifyTilesChanged(changeType == PACKAGES_DELETED); // we need to remove tiles only if packages were deleted
     }
 
     void PackageManagerTileDataSource::PackageManagerListener::onStylesChanged() {

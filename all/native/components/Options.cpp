@@ -25,6 +25,9 @@ namespace carto {
         _mainLightDir(DEFAULT_MAIN_LIGHT_DIR),
         _renderProjectionMode(RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR),
         _clickTypeDetection(true),
+        _doubleClickDetection(true),
+        _longClickDuration(DEFAULT_LONG_CLICK_DURATION),
+        _doubleClickMaxDuration(DEFAULT_DOUBLE_CLICK_MAX_DURATION),
         _tileDrawSize(256),
         _dpi(160.0f),
         _drawDistance(16),
@@ -158,6 +161,54 @@ namespace carto {
         notifyOptionChanged("ClickTypeDetection");
     }
     
+    bool Options::isDoubleClickDetection() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _doubleClickDetection;
+    }
+    
+    void Options::setDoubleClickDetection(bool enabled) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_doubleClickDetection == enabled) {
+                return;
+            }
+            _doubleClickDetection = enabled;
+        }
+        notifyOptionChanged("DoubleClickDetection");
+    }
+
+    float Options::getLongClickDuration() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _longClickDuration;
+    }
+
+    void Options::setLongClickDuration(float duration) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_longClickDuration == duration) {
+                return;
+            }
+            _longClickDuration = duration;
+        }
+        notifyOptionChanged("LongClickDuration");
+    }
+
+    float Options::getDoubleClickMaxDuration() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _doubleClickMaxDuration;
+    }
+
+    void Options::setDoubleClickMaxDuration(float duration) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_doubleClickMaxDuration == duration) {
+                return;
+            }
+            _doubleClickMaxDuration = duration;
+        }
+        notifyOptionChanged("DoubleClickMaxDuration");
+    }
+
     int Options::getTileDrawSize() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _tileDrawSize;
@@ -773,6 +824,8 @@ namespace carto {
         }
     }
 
+    const float Options::DEFAULT_LONG_CLICK_DURATION = 0.4f;
+    const float Options::DEFAULT_DOUBLE_CLICK_MAX_DURATION = 0.4f;
     const Color Options::DEFAULT_CLEAR_COLOR = Color(0, 0, 0, 255);
     const Color Options::DEFAULT_SKY_COLOR = Color(149, 196, 255, 255);
     const Color Options::DEFAULT_BACKGROUND_COLOR = Color(226, 226, 226, 255);

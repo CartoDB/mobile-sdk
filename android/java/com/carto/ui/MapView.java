@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.content.res.TypedArray;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLSurfaceView.Renderer;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -30,7 +29,7 @@ import com.carto.utils.AssetUtils;
 /**
  * MapView is a view class supporting map rendering and interaction.
  */
-public class MapView extends GLSurfaceView implements Renderer {
+public class MapView extends GLSurfaceView implements GLSurfaceView.Renderer, MapViewInterface {
     
     private static final int NATIVE_ACTION_POINTER_1_DOWN = 0;
     private static final int NATIVE_ACTION_POINTER_2_DOWN = 1;
@@ -42,17 +41,20 @@ public class MapView extends GLSurfaceView implements Renderer {
     
     private static final int INVALID_POINTER_ID = -1;
 
+    private static Throwable libraryLoadingErrorCause;
+
+    private static AssetManager assetManager;
+    
     static {
         try {
             System.loadLibrary("carto_mobile_sdk");
             AndroidUtils.attachJVM(MapView.class);
-        } catch (Throwable t) {
-            android.util.Log.e("carto_mobile_sdk", "Failed to initialize Carto Mobile Maps SDK, native .so library failed to load?", t);
+        } catch (Throwable cause) {
+            android.util.Log.e("carto_mobile_sdk", "Failed to initialize Carto Mobile Maps SDK, native .so library failed to load?", cause);
+            libraryLoadingErrorCause = cause;
         }
     }
-    
-    private static AssetManager assetManager;
-    
+
     private BaseMapView baseMapView;
     
     private int pointer1Id = INVALID_POINTER_ID;
@@ -61,11 +63,17 @@ public class MapView extends GLSurfaceView implements Renderer {
     /**
      * Registers the SDK license. This class method and must be called before
      * creating any actual MapView instances.
+     * This method may throw RuntimeException if SDK initialization fails.
      * @param licenseKey The license string provided for this application.
      * @param context Application context for the license.
      * @return True if license is valid, false if not.
      */
     public static boolean registerLicense(final String licenseKey, Context context) {
+        // Check that native .so loading was successful
+        if (libraryLoadingErrorCause != null) {
+            throw new RuntimeException("Failed to load native library", libraryLoadingErrorCause);
+        }
+
         // Connect context info and assets manager to native part
         AndroidUtils.setContext(context);
         if (assetManager == null) {
@@ -129,7 +137,7 @@ public class MapView extends GLSurfaceView implements Renderer {
         setLongClickable(longClickable);
 
         if (!isInEditMode()) {
-            // Connect context info and assets manager to native part
+            // Connect context info and asset manager to native part
             AndroidUtils.setContext(context);
             if (assetManager == null) {
                 com.carto.utils.Log.warn("MapView: MapView created before MapView.registerLicense is called");
@@ -137,15 +145,13 @@ public class MapView extends GLSurfaceView implements Renderer {
                 assetManager = context.getApplicationContext().getAssets();
                 AssetUtils.setAssetManagerPointer(assetManager);
             }
-        
-            // Set asset manager pointer to allow native access to assets
-            assetManager = context.getApplicationContext().getAssets();
-            AssetUtils.setAssetManagerPointer(assetManager);
-        
+
+            // Initialize native BaseMapView instance
             baseMapView = new BaseMapView();
             baseMapView.getOptions().setDPI(getResources().getDisplayMetrics().densityDpi);
             baseMapView.setRedrawRequestListener(new MapRedrawRequestListener(this));
-        
+
+            // Set up relevant EGL state
             try {
                 Method m = GLSurfaceView.class.getMethod("setPreserveEGLContextOnPause", Boolean.TYPE);
                 m.invoke(this, true);
@@ -252,6 +258,8 @@ public class MapView extends GLSurfaceView implements Renderer {
                 baseMapView.onInputEvent(NATIVE_ACTION_CANCEL, 
                         NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE, 
                         NATIVE_NO_COORDINATE, NATIVE_NO_COORDINATE);
+                pointer1Id = INVALID_POINTER_ID;
+                pointer2Id = INVALID_POINTER_ID;
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:

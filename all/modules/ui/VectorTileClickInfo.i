@@ -3,7 +3,7 @@
 
 %module VectorTileClickInfo
 
-!proxy_imports(carto::VectorTileClickInfo, core.MapPos, core.MapTile, geometry.VectorTileFeature, layers.Layer, ui.ClickType)
+!proxy_imports(carto::VectorTileClickInfo, core.MapPos, core.MapTile, geometry.VectorTileFeature, layers.Layer, ui.ClickInfo)
 
 %{
 #include "ui/VectorTileClickInfo.h"
@@ -14,7 +14,7 @@
 %include <std_string.i>
 %include <cartoswig.i>
 
-%import "ui/ClickType.i"
+%import "ui/ClickInfo.i"
 %import "core/MapPos.i"
 %import "core/MapTile.i"
 %import "geometry/VectorTileFeature.i"
@@ -23,6 +23,7 @@
 !shared_ptr(carto::VectorTileClickInfo, ui.VectorTileClickInfo)
 
 %attribute(carto::VectorTileClickInfo, carto::ClickType::ClickType, ClickType, getClickType)
+%attributeval(carto::VectorTileClickInfo, carto::ClickInfo, ClickInfo, getClickInfo)
 %attributeval(carto::VectorTileClickInfo, carto::MapPos, ClickPos, getClickPos)
 %attributeval(carto::VectorTileClickInfo, carto::MapPos, FeatureClickPos, getFeatureClickPos)
 %attributeval(carto::VectorTileClickInfo, carto::MapTile, MapTile, getMapTile)

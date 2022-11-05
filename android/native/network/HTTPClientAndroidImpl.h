@@ -9,6 +9,8 @@
 
 #include "network/HTTPClient.h"
 
+#include <atomic>
+
 namespace carto {
 
     class HTTPClient::AndroidImpl : public HTTPClient::Impl {
@@ -29,8 +31,8 @@ namespace carto {
         static std::unique_ptr<InputStreamClass>& GetInputStreamClass();
         static std::unique_ptr<OutputStreamClass>& GetOutputStreamClass();
 
-        bool _log;
-        int _timeout;
+        const bool _log;
+        std::atomic<int> _timeout;
     };
 
 }

@@ -1,0 +1,129 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.6.4'
+        classpath 'io.github.gradle-nexus:publish-plugin:1.1.0'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    buildDir = '../../build/android-aar'
+}
+
+apply plugin: 'signing'
+apply plugin: 'maven-publish'
+apply plugin: 'com.android.library'
+apply plugin: 'io.github.gradle-nexus.publish-plugin'
+
+apply from: "publish.gradle"
+
+android {
+    compileSdkVersion 31
+    ndkVersion "23.2.8568313"
+
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 31
+        versionCode 1
+        versionName "1.0"
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs = ['../../generated/android-java/proxies', '../../android/java']
+            jniLibs.srcDir '../../dist/android/'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packagingOptions {
+        doNotStrip "*/*/libcarto_mobile_sdk.so"
+    }
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    destinationDir = file("../../dist/android/javadoc")
+    title = "CARTO Mobile SDK"
+    options.setMemberLevel(JavadocMemberLevel.PUBLIC)
+    failOnError false
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.source
+    archiveClassifier = "sources"
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from tasks.javadoc.destinationDir
+    archiveClassifier = "javadoc"
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+group = 'com.carto'
+version = System.getProperty('build-version')
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId = 'com.carto'
+                artifactId 'carto-mobile-sdk'
+                version = System.getProperty('build-version')
+                from(components.release)
+                artifact sourcesJar
+                artifact javadocJar
+                pom {
+                    name = "CARTO Mobile SDK"
+                    description = "CARTO Mobile Maps SDK for Android"
+                    url = "https://github.com/CartoDB/mobile-sdk"
+                    licenses {
+                        license {
+                            name = "BSD 3-Clause"
+                            url = "https://opensource.org/licenses/BSD-3-Clause"
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = "CARTO"
+                            name = "CARTO Mobile Team"
+                        }
+                    }
+                    scm {
+                        connection = "scm:git:https://github.com/CartoDB/mobile-sdk.git"
+                        developerConnection = "scm:git:https://github.com/CartoDB/mobile-sdk.git"
+                        url = "https://github.com/CartoDB/mobile-sdk"
+                    }
+                }
+            }
+        }
+    }
+}
+
+ext["signing.keyId"] = rootProject.ext["signing.keyId"]
+ext["signing.password"] = rootProject.ext["signing.password"]
+ext["signing.secretKeyRingFile"] = rootProject.ext["signing.secretKeyRingFile"]
+
+signing {
+    sign publishing.publications
+}

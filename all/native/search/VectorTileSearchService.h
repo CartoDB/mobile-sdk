@@ -23,6 +23,7 @@ namespace carto {
 
     /**
      * A search service for finding features from the specified vector tile data source.
+     * Depending on the datasource, searching may perform network requests and must be executed in non-UI background thread.
      */
     class VectorTileSearchService {
     public:
@@ -85,6 +86,7 @@ namespace carto {
         /**
          * Searches for the features specified by search request from the vector tiles bound to the service.
          * The zoom level range used for searching is specified using minZoom/maxZoom attributes of the search service.
+         * Depending on the data source, this method may perform slow IO operations and may need to be run in background thread.
          * @param request The search request containing search filters.
          * @return The resulting feature collection containing features matching the request.
          */

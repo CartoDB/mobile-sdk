@@ -3,7 +3,7 @@
 #include "TomTomOnlineReverseGeocodingService.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
-#include "geocoding/TomTomGeocodingProxy.h"
+#include "geocoding/utils/TomTomGeocodingProxy.h"
 #include "projections/Projection.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"

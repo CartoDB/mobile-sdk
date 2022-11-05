@@ -69,9 +69,6 @@ namespace carto {
             _tilt = viewState.getTilt() + _tiltDelta;
         }
     
-        cglib::vec3<double> cameraVec = cameraPos - focusPos;
-        double length = cglib::length(cameraVec);
-    
         // Enforce tilt range
         MapRange tiltRange = options.getTiltRange();
         float tilt = GeneralUtils::Clamp(_tilt, tiltRange.getMin(), tiltRange.getMax());

@@ -1,10 +1,10 @@
+#ifdef _CARTO_OFFLINE_SUPPORT
+
 #include "PersistentCacheTileDataSource.h"
 #include "core/BinaryData.h"
 #include "datasources/TileDownloadListener.h"
 #include "utils/Log.h"
 #include "utils/TileUtils.h"
-
-#include <memory>
 
 #include <sqlite3pp.h>
 
@@ -14,6 +14,7 @@ namespace carto {
         CacheTileDataSource(dataSource),
         _database(),
         _cacheOnlyMode(false),
+        _downloadTasks(),
         _downloadThreadPool(std::make_shared<CancelableThreadPool>()),
         _cache(DEFAULT_CAPACITY),
         _mutex()
@@ -40,10 +41,22 @@ namespace carto {
 
     void PersistentCacheTileDataSource::startDownloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& tileDownloadListener) {
         auto task = std::make_shared<DownloadTask>(std::static_pointer_cast<PersistentCacheTileDataSource>(shared_from_this()), mapBounds, minZoom, maxZoom, tileDownloadListener);
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _downloadTasks.insert(task);
+        }
         _downloadThreadPool->execute(task, 0);
     }
 
     void PersistentCacheTileDataSource::stopAllDownloads() {
+        std::set<std::shared_ptr<DownloadTask>> downloadTasks;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            downloadTasks = _downloadTasks;
+        }
+        for (std::shared_ptr<DownloadTask> task : downloadTasks) {
+            task->cancel();
+        }
         _downloadThreadPool->cancelAll();
     }
     
@@ -127,7 +140,7 @@ namespace carto {
     
     void PersistentCacheTileDataSource::openDatabase(const std::string& databasePath) {
         try {
-            _database.reset(new sqlite3pp::database(databasePath.c_str()));
+            _database = std::make_unique<sqlite3pp::database>(databasePath.c_str());
         }
         catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::openDatabase: Failed to connect to database: %s", ex.what());
@@ -156,7 +169,13 @@ namespace carto {
                 command.finish();
             }
 
-            sqlite3pp::command command3(*_database, "CREATE TABLE IF NOT EXISTS persistent_cache(tileId INTEGER NOT NULL PRIMARY KEY, compressed BLOB, time INTEGER, expirationTime INTEGER)");
+            sqlite3pp::command command3(*_database, R"SQL(
+                    CREATE TABLE IF NOT EXISTS persistent_cache(
+                        tileId INTEGER NOT NULL PRIMARY KEY,
+                        compressed BLOB,
+                        time INTEGER,
+                        expirationTime INTEGER
+                    ))SQL");
             command3.execute();
             command3.finish();
         }
@@ -338,13 +357,14 @@ namespace carto {
             minZoom = std::max(minZoom, dataSource->getMinZoom());
             maxZoom = std::min(maxZoom, dataSource->getMaxZoom());
         } else {
+            Log::Info("PersistentCacheTileDataSource::DownloadTask: Download cancelled due to lost datasource");
             return;
         }
 
         std::uint64_t tileCount = 0;
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
-            MapTile mapTile1 = TileUtils::CalculateMapTile(_mapBounds.getMin(), zoom, projection);
-            MapTile mapTile2 = TileUtils::CalculateMapTile(_mapBounds.getMax(), zoom, projection);
+            MapTile mapTile1 = TileUtils::CalculateClippedMapTile(_mapBounds.getMin(), zoom, projection);
+            MapTile mapTile2 = TileUtils::CalculateClippedMapTile(_mapBounds.getMax(), zoom, projection);
             std::uint64_t dx = std::abs(mapTile1.getX() - mapTile2.getX()) + 1;
             std::uint64_t dy = std::abs(mapTile1.getY() - mapTile2.getY()) + 1;
             tileCount += dx * dy;
@@ -358,8 +378,8 @@ namespace carto {
 
         std::uint64_t tileIndex = 0;
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
-            MapTile mapTile1 = TileUtils::CalculateMapTile(_mapBounds.getMin(), zoom, projection);
-            MapTile mapTile2 = TileUtils::CalculateMapTile(_mapBounds.getMax(), zoom, projection);
+            MapTile mapTile1 = TileUtils::CalculateClippedMapTile(_mapBounds.getMin(), zoom, projection);
+            MapTile mapTile2 = TileUtils::CalculateClippedMapTile(_mapBounds.getMax(), zoom, projection);
             for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
                 if (isCanceled()) {
                     break;
@@ -379,7 +399,8 @@ namespace carto {
                     if (auto dataSource = _dataSource.lock()) {
                         tileData = dataSource->loadTile(mapTile.getFlipped());
                     } else {
-                        return;
+                        cancel();
+                        break;
                     }
                     tileIndex++;
 
@@ -390,15 +411,27 @@ namespace carto {
             }
         }
 
-        if (tileIndex == tileCount && _downloadListener) {
-            _downloadListener->onDownloadProgress(100.0f);
-            _downloadListener->onDownloadCompleted();
+        if (auto dataSource = _dataSource.lock()) {
+            dataSource->_downloadTasks.erase(std::static_pointer_cast<DownloadTask>(shared_from_this()));
+        } else {
+            Log::Info("PersistentCacheTileDataSource::DownloadTask: Download cancelled due to lost datasource");
+            return;
         }
 
-        Log::Info("PersistentCacheTileDataSource::DownloadTask: Finished downloading");
+        if (tileIndex == tileCount) {
+            if (_downloadListener) {
+                _downloadListener->onDownloadProgress(100.0f);
+                _downloadListener->onDownloadCompleted();
+            }
+            Log::Info("PersistentCacheTileDataSource::DownloadTask: Finished downloading");
+        } else {
+            Log::Info("PersistentCacheTileDataSource::DownloadTask: Download cancelled");
+        }
     }
 
     const unsigned int PersistentCacheTileDataSource::DEFAULT_CAPACITY = 50 * 1024 * 1024;
     const unsigned int PersistentCacheTileDataSource::EXTRA_TILE_FOOTPRINT = 1024;
 
 }
+
+#endif

@@ -53,6 +53,7 @@ namespace carto {
         CFUniquePtr<CTFontRef> _font;
         float _fontSize;
     };
+
 }
 
 #endif

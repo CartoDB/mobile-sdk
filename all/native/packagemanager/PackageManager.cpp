@@ -31,11 +31,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/document.h>
 
-#include <rc5.h>
-#include <sha.h>
-#include <modes.h>
-#include <filters.h>
-#include <hex.h>
+#include <botan/botan_all.h>
 
 namespace {
 
@@ -70,6 +66,7 @@ namespace carto {
         _packageManagerListener(),
         _serverPackageCache(),
         _packageHandlerCache(),
+        _packageFileMutex(),
         _mutex()
     {
         if (_packageListURL.empty()) {
@@ -88,6 +85,7 @@ namespace carto {
                 _taskQueue = std::make_shared<PersistentTaskQueue>(createLocalFilePath(taskDbFileName));
             }
             catch (const std::exception& ex) {
+                Log::Errorf("PackageManager: Second error while constructing PackageManager::PersistentTaskQueue: %s", ex.what());
                 throw FileException("Failed to create/open package manager task queue database", taskDbFileName);
             }
         }
@@ -96,21 +94,21 @@ namespace carto {
         try {
             _localDb = std::make_shared<sqlite3pp::database>(createLocalFilePath(packageDbFileName).c_str());
             InitializeDb(*_localDb, _serverEncKey + _localEncKey);
+            syncLocalPackages();
         }
         catch (const std::exception& ex) {
             Log::Errorf("PackageManager: Error while constructing PackageManager: %s, trying to remove", ex.what());
             _localDb.reset();
-            utf8_filesystem::unlink(packageDbFileName.c_str());
             try {
+                utf8_filesystem::unlink(packageDbFileName.c_str());
                 _localDb = std::make_shared<sqlite3pp::database>(createLocalFilePath(packageDbFileName).c_str());
                 InitializeDb(*_localDb, _serverEncKey + _localEncKey);
             }
             catch (const std::exception& ex) {
+                Log::Errorf("PackageManager: Second attempt at constructing PackageManager failed: %s", ex.what());
                 throw FileException("Failed to create/open package manager database", packageDbFileName);
             }
         }
-
-        syncLocalPackages();
     }
 
     PackageManager::~PackageManager() {
@@ -341,21 +339,26 @@ namespace carto {
     }
 
     void PackageManager::accessLocalPackages(const std::function<void(const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >&)>& callback) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        // NOTE: should use shared_lock here, but iOS 9 does not support it
+        std::unique_lock<std::mutex> packageLock(_packageFileMutex);
 
-        // Create instances to all open files
+        // Find all package handlers
         std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> > packageHandlerMap;
-        for (const std::shared_ptr<PackageInfo>& packageInfo : _localPackages) {
-            auto it = _packageHandlerCache.find(packageInfo);
-            if (it == _packageHandlerCache.end()) {
-                std::string fileName = createLocalFilePath(createPackageFileName(packageInfo->getPackageId(), packageInfo->getPackageType(), packageInfo->getVersion()));
-                auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageInfo->getPackageType(), fileName);
-                if (!handler) {
-                    continue;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+            for (const std::shared_ptr<PackageInfo>& packageInfo : _localPackages) {
+                auto it = _packageHandlerCache.find(packageInfo);
+                if (it == _packageHandlerCache.end()) {
+                    std::string fileName = createLocalFilePath(createPackageFileName(packageInfo->getPackageId(), packageInfo->getPackageType(), packageInfo->getVersion()));
+                    auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageInfo->getPackageType(), fileName);
+                    if (!handler) {
+                        continue;
+                    }
+                    it = _packageHandlerCache.insert(std::make_pair(packageInfo, handler)).first;
                 }
-                it = _packageHandlerCache.insert(std::make_pair(packageInfo, handler)).first;
+                packageHandlerMap[packageInfo] = it->second;
             }
-            packageHandlerMap[packageInfo] = it->second;
         }
 
         // Use the callback
@@ -378,7 +381,7 @@ namespace carto {
         }
 
         // Calculate map tile from the map position
-        MapTile mapTile = CalculateMapTile(mapPos, zoom, projection);
+        MapTile mapTile = CalculateMapTile(mapPos, zoom, projection, false);
 
         // Find tile statuses from all packages. Keep only packages where the tile exists
         std::vector<std::pair<std::shared_ptr<PackageInfo>, PackageTileStatus::PackageTileStatus> > packageTileStatuses;
@@ -425,8 +428,8 @@ namespace carto {
         std::vector<std::shared_ptr<PackageInfo> > localPackages = getLocalPackages();
 
         // Calculate tile extents
-        MapTile mapTile1 = CalculateMapTile(mapBounds.getMin(), zoom, projection);
-        MapTile mapTile2 = CalculateMapTile(mapBounds.getMax(), zoom, projection);
+        MapTile mapTile1 = CalculateMapTile(mapBounds.getMin(), zoom, projection, true);
+        MapTile mapTile2 = CalculateMapTile(mapBounds.getMax(), zoom, projection, true);
         for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
             for (int x = std::min(mapTile1.getX(), mapTile2.getX()); x <= std::max(mapTile1.getX(), mapTile2.getX()); x++) {
                 bool found = false;
@@ -743,7 +746,7 @@ namespace carto {
         // Test if the data is gzipped, in that case inflate
         std::vector<unsigned char> packageListDataTemp;
         if (zlib::inflate_gzip(packageListData.data(), packageListData.size(), packageListDataTemp)) {
-            std::swap(packageListData, packageListDataTemp);
+            packageListData = std::move(packageListDataTemp);
         }
 
         // Create JSON string
@@ -773,9 +776,14 @@ namespace carto {
             }
         }
 
-        // Update package list file
-        savePackageListJson(_packageListFileName, packageListJson);
+        // Update package list file and reset package cache
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            savePackageListJson(_packageListFileName, packageListJson);
+            _serverPackageCache.reset();
+        }
 
+        // Done
         Log::Info("PackageManager: Package list updated");
         return true;
     }
@@ -1000,6 +1008,14 @@ namespace carto {
                 }
             }
 
+            // Read/calculate tile mask
+            std::string tileMaskValue;
+            if (package->getTileMask()) {
+                tileMaskValue = EncodeTileMask(package->getTileMask());
+            } else if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(task.packageType, packageFileName)) {
+                tileMaskValue = EncodeTileMask(handler->calculateTileMask());
+            }
+
             // Get package id, create package record
             int id = -1;
             {
@@ -1014,12 +1030,6 @@ namespace carto {
                     std::string metaInfo;
                     if (package->getMetaInfo()) {
                         metaInfo = package->getMetaInfo()->getVariant().toString();
-                    }
-                    std::string tileMaskValue;
-                    if (package->getTileMask()) {
-                        tileMaskValue = EncodeTileMask(package->getTileMask());
-                    } else if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(task.packageType, packageFileName)) {
-                        tileMaskValue = EncodeTileMask(handler->calculateTileMask());
                     }
                     std::uint64_t fileSize = package->getSize();
                     if (packageSizeIndeterminate) {
@@ -1109,48 +1119,37 @@ namespace carto {
     }
 
     void PackageManager::syncLocalPackages() {
-        if (!_localDb) {
-            return;
-        }
-
-        try {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-            // Find all valid packages
-            std::vector<std::shared_ptr<PackageInfo> > packages;
-            sqlite3pp::query query(*_localDb, "SELECT package_id, package_type, version, size, server_url, tile_mask, metainfo FROM packages WHERE valid=1 ORDER BY id ASC");
-            for (auto qit = query.begin(); qit != query.end(); qit++) {
-                std::shared_ptr<PackageTileMask> tileMask;
-                if (strlen(qit->get<const char*>(5)) != 0) {
-                    tileMask = DecodeTileMask(qit->get<const char*>(5));
-                }
-                std::shared_ptr<PackageMetaInfo> metaInfo;
-                if (strlen(qit->get<const char*>(6)) != 0) {
-                    rapidjson::Document metaInfoDoc;
-                    if (metaInfoDoc.Parse<rapidjson::kParseDefaultFlags>(qit->get<const char*>(6)).HasParseError()) {
-                        throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Error while parsing meta info");
-                    }
-                    metaInfo = createPackageMetaInfo(metaInfoDoc);
-                }
-                auto packageInfo = std::make_shared<PackageInfo>(
-                    qit->get<const char*>(0),
-                    static_cast<PackageType::PackageType>(qit->get<int>(1)),
-                    qit->get<int>(2),
-                    qit->get<std::uint64_t>(3),
-                    qit->get<const char*>(4),
-                    tileMask,
-                    metaInfo
-                    );
-                packages.push_back(packageInfo);
+        // Find all valid packages
+        std::vector<std::shared_ptr<PackageInfo> > packages;
+        sqlite3pp::query query(*_localDb, "SELECT package_id, package_type, version, size, server_url, tile_mask, metainfo FROM packages WHERE valid=1 ORDER BY id ASC");
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
+            std::shared_ptr<PackageTileMask> tileMask;
+            if (strlen(qit->get<const char*>(5)) != 0) {
+                tileMask = DecodeTileMask(qit->get<const char*>(5));
             }
+            std::shared_ptr<PackageMetaInfo> metaInfo;
+            if (strlen(qit->get<const char*>(6)) != 0) {
+                rapidjson::Document metaInfoDoc;
+                if (metaInfoDoc.Parse<rapidjson::kParseDefaultFlags>(qit->get<const char*>(6)).HasParseError()) {
+                    throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Error while parsing meta info");
+                }
+                metaInfo = createPackageMetaInfo(metaInfoDoc);
+            }
+            auto packageInfo = std::make_shared<PackageInfo>(
+                qit->get<const char*>(0),
+                static_cast<PackageType::PackageType>(qit->get<int>(1)),
+                qit->get<int>(2),
+                qit->get<std::uint64_t>(3),
+                qit->get<const char*>(4),
+                tileMask,
+                metaInfo
+            );
+            packages.push_back(packageInfo);
+        }
 
-            // Update packages, sync caches
-            std::swap(_localPackages, packages);
-            _packageHandlerCache.clear();
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("PackageManager::syncLocalPackages: %s", ex.what());
-        }
+        // Update packages, sync caches
+        _localPackages = std::move(packages);
+        _packageHandlerCache.clear();
     }
 
     void PackageManager::importLocalPackage(int id, int taskId, const std::string& packageId, PackageType::PackageType packageType, const std::string& packageFileName) {
@@ -1160,31 +1159,46 @@ namespace carto {
         }
 
         // Mark downloaded package as valid and older packages as invalid.
-        {
+        std::vector<int> otherPackageIds;
+        try {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             sqlite3pp::command command2(*_localDb, "UPDATE packages SET valid=(id=:id) WHERE package_id=:package_id");
             command2.bind(":id", id);
             command2.bind(":package_id", packageId.c_str());
             command2.execute();
 
-            // Delete older invalid packages
+            // Find older invalid packages
             sqlite3pp::query query(*_localDb, "SELECT id FROM packages WHERE package_id=:package_id AND valid=0");
             query.bind(":package_id", packageId.c_str());
             for (auto qit = query.begin(); qit != query.end(); qit++) {
                 int otherId = qit->get<int>(0);
-                deleteLocalPackage(otherId);
+                otherPackageIds.push_back(otherId);
             }
+
+            // Sync
+            syncLocalPackages();
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManager::importLocalPackage: %s", ex.what());
+            return;
         }
 
-        // Sync
-        syncLocalPackages();
-        notifyPackagesChanged();
+        // Notify listeners
+        notifyPackagesChanged(OnChangeListener::PACKAGES_ADDED);
+
+        // Delete older invalid packages
+        for (int otherId : otherPackageIds) {
+            deleteLocalPackage(otherId);
+        }
     }
 
     void PackageManager::deleteLocalPackage(int id) {
+        std::unique_lock<std::mutex> packageLock(_packageFileMutex);
+
+        // Find package info and if successful, remove the package
         std::string packageFileName;
         PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
-        {
+        try {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
             // Get package file name
@@ -1205,18 +1219,22 @@ namespace carto {
             sqlite3pp::command command(*_localDb, "DELETE FROM packages WHERE id=:id");
             command.bind(":id", id);
             command.execute();
+
+            // Sync
+            syncLocalPackages();
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManager::deleteLocalPackage: %s", ex.what());
+            return;
         }
 
-        // Sync
-        syncLocalPackages();
-        notifyPackagesChanged();
+        // Notify packages were deleted
+        notifyPackagesChanged(OnChangeListener::PACKAGES_DELETED);
 
-        // Invoke handler callback
+        // Invoke handler callback, delete file
         if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageType, packageFileName)) {
             handler->onDeletePackage();
         }
-
-        // Delete file
         utf8_filesystem::unlink(packageFileName.c_str());
     }
 
@@ -1385,7 +1403,7 @@ namespace carto {
         return false;
     }
 
-    void PackageManager::notifyPackagesChanged() {
+    void PackageManager::notifyPackagesChanged(OnChangeListener::PackageChangeType changeType) {
         std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -1393,7 +1411,7 @@ namespace carto {
         }
 
         for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
-            onChangeListener->onPackagesChanged();
+            onChangeListener->onPackagesChanged(changeType);
         }
     }
 
@@ -1410,7 +1428,6 @@ namespace carto {
     }
 
     std::string PackageManager::loadPackageListJson(const std::string& jsonFileName) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         std::string packageListFileName = createLocalFilePath(jsonFileName);
         FILE* fpRaw = utf8_filesystem::fopen(packageListFileName.c_str(), "rb");
         if (!fpRaw) {
@@ -1430,7 +1447,6 @@ namespace carto {
     }
 
     void PackageManager::savePackageListJson(const std::string& jsonFileName, const std::string& json) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         std::string packageListFileName = createLocalFilePath(jsonFileName);
         std::string tempPackageListFileName = createLocalFilePath(jsonFileName + ".tmp");
         FILE* fpRaw = utf8_filesystem::fopen(tempPackageListFileName.c_str(), "wb");
@@ -1446,7 +1462,6 @@ namespace carto {
         if (utf8_filesystem::rename(tempPackageListFileName.c_str(), packageListFileName.c_str()) != 0) {
             throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not rename package list file ") + tempPackageListFileName);
         }
-        _serverPackageCache.reset();
     }
 
     void PackageManager::InitializeDb(sqlite3pp::database& db, const std::string& encKey) {
@@ -1462,7 +1477,7 @@ namespace carto {
                     tile_mask TEXT NOT NULL,
                     metainfo TEXT NOT NULL,
                     valid INTEGER NOT NULL DEFAULT 0
-                    ))SQL");
+                ))SQL");
         db.execute(R"SQL(
                 CREATE TABLE IF NOT EXISTS metadata(
                     name TEXT,
@@ -1503,24 +1518,23 @@ namespace carto {
     }
 
     std::string PackageManager::CalculateKeyHash(const std::string& encKey) {
-        CryptoPP::SHA1 hash;
-        unsigned char digest[CryptoPP::SHA1::DIGESTSIZE];
-        hash.CalculateDigest(digest, reinterpret_cast<const unsigned char*>(encKey.c_str()), encKey.size());
-        std::string sha1;
-        CryptoPP::HexEncoder encoder;
-        encoder.Attach(new CryptoPP::StringSink(sha1));
-        encoder.Put(digest, sizeof(digest));
-        encoder.MessageEnd();
-        return sha1;
+        std::unique_ptr<Botan::HashFunction> hash(new Botan::SHA_160);
+        hash->update(reinterpret_cast<const std::uint8_t*>(encKey.data()), encKey.size());
+        return Botan::hex_encode(hash->final(), true);
     }
 
-    MapTile PackageManager::CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj) {
+    MapTile PackageManager::CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj, bool clip) {
         EPSG3857 epsg3857;
         double tileWidth = epsg3857.getBounds().getDelta().getX() / (1 << zoom);
         double tileHeight = epsg3857.getBounds().getDelta().getY() / (1 << zoom);
         MapVec mapVec = epsg3857.fromWgs84(proj->toWgs84(mapPos)) - epsg3857.getBounds().getMin();
         int x = static_cast<int>(std::floor(mapVec.getX() / tileWidth));
         int y = static_cast<int>(std::floor(mapVec.getY() / tileHeight));
+        if (clip) {
+            int maxExtent = (1 << zoom) - 1;
+            x = std::max(0, std::min(maxExtent, x));
+            y = std::max(0, std::min(maxExtent, y));
+        }
         return MapTile(x, y, zoom, 0);
     }
 
@@ -1678,6 +1692,7 @@ namespace carto {
     }
 
     const int PackageManager::DEFAULT_TILEMASK_ZOOMLEVEL = 14;
+
 }
 
 #endif

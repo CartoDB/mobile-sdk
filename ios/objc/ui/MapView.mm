@@ -10,11 +10,11 @@
 
 #import  <UIKit/UIKit.h>
 
-@interface NTMapView() <NTGLKViewDelegate> { }
+@interface NTMapView() { }
 
 @property (strong, nonatomic) NTBaseMapView* baseMapView;
-@property (strong, nonatomic) NTGLContext* viewContext;
 @property (assign, nonatomic) BOOL active;
+@property (assign, nonatomic) BOOL surfaceCreated;
 @property (assign, nonatomic) float scale;
 @property (assign, nonatomic) CGSize activeDrawableSize;
 
@@ -61,36 +61,49 @@ static const int NATIVE_NO_COORDINATE = -1;
 }
 
 -(void)initBase {
-    self.delegate = self;
-
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
-
-    _active = YES;
-
-    _scale = 1;
-    if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
-        _scale = [[UIScreen mainScreen] scale];
+    _active = NO;
+    _surfaceCreated = NO;
+    _activeDrawableSize = CGSizeMake(0, 0);
+    _scale = [[UIScreen mainScreen] scale];
+    // In case of MetalANGLE build, use the original scale value
+#ifndef _CARTO_USE_METALANGLE
+    if ([[UIScreen mainScreen] respondsToSelector:@selector(nativeScale)]) {
+        _scale = [[UIScreen mainScreen] nativeScale];
     }
+#endif
+    self.contentScaleFactor = _scale;
 
     _baseMapView = [[NTBaseMapView alloc] init];
-    _nativeMapView = [_baseMapView getCptr];
+    [[_baseMapView getOptions] setDPI:carto::Const::UNSCALED_DPI * _scale];
 
     NTMapRedrawRequestListener* redrawRequestListener = [[NTMapRedrawRequestListener alloc] initWithView:self];
     [_baseMapView setRedrawRequestListener:redrawRequestListener];
     
-    [[_baseMapView getOptions] setDPI:carto::Const::UNSCALED_DPI * _scale];
+    if (self.window != nil) {
+        [self initContext];
+        _active = YES;
 
-#ifdef _CARTO_USE_METALANGLE
-    _viewContext = [[NTGLContext alloc] initWithAPI:kMGLRenderingAPIOpenGLES2];
-#else
-    _viewContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-#endif
-    if (!_viewContext) {
-        carto::Log::Fatal("MapView::initBase: Failed to create OpenGL ES 2.0 context");
+        [self setNeedsDisplay];
     }
 
-    self.context = _viewContext;
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidBecomeActive) name:UIApplicationDidBecomeActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
+}
+
+-(void)initContext {
+#ifdef _CARTO_USE_METALANGLE
+    NTGLContext* context = [[NTGLContext alloc] initWithAPI:kMGLRenderingAPIOpenGLES2];
+#else
+    NTGLContext* context = [[NTGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+#endif
+    if (!context) {
+        carto::Log::Fatal("MapView::initContext: Failed to create OpenGL ES 2.0 context");
+    }
+
+    self.context = context;
+    self.multipleTouchEnabled = YES;
 #ifdef _CARTO_USE_METALANGLE
     self.drawableColorFormat = MGLDrawableColorFormatRGBA8888;
     self.drawableDepthFormat = MGLDrawableDepthFormat24;
@@ -102,99 +115,146 @@ static const int NATIVE_NO_COORDINATE = -1;
     self.drawableMultisample = GLKViewDrawableMultisampleNone;
     self.drawableStencilFormat = GLKViewDrawableStencilFormat8;
 #endif
-    self.multipleTouchEnabled = YES;
+}
 
-    @synchronized(self) {
-        if (_viewContext) {
-            [NTGLContext setCurrentContext:_viewContext];
+-(void)willMoveToWindow:(UIWindow *)newWindow {
+    [super willMoveToWindow:newWindow];
 
-            [_baseMapView onSurfaceCreated];
+    if (newWindow == nil) {
+        carto::Log::Info("MapView::willMoveToWindow: null");
+    } else {
+        carto::Log::Info("MapView::willMoveToWindow: nonnull");
 
-            CGFloat drawableWidth = self.bounds.size.width * _scale;
-            CGFloat drawableHeight = self.bounds.size.height * _scale;
-            self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
-            [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
+        @synchronized (self) {
+            if (!_active) {
+                [self initContext];
+                if ([NTGLContext currentContext] == nil) {
+                    [NTGLContext setCurrentContext:self.context];
+                }
+                _active = YES;
+                _surfaceCreated = NO;
+            }
         }
     }
-    [self setNeedsDisplay];
+}
+
+-(void)didMoveToWindow {
+    [super didMoveToWindow];
+
+    if (self.window == nil) {
+        carto::Log::Info("MapView::didMoveToWindow: null");
+
+        @synchronized (self) {
+            if (_active) {
+                [_baseMapView onSurfaceDestroyed];
+                if ([NTGLContext currentContext] == self.context) {
+                    [NTGLContext setCurrentContext:nil];
+                }
+                _active = NO;
+                _surfaceCreated = NO;
+            }
+        }
+    } else {
+        carto::Log::Info("MapView::didMoveToWindow: nonnull");
+
+        [self setNeedsDisplay];
+    }
 }
 
 -(void)layoutSubviews {
     [super layoutSubviews];
 
-    @synchronized (self) {
-        if (_viewContext) {
-            NTGLContext* context = [NTGLContext currentContext];
-            if (context != _viewContext) {
-                [NTGLContext setCurrentContext:_viewContext];
-            }
-
-            CGFloat drawableWidth = self.bounds.size.width * _scale;
-            CGFloat drawableHeight = self.bounds.size.height * _scale;
-            if (self.activeDrawableSize.width != drawableWidth || self.activeDrawableSize.height != drawableHeight) {
-                self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
-                [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
-            }
-
-            if (context != _viewContext) {
-                [NTGLContext setCurrentContext:context];
-            }
-        }
-    }
     [self setNeedsDisplay];
 }
 
-#ifdef _CARTO_USE_METALANGLE
--(void)mglkView:(NTGLKView*)view drawInRect:(CGRect)rect {
-#else
--(void)glkView:(NTGLKView*)view drawInRect:(CGRect)rect {
-#endif
+-(void)drawRect:(CGRect)rect {
     @synchronized (self) {
-        if (_viewContext && _active) {
+        if (_active) {
+#ifdef _CARTO_USE_METALANGLE
             NTGLContext* context = [NTGLContext currentContext];
-            if (context != _viewContext) {
-                [NTGLContext setCurrentContext:_viewContext];
+            [NTGLContext setCurrentContext:self.context forLayer:self.glLayer];
+#endif
+
+            if (!_surfaceCreated) {
+                [_baseMapView onSurfaceCreated];
+                _activeDrawableSize = CGSizeMake(0, 0);
+                _surfaceCreated = YES;
             }
 
 #ifdef _CARTO_USE_METALANGLE
-            CGFloat drawableWidth = view.drawableSize.width;
-            CGFloat drawableHeight = view.drawableSize.height;
+            CGFloat drawableWidth = self.drawableSize.width;
+            CGFloat drawableHeight = self.drawableSize.height;
 #else
-            CGFloat drawableWidth = view.drawableWidth;
-            CGFloat drawableHeight = view.drawableHeight;
+            CGFloat drawableWidth = self.drawableWidth;
+            CGFloat drawableHeight = self.drawableHeight;
 #endif
-            if (self.activeDrawableSize.width != drawableWidth || self.activeDrawableSize.height != drawableHeight) {
-                self.activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
-                [_baseMapView onSurfaceChanged:(int)self.activeDrawableSize.width height:(int)self.activeDrawableSize.height];
+            if (_activeDrawableSize.width != drawableWidth || _activeDrawableSize.height != drawableHeight) {
+                _activeDrawableSize = CGSizeMake(drawableWidth, drawableHeight);
+                [_baseMapView onSurfaceChanged:(int)_activeDrawableSize.width height:(int)_activeDrawableSize.height];
             }
+
             [_baseMapView onDrawFrame];
 
-            if (context != _viewContext) {
+#ifdef _CARTO_USE_METALANGLE
+            [self.context present:self.glLayer];
+            if (context != self.context) {
                 [NTGLContext setCurrentContext:context];
             }
+#endif
         }
     }
 }
 
 -(void)dealloc {
-    @synchronized (self) {
-        if (_viewContext) {
-            [_baseMapView onSurfaceDestroyed];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
 
-            if ([NTGLContext currentContext] == _viewContext) {
+    @synchronized (self) {
+        if (self.context) {
+            [_baseMapView onSurfaceDestroyed];
+            [_baseMapView setRedrawRequestListener:nil];
+
+            if ([NTGLContext currentContext] == self.context) {
                 [NTGLContext setCurrentContext:nil];
             }
 
-            [_baseMapView setRedrawRequestListener:nil];
-            _nativeMapView = nil;
             _baseMapView = nil;
-            _viewContext = nil;
+            _surfaceCreated = NO;
             _activeDrawableSize = CGSizeMake(0, 0);
         }
     }
+}
 
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
+-(void)appWillResignActive {
+    carto::Log::Info("MapView::appWillResignActive");
+
+    @synchronized (self) {
+        if (_active) {
+            NTGLContext* context = [NTGLContext currentContext];
+            if (context != self.context) {
+                [NTGLContext setCurrentContext:self.context];
+            }
+
+            [_baseMapView finishRendering];
+
+            if (context != self.context) {
+                [NTGLContext setCurrentContext:context];
+            }
+        }
+        _active = NO;
+    }
+}
+
+-(void)appDidBecomeActive {
+    carto::Log::Info("MapView::appDidBecomeActive");
+
+    @synchronized (self) {
+        _active = YES;
+    }
+
+    [self setNeedsDisplay];
 }
 
 -(void)appDidEnterBackground {
@@ -202,18 +262,6 @@ static const int NATIVE_NO_COORDINATE = -1;
 
     @synchronized (self) {
         _active = NO;
-        if (_viewContext) {
-            NTGLContext* context = [NTGLContext currentContext];
-            if (context != _viewContext) {
-                [NTGLContext setCurrentContext:_viewContext];
-            }
-
-            [_baseMapView finishRendering];
-
-            if (context != _viewContext) {
-                [NTGLContext setCurrentContext:context];
-            }
-        }
     }
 }
 
@@ -223,6 +271,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     @synchronized (self) {
         _active = YES;
     }
+
     [self setNeedsDisplay];
 }
 

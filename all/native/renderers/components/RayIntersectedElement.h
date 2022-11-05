@@ -8,8 +8,7 @@
 #define _CARTO_RAYINTERSECTEDELEMENT_H_
 
 #include <memory>
-
-#include <boost/any.hpp>
+#include <any>
 
 #include <cglib/vec.h>
 
@@ -19,12 +18,12 @@ namespace carto {
     class RayIntersectedElement {
     public:
         template <typename T>
-        RayIntersectedElement(const std::shared_ptr<T>& element, const std::shared_ptr<Layer>& layer, const cglib::vec3<double>& hitPos, const cglib::vec3<double>& elementPos, bool is3D) :
+        RayIntersectedElement(const std::shared_ptr<T>& element, const std::shared_ptr<Layer>& layer, const cglib::vec3<double>& hitPos, const cglib::vec3<double>& elementPos, bool is3DElement) :
             _element(element),
             _layer(layer),
             _hitPos(hitPos),
             _elementPos(elementPos),
-            _is3D(is3D)
+            _is3DElement(is3DElement)
         {
         }
 
@@ -32,7 +31,7 @@ namespace carto {
 
         template <typename T>
         std::shared_ptr<T> getElement() const {
-            if (auto element = boost::any_cast<std::shared_ptr<T> >(&_element)) {
+            if (auto element = std::any_cast<std::shared_ptr<T> >(&_element)) {
                 return *element;
             }
             return std::shared_ptr<T>();
@@ -44,16 +43,16 @@ namespace carto {
 
         const cglib::vec3<double>& getElementPos() const;
 
-        bool is3D() const;
+        bool is3DElement() const;
 
         double getDistance(const cglib::vec3<double>& origin) const;
     
     private:
-        boost::any _element;
+        std::any _element;
         std::shared_ptr<Layer> _layer;
         cglib::vec3<double> _hitPos;
         cglib::vec3<double> _elementPos;
-        bool _is3D;
+        bool _is3DElement;
     };
     
 }

@@ -35,7 +35,7 @@ namespace carto {
         std::shared_ptr<Bitmap> getBitmap() const;
         /**
          * Sets the bitmap that will be used for drawing the line. The bitmap will be stretched
-         * horizontally to match the width of the line and repeated vertically along the lengtht of the line.
+         * horizontally to match the width of the line and repeated vertically along the length of the line.
          * The default is "default_line.png".
          * @param bitmap The new bitmap for the line.
          */

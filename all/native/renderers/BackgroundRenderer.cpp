@@ -68,7 +68,7 @@ namespace carto {
 
         std::shared_ptr<Bitmap> backgroundBitmap;
         if (!layers.empty() && _options.getBackgroundBitmap() == Options::GetDefaultBackgroundBitmap()) {
-            backgroundBitmap = layers.front()->getBackgroundBitmap();
+            backgroundBitmap = layers.front()->getBackgroundBitmap(viewState);
         }
         if (!backgroundBitmap) {
             backgroundBitmap = _options.getBackgroundBitmap();
@@ -84,7 +84,7 @@ namespace carto {
 
         std::shared_ptr<Bitmap> skyBitmap;
         if (!layers.empty()) {
-            skyBitmap = layers.front()->getSkyBitmap();
+            skyBitmap = layers.front()->getSkyBitmap(viewState);
         }
         if (!skyBitmap) {
             skyBitmap = _options.getSkyBitmap();
@@ -223,7 +223,7 @@ namespace carto {
             glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), _backgroundVertices.data() + 0);
             glVertexAttribPointer(_a_normal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), _backgroundVertices.data() + 3);
             glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), _backgroundVertices.data() + 6);
-            glDrawElements(GL_TRIANGLES, _backgroundIndices.size(), GL_UNSIGNED_SHORT, _backgroundIndices.data());
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(_backgroundIndices.size()), GL_UNSIGNED_SHORT, _backgroundIndices.data());
             glDisableVertexAttribArray(_a_normal);
         } else if (_options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
             // Calculate coordinate transformation parameters
@@ -251,7 +251,7 @@ namespace carto {
             // Draw
             glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _backgroundVertices.data() + 0);
             glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _backgroundVertices.data() + 3);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(vertexCount));
         }
     }
     
@@ -295,7 +295,7 @@ namespace carto {
         // Draw
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 0);
         glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 3);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(vertexCount));
     }
 
     void BackgroundRenderer::drawContour(const ViewState& viewState) {
@@ -308,7 +308,7 @@ namespace carto {
         // Draw
         std::size_t vertexCount = _contourCoords.size();
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _contourCoords.data());
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, static_cast<GLsizei>(vertexCount));
     }
 
     void BackgroundRenderer::BuildPlanarSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& focusPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale) {
@@ -418,12 +418,6 @@ namespace carto {
         }
     }
 
-    const float BackgroundRenderer::SKY_SCALE_MULTIPLIER_PLANAR = 2.0f / std::sqrt(3.0f);
-    const float BackgroundRenderer::SKY_RELATIVE_HEIGHT_PLANAR[] = { -0.02f, 0.06f };
-    const float BackgroundRenderer::SKY_HEIGHT_RAMP_PLANAR[] = { 40.0f, -18.0f };
-    const float BackgroundRenderer::SKY_RELATIVE_HEIGHT_SPHERICAL[] = { -0.05f, 0.1f };
-    const float BackgroundRenderer::SKY_HEIGHT_RAMP_SPHERICAL[2] = { 3.0f, 4.0f };
-
     const float BackgroundRenderer::PLANE_COORDS[] = {
         -0.5f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f
     };
@@ -431,6 +425,12 @@ namespace carto {
     const float BackgroundRenderer::PLANE_TEX_COORDS[] = {
         0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f
     };
+
+    const float BackgroundRenderer::SKY_SCALE_MULTIPLIER_PLANAR = 2.0f / std::sqrt(3.0f);
+    const float BackgroundRenderer::SKY_RELATIVE_HEIGHT_PLANAR[] = { -0.02f, 0.06f };
+    const float BackgroundRenderer::SKY_HEIGHT_RAMP_PLANAR[] = { 40.0f, -18.0f };
+    const float BackgroundRenderer::SKY_RELATIVE_HEIGHT_SPHERICAL[] = { -0.05f, 0.1f };
+    const float BackgroundRenderer::SKY_HEIGHT_RAMP_SPHERICAL[2] = { 3.0f, 4.0f };
 
     const std::string BackgroundRenderer::BACKGROUND_VERTEX_SHADER = R"GLSL(
         #version 100

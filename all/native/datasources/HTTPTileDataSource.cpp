@@ -12,6 +12,7 @@ namespace carto {
         _subdomains({ "a", "b", "c", "d" }),
         _tmsScheme(false),
         _maxAgeHeaderCheck(false),
+        _timeout(-1),
         _headers(),
         _httpClient(true),
         _randomGenerator(),
@@ -74,6 +75,17 @@ namespace carto {
         notifyTilesChanged(false);
     }
     
+    int HTTPTileDataSource::getTimeout() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _timeout;
+    }
+
+    void HTTPTileDataSource::setTimeout(int timeout) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _httpClient.setTimeout(timeout < 0 ? -1 : timeout * 1000);
+        _timeout = timeout;
+    }
+
     std::map<std::string, std::string> HTTPTileDataSource::getHTTPHeaders() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _headers;

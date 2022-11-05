@@ -5,7 +5,7 @@
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/RoutingPackageHandler.h"
 #include "projections/Projection.h"
-#include "routing/OSRMRoutingProxy.h"
+#include "routing/utils/OSRMRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -103,7 +103,7 @@ namespace carto {
     {
     }
         
-    void PackageManagerRoutingService::PackageManagerListener::onPackagesChanged() {
+    void PackageManagerRoutingService::PackageManagerListener::onPackagesChanged(PackageChangeType changeType) {
         std::lock_guard<std::mutex> lock(_service._mutex);
         _service._cachedPackageFileMap.clear();
         _service._cachedRouteFinder.reset();

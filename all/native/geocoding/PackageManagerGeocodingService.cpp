@@ -2,7 +2,7 @@
 
 #include "PackageManagerGeocodingService.h"
 #include "components/Exceptions.h"
-#include "geocoding/GeocodingProxy.h"
+#include "geocoding/utils/CartoGeocodingProxy.h"
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/GeocodingPackageHandler.h"
 
@@ -85,7 +85,9 @@ namespace carto {
             std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<sqlite3pp::database> > packageDatabaseMap;
             for (auto it = packageHandlerMap.begin(); it != packageHandlerMap.end(); it++) {
                 if (auto geocodingHandler = std::dynamic_pointer_cast<GeocodingPackageHandler>(it->second)) {
-                    packageDatabaseMap[it->first] = geocodingHandler->getGeocodingDatabase();
+                    if (auto packageDatabase = geocodingHandler->getDatabase()) {
+                        packageDatabaseMap[it->first] = packageDatabase;
+                    }
                 }
             }
 
@@ -110,7 +112,7 @@ namespace carto {
                 _cachedGeocoder = geocoder;
             }
 
-            results = GeocodingProxy::CalculateAddresses(_cachedGeocoder, request);
+            results = CartoGeocodingProxy::CalculateAddresses(_cachedGeocoder, request);
         });
         return results;
     }
@@ -120,7 +122,7 @@ namespace carto {
     {
     }
         
-    void PackageManagerGeocodingService::PackageManagerListener::onPackagesChanged() {
+    void PackageManagerGeocodingService::PackageManagerListener::onPackagesChanged(PackageChangeType changeType) {
         std::lock_guard<std::mutex> lock(_service._mutex);
         _service._cachedPackageDatabaseMap.clear();
         _service._cachedGeocoder.reset();

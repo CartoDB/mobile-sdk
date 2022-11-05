@@ -11,6 +11,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <cartoswig.i>
 
 %import "graphics/Bitmap.i"
 

@@ -51,7 +51,7 @@ namespace carto {
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, responseData, Log::IsShowDebug())) {
-            Log::Warnf("CartoAssetPackageUpdater: Failed to fetch tile style data");
+            throw NetworkException("Failed to fetch tile style data");
         }
         return responseData;
     }

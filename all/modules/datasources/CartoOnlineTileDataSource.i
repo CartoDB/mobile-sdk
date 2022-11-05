@@ -19,6 +19,7 @@
 
 !polymorphic_shared_ptr(carto::CartoOnlineTileDataSource, datasources.CartoOnlineTileDataSource)
 
+%attribute(carto::CartoOnlineTileDataSource, int, Timeout, getTimeout, setTimeout)
 %std_exceptions(carto::CartoOnlineTileDataSource::CartoOnlineTileDataSource)
 
 %ignore carto::CartoOnlineTileDataSource::getSchema;

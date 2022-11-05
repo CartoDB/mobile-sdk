@@ -29,8 +29,6 @@ namespace carto {
         MapPackageHandler(const std::string& fileName, const std::string& serverEncKey, const std::string& localEncKey);
         virtual ~MapPackageHandler();
 
-        void openDatabase();
-        void closeDatabase();
         std::shared_ptr<BinaryData> loadTile(const MapTile& mapTile);
 
         virtual void onImportPackage();
@@ -39,13 +37,14 @@ namespace carto {
         virtual std::shared_ptr<PackageTileMask> calculateTileMask() const;
 
     private:
+        bool openDatabase();
+        void closeDatabase();
+
         static bool CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey);
         static void UpdateDbEncryption(sqlite3pp::database& db, const std::string& encKey);
 
         static std::string CalculateKeyHash(const std::string& encKey);
-        static void EncryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
-        static void DecryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
-        static void SetCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey);
+        static void EncryptDecryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey, bool encrypt);
 
         const std::string _serverEncKey;
         const std::string _localEncKey;

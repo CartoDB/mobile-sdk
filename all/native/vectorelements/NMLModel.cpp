@@ -11,25 +11,31 @@
 
 namespace carto {
 
-    NMLModel::NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<NMLModelStyle>& style) :
-        VectorElement(geometry),
+    NMLModel::NMLModel(const std::shared_ptr<Billboard>& baseBillboard, const std::shared_ptr<NMLModelStyle>& style) :
+        Billboard(baseBillboard),
         _rotationAxis(0, 0, 1),
-        _rotationAngle(0),
         _scale(1),
         _style(style)
     {
-        if (!geometry) {
-            throw NullArgumentException("Null geometry");
+        if (!style) {
+            throw NullArgumentException("Null style");
         }
+    }
+
+    NMLModel::NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<NMLModelStyle>& style) :
+        Billboard(geometry),
+        _rotationAxis(0, 0, 1),
+        _scale(1),
+        _style(style)
+    {
         if (!style) {
             throw NullArgumentException("Null style");
         }
     }
     
     NMLModel::NMLModel(const MapPos& mapPos, const std::shared_ptr<NMLModelStyle>& style) :
-        VectorElement(std::make_shared<PointGeometry>(mapPos)),
+        Billboard(mapPos),
         _rotationAxis(0, 0, 1),
-        _rotationAngle(0),
         _scale(1),
         _style(style)
     {
@@ -38,67 +44,15 @@ namespace carto {
         }
     }
     
-    NMLModel::NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<BinaryData>& sourceModelData) :
-        VectorElement(geometry),
-        _rotationAxis(0, 0, 1),
-        _rotationAngle(0),
-        _scale(1),
-        _style()
-    {
-        if (!geometry) {
-            throw NullArgumentException("Null geometry");
-        }
-        if (!sourceModelData) {
-            throw NullArgumentException("Null sourceModelData");
-        }
-
-        NMLModelStyleBuilder styleBuilder;
-        styleBuilder.setModelAsset(sourceModelData);
-        _style = styleBuilder.buildStyle();
-    }
-    
-    NMLModel::NMLModel(const MapPos& mapPos, const std::shared_ptr<BinaryData>& sourceModelData) :
-        VectorElement(std::make_shared<PointGeometry>(mapPos)),
-        _rotationAxis(0, 0, 1),
-        _rotationAngle(0),
-        _scale(1),
-        _style()
-    {
-        if (!sourceModelData) {
-            throw NullArgumentException("Null sourceModelData");
-        }
-
-        NMLModelStyleBuilder styleBuilder;
-        styleBuilder.setModelAsset(sourceModelData);
-        _style = styleBuilder.buildStyle();
-    }
-    
     NMLModel::~NMLModel() {
     }
         
-    void NMLModel::setGeometry(const std::shared_ptr<Geometry>& geometry) {
-        if (!geometry) {
-            throw NullArgumentException("Null geometry");
-        }
-
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _geometry = geometry;
-        }
-        notifyElementChanged();
+    float NMLModel::getRotationAngle() const {
+        return Billboard::getRotation();
     }
     
-    void NMLModel::setPos(const MapPos& pos) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _geometry = std::make_shared<PointGeometry>(pos);
-        }
-        notifyElementChanged();
-    }
-        
-    float NMLModel::getRotationAngle() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _rotationAngle;
+    void NMLModel::setRotationAngle(float angle) {
+        Billboard::setRotation(angle);
     }
     
     MapVec NMLModel::getRotationAxis() const {
@@ -106,11 +60,19 @@ namespace carto {
         return _rotationAxis;
     }
     
+    void NMLModel::setRotationAxis(const MapVec& axis) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _rotationAxis = axis;
+        }
+        notifyElementChanged();
+    }
+    
     void NMLModel::setRotation(const MapVec& axis, float angle) {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _rotationAxis = axis;
-            _rotationAngle = angle;
+            _rotation = angle;
         }
         notifyElementChanged();
     }
@@ -143,16 +105,6 @@ namespace carto {
             _style = style;
         }
         notifyElementChanged();
-    }
-    
-    std::shared_ptr<NMLModelDrawData> NMLModel::getDrawData() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _drawData;
-    }
-    
-    void NMLModel::setDrawData(const std::shared_ptr<NMLModelDrawData>& drawData) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _drawData = drawData;
     }
     
 }

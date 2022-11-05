@@ -15,18 +15,19 @@
 #include "layers/TileLayer.h"
 #include "vectortiles/VectorTileDecoder.h"
 
+#include <atomic>
 #include <memory>
 #include <map>
 
 #include <stdext/timed_lru_cache.h>
 
+#include <vt/Tile.h>
+#include <mapnikvt/Properties.h>
+
 namespace carto {
     class TileDrawData;
     class VectorTileEventListener;
     class VTLabelPlacementWorker;
-    namespace vt {
-        class Tile;
-    }
         
     namespace VectorTileRenderOrder {
         /**
@@ -119,6 +120,54 @@ namespace carto {
          * @param radius The new click radius of vector tile features. The default value is 4.
          */
         void setClickRadius(float radius);
+
+        /**
+         * Returns the current relative layer blending speed.
+         * @return The current relative layer blending speed. Default is 1.0.
+         */
+        float getLayerBlendingSpeed() const;
+        /**
+         * Sets the relative layer blending speed.
+         * @param speed The new relative speed value. Default is 1.0. Use zero or negative values to disable blending.
+         */
+        void setLayerBlendingSpeed(float speed);
+
+        /**
+         * Returns the current relative label blending speed.
+         * @return The current relative label blending speed. Default is 1.0.
+         */
+        float getLabelBlendingSpeed() const;
+        /**
+         * Sets the relative label blending speed.
+         * @param speed The new relative speed value. Default is 1.0. Use zero or negative values to disable blending.
+         */
+        void setLabelBlendingSpeed(float speed);
+
+        /**
+         * Returns the renderer layer filter. The filter is given as ECMA regular expression that is applied to qualified layer names.
+         * @return The renderer layer filter. Default is empty string, which means no filter is used.
+         */
+        std::string getRendererLayerFilter() const;
+        /**
+         * Sets the renderer layer filter. The filter is given as ECMA regular expression that is applied to qualified layer names.
+         * If non-empty, then only layers that pass the filter are rendered.
+         * @param filter The new renderer layer filter.
+         * @throws std::runtime_error If the filter expression is not valid.
+         */
+        void setRendererLayerFilter(const std::string& filter);
+
+        /**
+         * Returns the click handler layer filter. The filter is given as ECMA regular expression that is applied to qualified layer names.
+         * @return The click handler layer filter. Default is empty string, which means no filter is used.
+         */
+        std::string getClickHandlerLayerFilter() const;
+        /**
+         * Sets the click handler layer filter. The filter is given as ECMA regular expression that is applied to qualified layer names.
+         * If non-empty, then only layers that pass the filter are tested when handling clicks.
+         * @param filter The new click handler layer filter.
+         * @throws std::runtime_error If the filter expression is not valid.
+         */
+        void setClickHandlerLayerFilter(const std::string& filter);
     
         /**
          * Returns the vector tile event listener.
@@ -134,40 +183,43 @@ namespace carto {
     protected:
         friend class VTLabelPlacementWorker;
 
-        virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
-        virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
-        virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
+        virtual long long getTileId(const MapTile& tile) const;
+        virtual bool tileExists(long long tileId, bool preloadingCache) const;
+        virtual bool tileValid(long long tileId, bool preloadingCache) const;
+        virtual bool prefetchTile(long long tileId, bool preloadingTile);
+        virtual void fetchTile(long long tileId, const MapTile& mapTile, bool preloadingTile, int priorityDelta);
         virtual void clearTiles(bool preloadingTiles);
-        virtual void tilesChanged(bool removeTiles);
+        virtual void invalidateTiles(bool preloadingTiles);
 
-        virtual long long getTileId(const MapTile& mapTile) const;
         virtual std::shared_ptr<VectorTileDecoder::TileMap> getTileMap(long long tileId) const;
         virtual std::shared_ptr<vt::Tile> getPoleTile(int y) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
-        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
+        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState, bool tilesChanged);
     
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;
         virtual std::vector<long long> getVisibleTileIds() const;
         
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
-        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
+        virtual bool processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         virtual void offsetLayerHorizontally(double offset);
         
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         
-        virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
-        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
+        virtual std::shared_ptr<Bitmap> getBackgroundBitmap(const ViewState& viewState) const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap(const ViewState& viewState) const;
 
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
-        // Configuration parameters that can be tweaked in subclasses
-        bool _useTileMapMode;
-    
+        bool isTileMapsMode() const;
+        void setTileMapsMode(bool enabled);
+
+        mvt::ExpressionContext getExpressionContext() const;
+
     private:    
         class TileDecoderListener : public VectorTileDecoder::OnChangeListener {
         public:
@@ -181,7 +233,7 @@ namespace carto {
     
         class FetchTask : public TileLayer::FetchTaskBase {
         public:
-            FetchTask(const std::shared_ptr<VectorTileLayer>& layer, const MapTile& tile, bool preloadingTile);
+            FetchTask(const std::shared_ptr<VectorTileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile);
             
         protected:
             virtual bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
@@ -196,6 +248,7 @@ namespace carto {
             const std::shared_ptr<BinaryData>& getTileData() const { return _tileData; }
             const std::shared_ptr<VectorTileDecoder::TileMap>& getTileMap() const { return _tileMap; }
 
+            int getMaxDrawCallCount() const;
             std::size_t getSize() const;
 
         private:
@@ -206,9 +259,9 @@ namespace carto {
 
         static const int BACKGROUND_BLOCK_SIZE;
         static const int BACKGROUND_BLOCK_COUNT;
+        static const int SKY_BITMAP_HEIGHT;
 
         static const int DEFAULT_CULL_DELAY;
-        static const int PRELOADING_PRIORITY_OFFSET;
 
         static const unsigned int EXTRA_TILE_FOOTPRINT;
         static const unsigned int DEFAULT_VISIBLE_CACHE_SIZE;
@@ -216,9 +269,15 @@ namespace carto {
         
         ThreadSafeDirectorPtr<VectorTileEventListener> _vectorTileEventListener;
 
-        VectorTileRenderOrder::VectorTileRenderOrder _labelRenderOrder;
-        VectorTileRenderOrder::VectorTileRenderOrder _buildingRenderOrder;
-        float _clickRadius;
+        std::atomic<VectorTileRenderOrder::VectorTileRenderOrder> _labelRenderOrder;
+        std::atomic<VectorTileRenderOrder::VectorTileRenderOrder> _buildingRenderOrder;
+        std::atomic<float> _clickRadius;
+        std::atomic<float> _layerBlendingSpeed;
+        std::atomic<float> _labelBlendingSpeed;
+        std::string _rendererLayerFilter;
+        std::string _clickHandlerLayerFilter;
+
+        std::atomic<bool> _tileMapsMode;
     
         const std::shared_ptr<VectorTileDecoder> _tileDecoder;
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;

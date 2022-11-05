@@ -294,7 +294,6 @@ namespace carto {
                 }
                 if (segments > 0) {
                     float segmentDeltaAngle = deltaAngle / segments;
-                    cglib::mat2x2<float> rot2DMat = cglib::rotate2_matrix(static_cast<float>(segmentDeltaAngle * Const::DEG_TO_RAD));
                     cglib::mat3x3<float> rot3DMat = cglib::rotate3_matrix(posNormals[i], static_cast<float>(segmentDeltaAngle * Const::DEG_TO_RAD));
                     bool leftTurn = (deltaAngle <= 0);
                     cglib::vec3<float> rotVec = prevNormalVec;

@@ -1,5 +1,4 @@
 #include "graphics/BitmapCanvasAndroidImpl.h"
-#include "graphics/Bitmap.h"
 #include "components/Exceptions.h"
 #include "utils/BitmapUtils.h"
 #include "utils/AndroidUtils.h"

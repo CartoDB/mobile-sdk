@@ -34,10 +34,10 @@ namespace carto {
         VectorLayer(dataSource),
         _clusterElementBuilder(clusterElementBuilder),
         _clusterBuilderMode(),
-        _minClusterDistance(100),
+        _minClusterDistance(100.0f),
         _maxClusterZoom(Const::MAX_SUPPORTED_ZOOM_LEVEL),
         _animatedClusters(true),
-        _dpiScale(1),
+        _dpiScale(1.0f),
         _clusters(std::make_shared<std::vector<Cluster> >()),
         _projectionSurface(),
         _singletonClusterCount(0),
@@ -131,7 +131,7 @@ namespace carto {
     }
 
     bool ClusteredVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
-        if (!isVisible() || !_lastCullState || !getVisibleZoomRange().inRange(viewState.getZoom()) || getOpacity() <= 0) {
+        if (!isVisible() || !getLastCullState() || !getVisibleZoomRange().inRange(viewState.getZoom()) || getOpacity() <= 0) {
             return false;
         }
 
@@ -142,14 +142,15 @@ namespace carto {
     void ClusteredVectorLayer::refreshElement(const std::shared_ptr<VectorElement>& element, bool remove) {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_lastCullState) {
-                syncRendererElement(element, _lastCullState->getViewState(), remove);
+            std::shared_ptr<CullState> lastCullState = getLastCullState();
+            if (lastCullState) {
+                syncRendererElement(element, lastCullState->getViewState(), remove);
             }
         }
         refresh();
     }
 
-    std::shared_ptr<CancelableTask> ClusteredVectorLayer::createFetchTask(const std::shared_ptr<CullState>& cullState) {
+    std::shared_ptr<VectorLayer::FetchTask> ClusteredVectorLayer::createFetchTask(const std::shared_ptr<CullState>& cullState) {
         return std::make_shared<ClusterFetchTask>(std::static_pointer_cast<ClusteredVectorLayer>(shared_from_this()));
     }
 
@@ -158,12 +159,8 @@ namespace carto {
     {
     }
 
-    bool ClusteredVectorLayer::ClusterFetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
-        std::shared_ptr<ClusteredVectorLayer> layer = std::static_pointer_cast<ClusteredVectorLayer>(_layer.lock());
-        if (!layer) {
-            return false;
-        }
-
+    bool ClusteredVectorLayer::ClusterFetchTask::loadElements(const std::shared_ptr<VectorLayer>& vectorLayer, const std::shared_ptr<CullState>& cullState) {
+        std::shared_ptr<ClusteredVectorLayer> layer = std::static_pointer_cast<ClusteredVectorLayer>(vectorLayer);
         if (auto options = layer->getOptions()) {
             std::lock_guard<std::mutex> lock(layer->_clusterMutex);
             layer->_dpiScale = options->getDPI() / Const::UNSCALED_DPI;
@@ -190,47 +187,46 @@ namespace carto {
             return;
         }
 
+        // Create singleton clusters
         auto clusters = std::make_shared<std::vector<Cluster> >();
         clusters->reserve(vectorElements.size() * 2);
-        int singletonClusterCount = 0;
+        std::vector<int> clusterIdxs;
+        clusterIdxs.reserve(vectorElements.size());
+        for (const std::shared_ptr<VectorElement>& element : vectorElements) {
+            int clusterIdx = createSingletonCluster(element, *clusters, *projectionSurface);
+            if (clusterIdx != -1) {
+                clusterIdxs.push_back(clusterIdx);
+            }
+        }
+
+        // Check if we must recalculate clustering
+        int singletonClusterCount = static_cast<int>(clusters->size());
+        {
+            std::lock_guard<std::mutex> lock(_clusterMutex);
+
+            if (_singletonClusterCount == singletonClusterCount) {
+                bool changed = false;
+                for (int i = 0; i < singletonClusterCount; i++) {
+                    if ((*_clusters)[i].vectorElement != (*clusters)[i].vectorElement ||
+                        (*_clusters)[i].staticPos != (*clusters)[i].staticPos)
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+                if (!changed) {
+                    // Reset cluster elements as styles/attributes may have changed
+                    for (Cluster& cluster : *_clusters) {
+                        cluster.clusterElement.reset();
+                    }
+                    return;
+                }
+            }
+        }
+
+        // Rebuild clusters, by doing bottom-up merging into a single cluster
         int rootClusterIdx = -1;
-        if (!vectorElements.empty()) {
-            // Create singleton clusters
-            std::vector<int> clusterIdxs;
-            clusterIdxs.reserve(vectorElements.size());
-            for (const std::shared_ptr<VectorElement>& element : vectorElements) {
-                int clusterIdx = createSingletonCluster(element, *clusters, *projectionSurface);
-                if (clusterIdx != -1) {
-                    clusterIdxs.push_back(clusterIdx);
-                }
-            }
-            singletonClusterCount = static_cast<int>(clusters->size());
-
-            // Check if we must recalculate clustering
-            {
-                std::lock_guard<std::mutex> lock(_clusterMutex);
-
-                if (_singletonClusterCount == singletonClusterCount) {
-                    bool changed = false;
-                    for (int i = 0; i < singletonClusterCount; i++) {
-                        if ((*_clusters)[i].vectorElement != (*clusters)[i].vectorElement ||
-                            (*_clusters)[i].staticPos != (*clusters)[i].staticPos)
-                        {
-                            changed = true;
-                            break;
-                        }
-                    }
-                    if (!changed) {
-                        // Reset cluster elements as styles/attributes may have changed
-                        for (Cluster& cluster : *_clusters) {
-                            cluster.clusterElement.reset();
-                        }
-                        return;
-                    }
-                }
-            }
-
-            // Rebuild clusters, by doing bottom-up merging into a single cluster
+        if (!clusters->empty()) {
             rootClusterIdx = mergeClusters(clusterIdxs.begin(), clusterIdxs.end(), *clusters, *projectionSurface, 1).front();
         }
 

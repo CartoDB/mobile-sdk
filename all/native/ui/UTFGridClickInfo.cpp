@@ -2,8 +2,8 @@
 
 namespace carto {
 
-    UTFGridClickInfo::UTFGridClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const Variant& elementInfo, const std::shared_ptr<Layer>& layer) :
-        _clickType(clickType),
+    UTFGridClickInfo::UTFGridClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const Variant& elementInfo, const std::shared_ptr<Layer>& layer) :
+        _clickInfo(clickInfo),
         _clickPos(clickPos),
         _elementInfo(elementInfo),
         _layer(layer)
@@ -14,9 +14,13 @@ namespace carto {
     }
 
     ClickType::ClickType UTFGridClickInfo::getClickType() const {
-        return _clickType;
+        return _clickInfo.getClickType();
     }
     
+    const ClickInfo& UTFGridClickInfo::getClickInfo() const {
+        return _clickInfo;
+    }
+
     const MapPos& UTFGridClickInfo::getClickPos() const {
         return _clickPos;
     }

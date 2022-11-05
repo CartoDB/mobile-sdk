@@ -7,6 +7,7 @@
 #include "utils/Log.h"
 
 #include <cmath>
+#include <limits>
 #include <cglib/mat.h>
 
 namespace carto {
@@ -282,7 +283,7 @@ namespace carto {
         if (_height <= 0) {
             _height = 1;
         }
-        _aspectRatio = (float) _width / _height;
+        _aspectRatio = (float)_width / _height;
     
         _screenSizeChanged = true;
     }

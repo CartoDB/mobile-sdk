@@ -10,7 +10,6 @@
 #include "renderers/GeometryCollectionRenderer.h"
 #include "renderers/LineRenderer.h"
 #include "renderers/MapRenderer.h"
-#include "renderers/NMLModelRenderer.h"
 #include "renderers/PointRenderer.h"
 #include "renderers/Polygon3DRenderer.h"
 #include "renderers/PolygonRenderer.h"
@@ -45,16 +44,15 @@ namespace carto {
         Layer(),
         _dataSource(dataSource),
         _dataSourceListener(),
-        _zBuffering(false),
+        _fetchingTasks(),
         _vectorElementEventListener(),
+        _zBuffering(false),
         _billboardRenderer(std::make_shared<BillboardRenderer>()),
         _geometryCollectionRenderer(std::make_shared<GeometryCollectionRenderer>()),
         _lineRenderer(std::make_shared<LineRenderer>()),
         _pointRenderer(std::make_shared<PointRenderer>()),
         _polygonRenderer(std::make_shared<PolygonRenderer>()),
-        _polygon3DRenderer(std::make_shared<Polygon3DRenderer>()),
-        _nmlModelRenderer(std::make_shared<NMLModelRenderer>()),
-        _lastTask()
+        _polygon3DRenderer(std::make_shared<Polygon3DRenderer>())
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -77,17 +75,16 @@ namespace carto {
     }
 
     bool VectorLayer::isZBuffering() const {
-        return _zBuffering;
+        return _zBuffering.load();
     }
 
     void VectorLayer::setZBuffering(bool enabled) {
-        _zBuffering = enabled;
+        _zBuffering.store(enabled);
         refresh();
     }
     
     bool VectorLayer::isUpdateInProgress() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return static_cast<bool>(_lastTask);
+        return _fetchingTasks.getCount() > 0;
     }
     
     void VectorLayer::setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
@@ -103,18 +100,15 @@ namespace carto {
         _pointRenderer->setComponents(options, mapRenderer);
         _polygonRenderer->setComponents(options, mapRenderer);
         _polygon3DRenderer->setComponents(options, mapRenderer);
-        _nmlModelRenderer->setComponents(options, mapRenderer);
     }
     
     void VectorLayer::loadData(const std::shared_ptr<CullState>& cullState) {
-        // Cancel last task, if it has not started yet
-        std::shared_ptr<CancelableTask> lastTask;
+        // Cancel tasks
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            lastTask = _lastTask;
-        }
-        if (lastTask) {
-            lastTask->cancel();
+            for (const std::shared_ptr<FetchTask>& task : _fetchingTasks.getAll()) {
+                task->cancel();
+            }
         }
 
         // Check if the layer should be shown
@@ -138,15 +132,15 @@ namespace carto {
             return;
         }
 
-        lastTask = createFetchTask(cullState);
         std::shared_ptr<CancelableThreadPool> envelopeThreadPool;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _lastTask = lastTask;
             envelopeThreadPool = _envelopeThreadPool;
         }
         if (envelopeThreadPool) {
-            envelopeThreadPool->execute(lastTask, getUpdatePriority());
+            std::shared_ptr<FetchTask> task = createFetchTask(cullState);
+            _fetchingTasks.insert(task);
+            envelopeThreadPool->execute(task, getUpdatePriority());
         }
     }
 
@@ -157,7 +151,6 @@ namespace carto {
         _pointRenderer->offsetLayerHorizontally(offset);
         _polygonRenderer->offsetLayerHorizontally(offset);
         _polygon3DRenderer->offsetLayerHorizontally(offset);
-        _nmlModelRenderer->offsetLayerHorizontally(offset);
     }
     
     bool VectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
@@ -178,7 +171,6 @@ namespace carto {
             _pointRenderer->onDrawFrame(deltaSeconds, viewState);
             _polygonRenderer->onDrawFrame(deltaSeconds, viewState);
             _polygon3DRenderer->onDrawFrame(deltaSeconds, viewState);
-            _nmlModelRenderer->onDrawFrame(deltaSeconds, viewState);
 
             if (zBuffering) {
                 mapRenderer->setZBuffering(false);
@@ -200,10 +192,9 @@ namespace carto {
         _pointRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
         _polygonRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
         _polygon3DRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
-        _nmlModelRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
     }
 
-    bool VectorLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+    bool VectorLayer::processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
         if (!projectionSurface) {
             return false;
@@ -216,16 +207,16 @@ namespace carto {
                     std::vector<float> coordBuf(12);
                     if (BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
                         cglib::vec3<double> originShift = viewState.getCameraPos();
-                        cglib::vec3<double> topLeft = originShift + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
-                        cglib::vec3<double> bottomLeft = originShift + cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]);
-                        cglib::vec3<double> topRight = originShift + cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]);
+                        cglib::vec3<double> topLeft     = originShift + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
+                        cglib::vec3<double> bottomLeft  = originShift + cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]);
+                        cglib::vec3<double> topRight    = originShift + cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]);
                         cglib::vec3<double> delta = intersectedElement.getHitPos() - topLeft;
 
-                        float x = static_cast<float>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft) * bitmap->getWidth());
+                        float x = static_cast<float>(cglib::dot_product(delta, topRight   - topLeft) / cglib::norm(topRight   - topLeft) * bitmap->getWidth());
                         float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft) * bitmap->getHeight());
 
                         MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
-                        if (popup->processClick(clickType, hitPos, ScreenPos(x, y))) {
+                        if (popup->processClick(clickInfo, hitPos, ScreenPos(x, y))) {
                             return true;
                         }
                     }
@@ -237,12 +228,12 @@ namespace carto {
             if (vectorElementEventListener) {
                 MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
                 MapPos elementPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getElementPos()));
-                auto vectorElementClickInfo = std::make_shared<VectorElementClickInfo>(clickType, hitPos, elementPos, element, intersectedElement.getLayer());
+                auto vectorElementClickInfo = std::make_shared<VectorElementClickInfo>(clickInfo, hitPos, elementPos, element, intersectedElement.getLayer());
                 return vectorElementEventListener->onVectorElementClicked(vectorElementClickInfo);
             }
         }
 
-        return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
+        return clickInfo.getClickType() == ClickType::CLICK_TYPE_SINGLE || clickInfo.getClickType() == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
     }
     
     void VectorLayer::refreshElement(const std::shared_ptr<VectorElement>& element, bool remove) {
@@ -250,13 +241,14 @@ namespace carto {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-            if (!_lastCullState) {
+            std::shared_ptr<CullState> lastCullState = getLastCullState();
+            if (!lastCullState) {
                 return;
             }
             
-            billboardsChanged = syncRendererElement(element, _lastCullState->getViewState(), remove);
+            billboardsChanged = syncRendererElement(element, lastCullState->getViewState(), remove);
             
-            if (!isVisible() || !getVisibleZoomRange().inRange(_lastCullState->getViewState().getZoom()) || getOpacity() <= 0) {
+            if (!isVisible() || !getVisibleZoomRange().inRange(lastCullState->getViewState().getZoom()) || getOpacity() <= 0) {
                 return;
             }
         }
@@ -282,7 +274,7 @@ namespace carto {
 
         if (const std::shared_ptr<Label>& label = std::dynamic_pointer_cast<Label>(element)) {
             if (!label->getDrawData() || label->getDrawData()->isOffset() || label->getDrawData()->getProjectionSurface() != projectionSurface) {
-                label->setDrawData(std::make_shared<LabelDrawData>(*label, *label->getStyle(), *_dataSource->getProjection(), projectionSurface, _lastCullState->getViewState()));
+                label->setDrawData(std::make_shared<LabelDrawData>(*label, *label->getStyle(), *_dataSource->getProjection(), projectionSurface, viewState));
             }
             _billboardRenderer->addElement(label);
         } else if (const std::shared_ptr<Line>& line = std::dynamic_pointer_cast<Line>(element)) {
@@ -319,11 +311,11 @@ namespace carto {
             if (!nmlModel->getDrawData() || nmlModel->getDrawData()->isOffset() || nmlModel->getDrawData()->getProjectionSurface() != projectionSurface) {
                 nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
-            _nmlModelRenderer->addElement(nmlModel);
+            _billboardRenderer->addElement(nmlModel);
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
             if (!popup->getDrawData() || popup->getDrawData()->isOffset() || popup->getDrawData()->getProjectionSurface() != projectionSurface) {
                 if (auto options = getOptions()) {
-                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), projectionSurface, options, _lastCullState->getViewState()));
+                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), projectionSurface, options, viewState));
                 } else {
                     return;
                 }
@@ -340,7 +332,6 @@ namespace carto {
         _pointRenderer->refreshElements();
         _polygonRenderer->refreshElements();
         _polygon3DRenderer->refreshElements();
-        _nmlModelRenderer->refreshElements();
         if (_billboardRenderer->getElementCount() > 0) {
             billboardsChanged = true;
         }
@@ -411,9 +402,9 @@ namespace carto {
         } else if (const std::shared_ptr<NMLModel>& nmlModel = std::dynamic_pointer_cast<NMLModel>(element)) {
             if (visible && !remove) {
                 nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), projectionSurface));
-                _nmlModelRenderer->updateElement(nmlModel);
+                _billboardRenderer->updateElement(nmlModel);
             } else {
-                _nmlModelRenderer->removeElement(nmlModel);
+                _billboardRenderer->removeElement(nmlModel);
             }
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
             if (visible && !remove) {
@@ -440,7 +431,7 @@ namespace carto {
         _dataSourceListener.reset();
     }
 
-    std::shared_ptr<CancelableTask> VectorLayer::createFetchTask(const std::shared_ptr<CullState>& cullState) {
+    std::shared_ptr<VectorLayer::FetchTask> VectorLayer::createFetchTask(const std::shared_ptr<CullState>& cullState) {
         return std::make_shared<FetchTask>(std::static_pointer_cast<VectorLayer>(shared_from_this()));
     }
     
@@ -498,39 +489,42 @@ namespace carto {
     }
     
     VectorLayer::FetchTask::FetchTask(const std::weak_ptr<VectorLayer>& layer) :
-        _layer(layer), _started(false)
+        _layer(layer),
+        _started(false)
     {
     }
     
     void VectorLayer::FetchTask::cancel() {
+        std::shared_ptr<VectorLayer> layer = _layer.lock();
+        if (!layer) {
+            Log::Info("VectorLayer::FetchTask: Lost connection to layer");
+            return;
+        }
+
         bool cancel = false;
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
             if (!_started) {
-                _canceled = true;
                 cancel = true;
             }
+            CancelableTask::cancel();
         }
 
         if (cancel) {
-            if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
-                std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                if (layer->_lastTask == shared_from_this()) {
-                    layer->_lastTask.reset();
-                }
-            }
+            layer->_fetchingTasks.remove(std::static_pointer_cast<FetchTask>(shared_from_this()));
         }
     }
     
     void VectorLayer::FetchTask::run() {
-        const std::shared_ptr<VectorLayer>& layer = _layer.lock();
+        std::shared_ptr<VectorLayer> layer = _layer.lock();
         if (!layer) {
+            Log::Info("VectorLayer::FetchTask: Lost connection to layer");
             return;
         }
         
         {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_canceled) {
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            if (isCanceled()) {
                 return;
             }
             _started = true;
@@ -539,16 +533,17 @@ namespace carto {
         // Renderer access needs to be synchronized, this method may be called from multiple threads at the same time
         bool billboardsChanged = false;
         {
-            std::shared_ptr<CullState> lastCullState;
+            std::shared_ptr<CullState> cullState;
             {
                 std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                if (layer->isVisible() && layer->_lastCullState && layer->getVisibleZoomRange().inRange(layer->_lastCullState->getViewState().getZoom())) {
-                    lastCullState = layer->_lastCullState;
+                std::shared_ptr<CullState> lastCullState = layer->getLastCullState();
+                if (layer->isVisible() && lastCullState && layer->getVisibleZoomRange().inRange(lastCullState->getViewState().getZoom())) {
+                    cullState = lastCullState;
                 }
             }
-            if (lastCullState) {
+            if (cullState) {
                 try {
-                    billboardsChanged = loadElements(lastCullState);
+                    billboardsChanged = loadElements(layer, cullState);
                 }
                 catch (const std::exception& ex) {
                     Log::Errorf("VectorLayer::FetchTask: Exception while loading elements: %s", ex.what());
@@ -557,12 +552,8 @@ namespace carto {
                 std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
                 billboardsChanged = layer->refreshRendererElements();
             }
-        
-            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-        
-            if (layer->_lastTask == shared_from_this()) {
-                layer->_lastTask.reset();
-            }
+
+            layer->_fetchingTasks.remove(std::static_pointer_cast<FetchTask>(shared_from_this()));
         }
 
         if (auto mapRenderer = layer->getMapRenderer()) {
@@ -574,12 +565,7 @@ namespace carto {
         }
     }
     
-    bool VectorLayer::FetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
-        const std::shared_ptr<VectorLayer>& layer = _layer.lock();
-        if (!layer) {
-            return false;
-        }
-
+    bool VectorLayer::FetchTask::loadElements(const std::shared_ptr<VectorLayer>& layer, const std::shared_ptr<CullState>& cullState) {
         std::shared_ptr<VectorData> vectorData = layer->_dataSource->loadElements(cullState);
         if (!vectorData) {
             return false;

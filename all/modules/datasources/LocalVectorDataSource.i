@@ -20,6 +20,7 @@
 %import "styles/Style.i"
 %import "vectorelements/VectorElement.i"
 
+!enum(carto::LocalSpatialIndexType::LocalSpatialIndexType)
 !polymorphic_shared_ptr(carto::LocalVectorDataSource, datasources.LocalVectorDataSource)
 
 %feature("director") carto::LocalVectorDataSource;

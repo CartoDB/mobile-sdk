@@ -95,8 +95,7 @@ namespace carto {
         MapRange zoomRange = options.getZoomRange();
         float zoom = GeneralUtils::Clamp(viewState.getZoom() + _zoomDelta, viewState.getMinZoom(), zoomRange.getMax());
         double scale = std::pow(2.0f, viewState.getZoom() - zoom);
-    
-        cglib::mat4x4<double> shiftTransform = projectionSurface->calculateTranslateMatrix(focusPos, targetPos, 1 - scale);
+        cglib::mat4x4<double> shiftTransform = projectionSurface->calculateTranslateMatrix(focusPos, targetPos, 1.0 - scale);
 
         focusPos = cglib::transform_point(focusPos, shiftTransform);
         cameraPos = focusPos + (cglib::transform_point(cameraPos, shiftTransform) - focusPos) * scale;

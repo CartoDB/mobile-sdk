@@ -13,6 +13,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <cartoswig.i>
 
 %import "core/ScreenPos.i"
 %import "geometry/Geometry.i"
@@ -20,6 +21,8 @@
 %import "styles/PointStyle.i"
 %import "ui/VectorElementDragInfo.i"
 
+!enum(carto::VectorElementDragPointStyle::VectorElementDragPointStyle)
+!enum(carto::VectorElementDragResult::VectorElementDragResult)
 !polymorphic_shared_ptr(carto::VectorEditEventListener, layers.VectorEditEventListener)
 
 %feature("director") carto::VectorEditEventListener;

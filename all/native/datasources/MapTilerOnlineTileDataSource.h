@@ -44,6 +44,17 @@ namespace carto {
          */
         void setCustomServiceURL(const std::string& serviceURL);
 
+        /**
+         * Returns the current timeout value.
+         * @return The current timeout value in seconds. If negative, then default platform-specific timeout is used.
+         */
+        int getTimeout() const;
+        /**
+         * Sets the current timeout value.
+         * @param timeout The new timeout value in seconds. If negative, then default platform-specific timeout is used.
+         */
+        void setTimeout(int timeout);
+
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         
     protected:
@@ -59,6 +70,7 @@ namespace carto {
         const std::string _key;
         HTTPClient _httpClient;
         std::string _serviceURL;
+        int _timeout;
 
         bool _tmsScheme;
         std::vector<std::string> _tileURLs;

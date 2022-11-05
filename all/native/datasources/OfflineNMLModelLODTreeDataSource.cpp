@@ -19,13 +19,12 @@ namespace carto {
 
     OfflineNMLModelLODTreeDataSource::OfflineNMLModelLODTreeDataSource(const std::string& path) :
         NMLModelLODTreeDataSource(std::make_shared<EPSG3857>()),
-        _db()
+        _database(std::make_unique<sqlite3pp::database>())
     {
-        _db.reset(new sqlite3pp::database());
-        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+        if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database", path);
         }
-        _db->execute("PRAGMA encoding='UTF-8'");
+        _database->execute("PRAGMA temp_store=MEMORY");
     }
     
     OfflineNMLModelLODTreeDataSource::~OfflineNMLModelLODTreeDataSource() {
@@ -34,13 +33,13 @@ namespace carto {
     MapBounds OfflineNMLModelLODTreeDataSource::getDataExtent() const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (!_db) {
+        if (!_database) {
             Log::Error("NMLModelLODTreeDataSource::getDataExtent: Failed to load tiles, could not connect to database");
             return MapBounds();
         }
     
         MapBounds dataExtent;
-        sqlite3pp::query query(*_db, "SELECT mapbounds_x0, mapbounds_y0, mapbounds_x1, mapbounds_y1 FROM MapTiles");
+        sqlite3pp::query query(*_database, "SELECT mapbounds_x0, mapbounds_y0, mapbounds_x1, mapbounds_y1 FROM MapTiles");
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             double mapBoundsX0 = (*qit).get<double>(0);
             double mapBoundsY0 = (*qit).get<double>(1);
@@ -57,14 +56,14 @@ namespace carto {
     std::vector<NMLModelLODTreeDataSource::MapTile> OfflineNMLModelLODTreeDataSource::loadMapTiles(const std::shared_ptr<CullState>& cullState) {
         std::lock_guard<std::mutex> lock(_mutex);
     
-        if (!_db) {
+        if (!_database) {
             Log::Error("NMLModelLODTreeDataSource::loadMapTiles: Failed to load tiles, could not connect to database");
             return std::vector<MapTile>();
         }
     
         MapBounds bounds = cullState->getProjectionEnvelope(_projection).getBounds();
         
-        sqlite3pp::query query(*_db, "SELECT id, modellodtree_id, mappos_x, mappos_y, groundheight, mapbounds_x0, mapbounds_y0, mapbounds_x1, mapbounds_y1 FROM MapTiles WHERE ((mapbounds_x1>=:x0 AND mapbounds_x0<=:x1) OR (mapbounds_x1>=:x0 + :width AND mapbounds_x0<=:x1 + :width) OR (mapbounds_x1>=:x0 - :width AND mapbounds_x0<=:x1 - :width)) AND (mapbounds_y1>=:y0 AND mapbounds_y0<=:y1)");
+        sqlite3pp::query query(*_database, "SELECT id, modellodtree_id, mappos_x, mappos_y, groundheight, mapbounds_x0, mapbounds_y0, mapbounds_x1, mapbounds_y1 FROM MapTiles WHERE ((mapbounds_x1>=:x0 AND mapbounds_x0<=:x1) OR (mapbounds_x1>=:x0 + :width AND mapbounds_x0<=:x1 + :width) OR (mapbounds_x1>=:x0 - :width AND mapbounds_x0<=:x1 - :width)) AND (mapbounds_y1>=:y0 AND mapbounds_y0<=:y1)");
         query.bind(":x0", bounds.getMin().getX());
         query.bind(":y0", bounds.getMin().getY());
         query.bind(":x1", bounds.getMax().getX());
@@ -106,12 +105,12 @@ namespace carto {
     std::shared_ptr<NMLModelLODTree> OfflineNMLModelLODTreeDataSource::loadModelLODTree(const MapTile& mapTile) {
         std::lock_guard<std::mutex> lock(_mutex);
     
-        if (!_db) {
+        if (!_database) {
             Log::Error("OfflineNMLModelLODTreeDataSource::loadModelLODTree: Failed to load LOD tree, could not connect to database");
             return std::shared_ptr<NMLModelLODTree>();
         }
     
-        sqlite3pp::query query(*_db, "SELECT id, nmlmodellodtree FROM ModelLODTrees WHERE id=:id");
+        sqlite3pp::query query(*_database, "SELECT id, nmlmodellodtree FROM ModelLODTrees WHERE id=:id");
         query.bind(":id", static_cast<std::uint64_t>(mapTile.modelLODTreeId));
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             long long modelLODTreeId = (*qit).get<std::uint64_t>(0);
@@ -119,7 +118,7 @@ namespace carto {
             const void* nmlModelLODTreeData = (*qit).get<const void*>(1);
             std::shared_ptr<nml::ModelLODTree> sourceModelLODTree = std::make_shared<nml::ModelLODTree>(protobuf::message(nmlModelLODTreeData, nmlModelLODTreeSize));
     
-            sqlite3pp::query queryProxyBindings(*_db, "SELECT * FROM ModelInfo WHERE modellodtree_id=:modellodtree_id");
+            sqlite3pp::query queryProxyBindings(*_database, "SELECT * FROM ModelInfo WHERE modellodtree_id=:modellodtree_id");
             queryProxyBindings.bind(":modellodtree_id", static_cast<std::uint64_t>(modelLODTreeId));
             NMLModelLODTree::ProxyMap proxyMap;
             for (auto qitProxyBindings = queryProxyBindings.begin(); qitProxyBindings != queryProxyBindings.end(); qitProxyBindings++) {
@@ -147,7 +146,7 @@ namespace carto {
     
             NMLModelLODTree::MeshBindingsMap meshBindingsMap;
             try {
-                sqlite3pp::query queryMeshBindings(*_db, "SELECT node_id, local_id, mesh_id, nmlmeshop FROM ModelLODTreeNodeMeshes WHERE modellodtree_id=:modellodtree_id");
+                sqlite3pp::query queryMeshBindings(*_database, "SELECT node_id, local_id, mesh_id, nmlmeshop FROM ModelLODTreeNodeMeshes WHERE modellodtree_id=:modellodtree_id");
                 queryMeshBindings.bind(":modellodtree_id", static_cast<std::uint64_t>(modelLODTreeId));
                 for (auto qitMeshBindings = queryMeshBindings.begin(); qitMeshBindings != queryMeshBindings.end(); qitMeshBindings++) {
                     int nodeId = (*qitMeshBindings).get<std::uint32_t>(0);
@@ -168,7 +167,7 @@ namespace carto {
                 Log::Error("OfflineNMLModelLODTreeDataSource: Mesh query failed. Legacy database without 'nmlmeshop' column?");
             }
     
-            sqlite3pp::query queryTexBindings(*_db, "SELECT node_id, local_id, texture_id, level FROM ModelLODTreeNodeTextures WHERE modellodtree_id=:modellodtree_id");
+            sqlite3pp::query queryTexBindings(*_database, "SELECT node_id, local_id, texture_id, level FROM ModelLODTreeNodeTextures WHERE modellodtree_id=:modellodtree_id");
             queryTexBindings.bind(":modellodtree_id", static_cast<std::uint64_t>(modelLODTreeId));
             NMLModelLODTree::TextureBindingsMap textureBindingsMap;
             for (auto qitTexBindings = queryTexBindings.begin(); qitTexBindings != queryTexBindings.end(); qitTexBindings++) {
@@ -190,12 +189,12 @@ namespace carto {
     std::shared_ptr<nml::Mesh> OfflineNMLModelLODTreeDataSource::loadMesh(long long meshId) {
         std::lock_guard<std::mutex> lock(_mutex);
     
-        if (!_db) {
+        if (!_database) {
             Log::Error("OfflineNMLModelLODTreeDataSource::loadMesh: Failed to load mesh, could not connect to database");
             return std::shared_ptr<nml::Mesh>();
         }
     
-        sqlite3pp::query query(*_db, "SELECT nmlmesh FROM Meshes WHERE id=:source_id");
+        sqlite3pp::query query(*_database, "SELECT nmlmesh FROM Meshes WHERE id=:source_id");
         query.bind(":source_id", static_cast<std::uint64_t>(meshId));
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             std::size_t nmlMeshSize = (*qit).column_bytes(0);
@@ -210,12 +209,12 @@ namespace carto {
     std::shared_ptr<nml::Texture> OfflineNMLModelLODTreeDataSource::loadTexture(long long textureId, int level) {
         std::lock_guard<std::mutex> lock(_mutex);
     
-        if (!_db) {
+        if (!_database) {
             Log::Error("OfflineNMLModelLODTreeDataSource::loadTexture: Failed to load texture, could not connect to database");
             return std::shared_ptr<nml::Texture>();
         }
     
-        sqlite3pp::query query(*_db, "SELECT nmltexture FROM Textures WHERE id=:source_id AND textures.level=:level ORDER BY textures.level ASC");
+        sqlite3pp::query query(*_database, "SELECT nmltexture FROM Textures WHERE id=:source_id AND textures.level=:level ORDER BY textures.level ASC");
         query.bind(":source_id", static_cast<std::uint64_t>(textureId));
         query.bind(":level", level);
         for (auto qit = query.begin(); qit != query.end(); qit++) {

@@ -1,10 +1,6 @@
 #include "AnimationHandler.h"
 #include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
-#include "renderers/cameraevents/CameraPanEvent.h"
-#include "renderers/cameraevents/CameraRotationEvent.h"
-#include "renderers/cameraevents/CameraTiltEvent.h"
-#include "renderers/cameraevents/CameraZoomEvent.h"
 #include "core/MapPos.h"
 #include "graphics/ViewState.h"
 
@@ -36,11 +32,29 @@ namespace carto {
     }
     
     void AnimationHandler::calculate(const ViewState& viewState, float deltaSeconds) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        calculatePan(viewState, deltaSeconds);
-        calculateRotation(viewState, deltaSeconds);
-        calculateTilt(viewState, deltaSeconds);
-        calculateZoom(viewState, deltaSeconds);
+        std::optional<CameraPanEvent> cameraPanEvent;
+        std::optional<CameraRotationEvent> cameraRotationEvent;
+        std::optional<CameraTiltEvent> cameraTiltEvent;
+        std::optional<CameraZoomEvent> cameraZoomEvent;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            cameraPanEvent = calculatePan(viewState, deltaSeconds);
+            cameraRotationEvent = calculateRotation(viewState, deltaSeconds);
+            cameraTiltEvent = calculateTilt(viewState, deltaSeconds);
+            cameraZoomEvent = calculateZoom(viewState, deltaSeconds);
+        }
+        if (cameraPanEvent) {
+            _mapRenderer.calculateCameraEvent(*cameraPanEvent, 0, false);
+        }
+        if (cameraRotationEvent) {
+            _mapRenderer.calculateCameraEvent(*cameraRotationEvent, 0, false);
+        }
+        if (cameraTiltEvent) {
+            _mapRenderer.calculateCameraEvent(*cameraTiltEvent, 0, false);
+        }
+        if (cameraZoomEvent) {
+            _mapRenderer.calculateCameraEvent(*cameraZoomEvent, 0, false);
+        }
     }
     
     void AnimationHandler::setPanTarget(const MapPos& panTarget, float durationSeconds) {
@@ -67,13 +81,16 @@ namespace carto {
     void AnimationHandler::setRotationTarget(float rotationTarget, const MapPos* targetPos, float durationSeconds) {
         std::lock_guard<std::mutex> lock(_mutex);
         _rotationStarted = true;
-        _rotationTarget = fmod(rotationTarget, 360.0f);
+        _rotationTarget = std::fmod(rotationTarget, 360.0f);
         if (_rotationTarget > 180) {
             _rotationTarget -= 360;
         } else if (_rotationTarget < -180) {
             _rotationTarget += 360;
         }
-        _rotationTargetPos.reset(targetPos ? new MapPos(*targetPos) : nullptr);
+        _rotationTargetPos.reset();
+        if (targetPos) {
+            _rotationTargetPos = *targetPos;
+        }
         _rotationDurationSeconds = durationSeconds;
     }
         
@@ -98,7 +115,10 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _zoomStarted = true;
         _zoomTarget = zoomTarget;
-        _zoomTargetPos.reset(targetPos ? new MapPos(*targetPos) : nullptr);
+        _zoomTargetPos.reset();
+        if (targetPos) {
+            _zoomTargetPos = *targetPos;
+        }
         _zoomDurationSeconds = durationSeconds;
     }
         
@@ -107,7 +127,7 @@ namespace carto {
         _zoomDurationSeconds = 0;
     }
     
-    void AnimationHandler::calculatePan(const ViewState& viewState, float deltaSeconds) {
+    std::optional<CameraPanEvent> AnimationHandler::calculatePan(const ViewState& viewState, float deltaSeconds) {
         // Disregard the first calculation event, because the deltaSeconds parameter may be
         // very large. It's caused by on-demand rendering.
         if (_panStarted) {
@@ -130,11 +150,12 @@ namespace carto {
     
             CameraPanEvent cameraEvent;
             cameraEvent.setPos(newFocusPos);
-            _mapRenderer.calculateCameraEvent(cameraEvent, 0, false);
+            return cameraEvent;
         }
+        return std::optional<CameraPanEvent>();
     }
     
-    void AnimationHandler::calculateRotation(const ViewState& viewState, float deltaSeconds) {
+    std::optional<CameraRotationEvent> AnimationHandler::calculateRotation(const ViewState& viewState, float deltaSeconds) {
         // Disregard the first calculation event, because the deltaSeconds parameter may be
         // very large. It's caused by on-demand rendering.
         if (_rotationStarted) {
@@ -163,11 +184,12 @@ namespace carto {
             if (_rotationTargetPos) {
                 cameraEvent.setTargetPos(*_rotationTargetPos);
             }
-            _mapRenderer.calculateCameraEvent(cameraEvent, 0, false);
+            return cameraEvent;
         }
+        return std::optional<CameraRotationEvent>();
     }
     
-    void AnimationHandler::calculateTilt(const ViewState& viewState, float deltaSeconds) {
+    std::optional<CameraTiltEvent> AnimationHandler::calculateTilt(const ViewState& viewState, float deltaSeconds) {
         // Disregard the first calculation event, because the deltaSeconds parameter may be
         // very large. It's caused by on-demand rendering.
         if (_tiltStarted) {
@@ -188,11 +210,12 @@ namespace carto {
     
             CameraTiltEvent cameraEvent;
             cameraEvent.setTilt(newTilt);
-            _mapRenderer.calculateCameraEvent(cameraEvent, 0, false);
+            return cameraEvent;
         }
+        return std::optional<CameraTiltEvent>();
     }
     
-    void AnimationHandler::calculateZoom(const ViewState& viewState, float deltaSeconds) {
+    std::optional<CameraZoomEvent> AnimationHandler::calculateZoom(const ViewState& viewState, float deltaSeconds) {
         // Disregard the first calculation event, because the deltaSeconds parameter may be
         // very large. It's caused by on-demand rendering.
         if (_zoomStarted) {
@@ -216,8 +239,9 @@ namespace carto {
             if (_zoomTargetPos) {
                 cameraEvent.setTargetPos(*_zoomTargetPos);
             }
-            _mapRenderer.calculateCameraEvent(cameraEvent, 0, false);
+            return cameraEvent;
         }
+        return std::optional<CameraZoomEvent>();
     }
     
 }

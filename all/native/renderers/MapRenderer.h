@@ -19,10 +19,12 @@
 #include "renderers/WatermarkRenderer.h"
 
 #include <atomic>
+#include <optional>
 #include <chrono>
 #include <memory>
 #include <thread>
 #include <vector>
+#include <map>
 
 namespace carto {
     class CameraPanEvent;
@@ -165,7 +167,7 @@ namespace carto {
         static const std::string BLEND_VERTEX_SHADER;
         static const std::string BLEND_FRAGMENT_SHADER;
         
-        std::chrono::steady_clock::time_point _lastFrameTime;
+        std::optional<std::chrono::steady_clock::time_point> _lastFrameTime;
     
         ViewState _viewState;
 
@@ -179,9 +181,8 @@ namespace carto {
         
         std::shared_ptr<OptionsListener> _optionsListener;
 
-        std::vector<std::pair<GLuint, GLuint> > _currentBoundFBOs;
-
-        std::shared_ptr<FrameBuffer> _screenFrameBuffer;
+        std::vector<std::pair<GLuint, GLuint> > _screenBoundFBOs;
+        std::map<GLuint, std::shared_ptr<FrameBuffer> > _screenFrameBuffers;
         std::shared_ptr<Shader> _screenBlendShader;
         
         BackgroundRenderer _backgroundRenderer;

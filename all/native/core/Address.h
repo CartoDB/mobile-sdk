@@ -7,6 +7,8 @@
 #ifndef _CARTO_ADDRESS_H_
 #define _CARTO_ADDRESS_H_
 
+#ifdef _CARTO_GEOCODING_SUPPORT
+
 #include <string>
 #include <vector>
 
@@ -14,6 +16,8 @@ namespace carto {
 
     /**
      * A geographical address describing country, region, county and other information.
+     * This class is deprecated and will be removed in future SDK versions. Use GeocodingAddress instead.
+     * @deprecated
      */
     class Address {
     public:
@@ -35,6 +39,7 @@ namespace carto {
          * @param categories The category tags describing the address.
          */
         Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& postcode, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories);
+        virtual ~Address();
 
         /**
          * Returns the country name included in the address.
@@ -135,5 +140,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

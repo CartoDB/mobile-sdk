@@ -6,6 +6,9 @@ import subprocess
 import shutil
 from build.sdk_build_utils import *
 
+ENUM_TEMPLATE = """
+"""
+
 VALUE_TYPE_TEMPLATE = """
 %typemap(out) $CLASSNAME$ "*($&1_ltype*)&$result = new $1_ltype($1);"
 %typemap(directorin, descriptor="$DESCRIPTOR$") $CLASSNAME$ "*($&1_ltype*)&$input = new $1_ltype($1);"
@@ -48,6 +51,9 @@ SHARED_PTR_TEMPLATE = """
 """
 
 POLYMORPHIC_SHARED_PTR_TEMPLATE = SHARED_PTR_TEMPLATE + """
+%pragma(java) jniclassclassmodifiers="@com.carto.utils.DontObfuscate public class"
+%typemap(javaclassmodifiers) $CLASSNAME$ "@com.carto.utils.DontObfuscate public class"
+
 %{
 #include "components/ClassRegistry.h"
 #include "components/Director.h"
@@ -108,7 +114,7 @@ POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE = """
     if (director != null) {
       return ($PACKAGE$.$TYPE$) director;
     }
-	
+
     String objClassName = $PACKAGE$.$TYPE$ModuleJNI.$TYPE$_swigGetClassName(cPtr, null);
     $PACKAGE$.$TYPE$ objInstance = null;
     try {
@@ -191,11 +197,15 @@ def fixProxyCode(fileName, className):
 
   lines_out = []
   for line in lines_in:
-    # Add '@hide' comment above the special SWIG-wrapper lines
+    # Add '@hidden' comment above the special SWIG-wrapper lines
     hide = line.strip() in [
-      'private long swigCPtr;',
-      'protected boolean swigCMemOwn;',
+      'public class %sModuleJNI {' % className,
+      '@com.carto.utils.DontObfuscate public class %sModuleJNI {' % className,
+      'private transient long swigCPtr;',
+      'protected transient boolean swigCMemOwn;',
       'public %s(long cPtr, boolean cMemoryOwn) {' % className,
+      'protected void finalize() {',
+      'public synchronized void delete() {',
       'public static long getCPtr(%s obj) {' % className,
       'public long swigGetRawPtr() {',
       'public String swigGetClassName() {',
@@ -208,7 +218,7 @@ def fixProxyCode(fileName, className):
       hide = True
     if hide:
       numSpaces = len(line) - len(line.lstrip())
-      lines_out.append(line[:numSpaces] + '/** @hide */\n')
+      lines_out.append(line[:numSpaces] + '/** @hidden */\n')
 
     lines_out.append(line)
 
@@ -223,10 +233,13 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
   imports_linenum = None
   include_linenum = None
   stl_wrapper = False
+  directors_module = False
   for line in lines_in:
     # Rename module
     match = re.search('^\s*(%module(?:[(].*[)]|)\s+)([^\s]*)\s*$', line)
     if match:
+      if match.group(1):
+        directors_module = 'directors' in match.group(1)
       line = '%s%sModule' % (match.group(1), match.group(2))
 
     # Language-specific method modifiers
@@ -247,6 +260,14 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
     # Attributes
     match = re.search('^\s*(%|!)(static|)attribute.*$', line)
     if match:
+      continue
+
+    # Detect enum directive
+    match = re.search('^\s*!enum\s*[(]([^)]*)[)].*$', line)
+    if match:
+      enumName = match.group(1).strip()
+      args = { 'ENUMNAME': match.group(1).strip() }
+      lines_out += applyTemplate(ENUM_TEMPLATE, args)
       continue
 
     # Detect value_type directive
@@ -448,7 +469,15 @@ def buildSwigPackage(args, sourceDir, packageName):
     if subprocess.call(cmd) != 0:
       print("Error in %s" % fileName)
       return False
+
+    for line in [line.rstrip('\n') for line in readUncommentedLines(sourcePath)]:
+      match = re.search('^\s*%template\((.*)\).*$', line)
+      if match:
+        templateFileNameWithoutExt = match.group(1)
+        if templateFileNameWithoutExt != fileNameWithoutExt:
+          fixProxyCode(os.path.join(proxyDir, templateFileNameWithoutExt + ".java"), templateFileNameWithoutExt)
     fixProxyCode(os.path.join(proxyDir, fileNameWithoutExt + ".java"), fileNameWithoutExt)
+    fixProxyCode(os.path.join(proxyDir, fileNameWithoutExt + "ModuleJNI.java"), fileNameWithoutExt)
     os.remove(os.path.join(proxyDir, fileNameWithoutExt + "Module.java"))
   return True
 

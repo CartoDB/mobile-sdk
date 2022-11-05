@@ -11,7 +11,7 @@
 #include "core/MapRange.h"
 #include "core/Variant.h"
 #include "renderers/components/CullState.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 
 #include <atomic>
 #include <memory>
@@ -185,11 +185,11 @@ namespace carto {
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) = 0;
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         
-        virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
-        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
+        virtual std::shared_ptr<Bitmap> getBackgroundBitmap(const ViewState& viewState) const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap(const ViewState& viewState) const;
         
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const = 0;
-        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const = 0;
+        virtual bool processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const = 0;
     
         virtual void registerDataSourceListener() = 0;
         virtual void unregisterDataSourceListener() = 0;
@@ -197,8 +197,11 @@ namespace carto {
         std::shared_ptr<CancelableThreadPool> _envelopeThreadPool;
         std::shared_ptr<CancelableThreadPool> _tileThreadPool;
         
-        std::shared_ptr<CullState> _lastCullState;
-       
+        mutable std::recursive_mutex _mutex;
+
+    private:
+        static const int DEFAULT_CULL_DELAY;
+
         std::atomic<int> _updatePriority;
 
         std::atomic<int> _cullDelay;
@@ -209,13 +212,10 @@ namespace carto {
         
         MapRange _visibleZoomRange;
 
-        mutable std::recursive_mutex _mutex;
-
-    private:
-        static const int DEFAULT_CULL_DELAY;
-
         std::map<std::string, Variant> _metaData;
 
+        std::shared_ptr<CullState> _lastCullState;
+       
         std::weak_ptr<Options> _options;
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<TouchHandler> _touchHandler;

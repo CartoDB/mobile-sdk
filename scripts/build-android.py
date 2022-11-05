@@ -5,14 +5,7 @@ import argparse
 import string
 from build.sdk_build_utils import *
 
-ANDROID_TOOLCHAINS = {
-  'armeabi-v7a': 'arm-linux-androideabi',
-  'x86':         'x86',
-  'arm64-v8a':   'aarch64-linux-android',
-  'x86_64':      'x86_64'
-}
-
-ANDROID_ABIS = list(ANDROID_TOOLCHAINS.keys())
+ANDROID_ABIS = ['armeabi-v7a', 'x86', 'arm64-v8a', 'x86_64']
 
 def javac(args, dir, *cmdArgs):
   return execute(args.javac, dir, *cmdArgs)
@@ -28,10 +21,12 @@ def zip(args, dir, *cmdArgs):
 
 def detectAndroidAPIs(args):
   api32, api64 = None, None
-  for name in os.listdir('%s/platforms' % args.androidndkpath):
-    if name.startswith('android-'):
-      api = int(name[8:])
-      if api >= 9:
+  with open('%s/meta/platforms.json' % args.androidndkpath, 'rb') as f: 
+    platforms = json.load(f)
+    minapi = platforms.get('min', 1)
+    maxapi = platforms.get('max', 0)
+    for api in range(minapi, maxapi + 1):
+      if api >= 11:
         api32 = min(api32 or api, api)
       if api >= 21:
         api64 = min(api64 or api, api)
@@ -42,7 +37,7 @@ def detectAndroidJavaAPI(args):
   for name in os.listdir('%s/platforms' % args.androidsdkpath):
     if name.startswith('android-'):
       api = int(name[8:])
-      if api >= 10:
+      if api >= 14:
         apiJava = min(apiJava or api, api)
   return apiJava
 
@@ -56,6 +51,7 @@ def buildAndroidSO(args, abi):
   api32, api64 = detectAndroidAPIs(args)
   if api32 is None or api64 is None:
     print('Failed to detect available platform APIs')
+    return False
   print('Using API-%d for 32-bit builds, API-%d for 64-bit builds' % (api32, api64))
 
   if not cmake(args, buildDir, options + [
@@ -69,14 +65,18 @@ def buildAndroidSO(args, abi):
     "-DANDROID_STL='c++_static'",
     "-DANDROID_ABI='%s'" % abi,
     "-DANDROID_PLATFORM='%d'" % (api64 if '64' in abi else api32),
+    "-DANDROID_ARM_NEON=%s" % ('true' if abi == 'arm64-v8a' or api32 >= 19 else 'false'),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Android'",
+    "-DSDK_ANDROID_ABI='%s'" % abi,
     '%s/scripts/build' % baseDir
   ]):
     return False
   if not cmake(args, buildDir, [
-    '--build', '.', '--', '-j4'
+    '--build', '.',
+    '--parallel', '4',
+    '--config', args.configuration
   ]):
     return False
   return makedirs('%s/%s' % (distDir, abi)) and copyfile('%s/libcarto_mobile_sdk.so' % buildDir, '%s/%s/libcarto_mobile_sdk.so' % (distDir, abi))
@@ -90,19 +90,23 @@ def buildAndroidJAR(args):
   apiJava = detectAndroidJavaAPI(args)
   if apiJava is None:
     print('Failed to detect available platform APIs')
+    return False
+  print('Using target API %d for Java files' % apiJava)
 
   javaFiles = []
   for sourceDir in ["%s/generated/android-java/proxies" % baseDir, "%s/android/java" % baseDir]:
     for dirpath, dirnames, filenames in os.walk(sourceDir):
       for filename in [f for f in filenames if f.endswith(".java")]:
+        if os.name == 'nt':
+          javaFiles.append(os.path.join(dirpath, "*.java"))
+          break
         javaFiles.append(os.path.join(dirpath, filename))
 
   if not javac(args, buildDir,
     '-g:vars',
-    '-source', '1.6',
-    '-target', '1.6',
-    '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
-    '-classpath', '%s/platforms/android-%d/android.jar' % (args.androidsdkpath, apiJava),
+    '-source', '1.7',
+    '-target', '1.7',
+    '-bootclasspath', '%s/platforms/android-%d/android.jar' % (args.androidsdkpath, apiJava),
     '-d', buildDir,
     *javaFiles
   ):
@@ -113,6 +117,9 @@ def buildAndroidJAR(args):
   classFiles = []
   for dirpath, dirnames, filenames in os.walk("."):
     for filename in [f for f in filenames if f.endswith(".class")]:
+      if os.name == 'nt':
+        classFiles.append(os.path.join(dirpath[2:], "*.class"))
+        break
       classFiles.append(os.path.join(dirpath[2:], filename))
   os.chdir(currentDir)
 
@@ -122,11 +129,12 @@ def buildAndroidJAR(args):
   ):
     return False
 
-  if makedirs(distDir) and \
-     copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
-    print("Output available in:\n%s" % distDir)
-    return True
-  return False
+  if not makedirs(distDir) or \
+     not copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
+    return False
+
+  print("JAR output available in:\n%s" % distDir)
+  return True
 
 def buildAndroidAAR(args):
   shutil.rmtree(getBuildDir('android-src'), True)
@@ -137,8 +145,13 @@ def buildAndroidAAR(args):
   distDir = getDistDir('android')
   version = args.buildversion
 
-  with open('%s/scripts/android-aar/carto-mobile-sdk.pom.template' % baseDir, 'r') as f:
-    pomFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'distDir': distDir, 'version': version })
+  with open('%s/scripts/android/carto-mobile-sdk.pom.template' % baseDir, 'r') as f:
+    pomFile = string.Template(f.read()).safe_substitute({
+      'baseDir': baseDir,
+      'buildDir': buildDir,
+      'distDir': distDir,
+      'version': version
+    })
   pomFileName = '%s/carto-mobile-sdk.pom' % buildDir
   with open(pomFileName, 'w') as f:
     f.write(pomFile)
@@ -157,23 +170,24 @@ def buildAndroidAAR(args):
     return False
 
   if not gradle(args, '%s/scripts' % baseDir,
-    '-p', 'android-aar',
+    '-p', 'android',
     '--project-cache-dir', buildDir,
     '--gradle-user-home', '%s/gradle' % buildDir,
     'assembleRelease'
   ):
     return False
-  aarFileName = '%s/outputs/aar/android-aar.aar' % buildDir
+  aarFileName = '%s/outputs/aar/carto-mobile-sdk-%s.aar' % (buildDir, args.configuration.lower())
   if not os.path.exists(aarFileName):
-    aarFileName = '%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower())
-  if makedirs(distDir) and \
-     copyfile(pomFileName, '%s/carto-mobile-sdk-%s.pom' % (distDir, version)) and \
-     copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) and \
-     copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)):
-    zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print("Output available in:\n%s\n\nTo publish, upload .pom, sources.jar and .aar to bintray.\n" % distDir)
-    return True
-  return False
+    aarFileName = '%s/outputs/aar/carto-mobile-sdk.aar' % buildDir
+  if not makedirs(distDir) or \
+     not copyfile(pomFileName, '%s/carto-mobile-sdk-%s.pom' % (distDir, version)) or \
+     not copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) or \
+     not copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)) or \
+     not zip(args, '%s/scripts/android/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt'):
+    return False
+
+  print("AAR output available in:\n%s" % distDir)
+  return True
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')
@@ -207,6 +221,10 @@ if args.androidndkpath == 'auto':
     args.androidndkpath = os.path.join(args.androidsdkpath, 'ndk-bundle')
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
+
+if not os.path.exists("%s/generated/android-java/proxies" % getBaseDir()):
+  print("Proxies/wrappers not generated yet, run swigpp script first.")
+  sys.exit(-1)
 
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')

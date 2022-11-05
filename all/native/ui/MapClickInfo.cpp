@@ -2,8 +2,8 @@
 
 namespace carto {
 
-    MapClickInfo::MapClickInfo(ClickType::ClickType clickType, const MapPos& clickPos) :
-        _clickType(clickType),
+    MapClickInfo::MapClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos) :
+        _clickInfo(clickInfo),
         _clickPos(clickPos)
     {
     }
@@ -12,7 +12,11 @@ namespace carto {
     }
 
     ClickType::ClickType MapClickInfo::getClickType() const {
-        return _clickType;
+        return _clickInfo.getClickType();
+    }
+    
+    const ClickInfo& MapClickInfo::getClickInfo() const {
+        return _clickInfo;
     }
     
     const MapPos& MapClickInfo::getClickPos() const {

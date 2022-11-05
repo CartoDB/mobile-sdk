@@ -8,7 +8,7 @@
 #define _CARTO_VECTORELEMENTCLICKINFO_H_
 
 #include "core/MapPos.h"
-#include "ui/ClickType.h"
+#include "ui/ClickInfo.h"
 #include "vectorelements/VectorElement.h"
 
 #include <memory>
@@ -23,14 +23,14 @@ namespace carto {
     class VectorElementClickInfo {
     public:
         /**
-         * Constructs a VectorElementClickInfo object from a click position and a vector element.
-         * @param clickType The click type (SINGLE, DUAL, etc)
+         * Constructs a VectorElementClickInfo object from a click info, click position and a vector element.
+         * @param clickInfo The click info.
          * @param clickPos The click position in the coordinate system of the data source.
          * @param elementClickPos The click position in the coordinate system of the data source that corresponds to element point.
          * @param vectorElement The vector element on which the click was performed.
          * @param layer The layer of the vector element on which the click was performed.
          */
-        VectorElementClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& elementClickPos, const std::shared_ptr<VectorElement>& vectorElement, const std::shared_ptr<Layer>& layer);
+        VectorElementClickInfo(const ClickInfo& clickInfo, const MapPos& clickPos, const MapPos& elementClickPos, const std::shared_ptr<VectorElement>& vectorElement, const std::shared_ptr<Layer>& layer);
         virtual ~VectorElementClickInfo();
     
         /**
@@ -38,6 +38,12 @@ namespace carto {
          * @return The type of the click performed.
          */
         ClickType::ClickType getClickType() const;
+
+        /**
+         * Returns the click info.
+         * @return The attributes of the click.
+         */
+        const ClickInfo& getClickInfo() const;
 
         /**
          * Returns the click position.
@@ -67,7 +73,7 @@ namespace carto {
         std::shared_ptr<Layer> getLayer() const;
     
     private:
-        ClickType::ClickType _clickType;
+        ClickInfo _clickInfo;
         MapPos _clickPos;
         MapPos _elementClickPos;
     

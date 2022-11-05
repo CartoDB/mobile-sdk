@@ -9,7 +9,11 @@
 
 #include "core/MapPos.h"
 #include "core/MapVec.h"
+#include "renderers/cameraevents/CameraPanEvent.h"
+#include "renderers/cameraevents/CameraRotationEvent.h"
+#include "renderers/cameraevents/CameraZoomEvent.h"
 
+#include <optional>
 #include <deque>
 #include <mutex>
 
@@ -41,9 +45,9 @@ namespace carto {
         void stopZoom();
 
     private:
-        void handlePan(const ViewState& viewState, float deltaSeconds);
-        void handleRotation(const ViewState& viewState, float deltaSeconds);
-        void handleZoom(const ViewState& viewState, float deltaSeconds);
+        std::optional<CameraPanEvent> calculatePan(const ViewState& viewState, float deltaSeconds);
+        std::optional<CameraRotationEvent> calculateRotation(const ViewState& viewState, float deltaSeconds);
+        std::optional<CameraZoomEvent> calculateZoom(const ViewState& viewState, float deltaSeconds);
     
         static const float KINETIC_PAN_START_TOLERANCE;
         static const float KINETIC_PAN_STOP_TOLERANCE;

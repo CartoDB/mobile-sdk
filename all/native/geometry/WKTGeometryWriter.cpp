@@ -10,7 +10,7 @@
 #include "geometry/MultiPointGeometry.h"
 #include "geometry/MultiLineGeometry.h"
 #include "geometry/MultiPolygonGeometry.h"
-#include "geometry/WKTGeometryGenerator.h"
+#include "geometry/utils/WKTGeometryGenerator.h"
 #include "utils/Log.h"
 
 namespace carto {

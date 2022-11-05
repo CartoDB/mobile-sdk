@@ -123,7 +123,7 @@ namespace carto {
             ClusterFetchTask(const std::weak_ptr<ClusteredVectorLayer>& layer);
 
         protected:
-            virtual bool loadElements(const std::shared_ptr<CullState>& cullState);
+            virtual bool loadElements(const std::shared_ptr<VectorLayer>& vectorLayer, const std::shared_ptr<CullState>& cullState);
         };
 
         static const unsigned int HIERARCHICAL_MODE_THRESHOLD;
@@ -147,7 +147,7 @@ namespace carto {
 
         virtual void refreshElement(const std::shared_ptr<VectorElement>& element, bool remove);
 
-        virtual std::shared_ptr<CancelableTask> createFetchTask(const std::shared_ptr<CullState>& cullState);
+        virtual std::shared_ptr<FetchTask> createFetchTask(const std::shared_ptr<CullState>& cullState);
 
         void rebuildClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements);
         int createSingletonCluster(const std::shared_ptr<VectorElement>& element, std::vector<Cluster>& clusters, const ProjectionSurface& projectionSurface) const;

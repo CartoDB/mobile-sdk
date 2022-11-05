@@ -19,18 +19,13 @@ rm -rf ${tempDir}
 mkdir -p ${tempDir}
 cp -r ${javaDir}/* ${tempDir}
 cp -r ${javaGenDir}/* ${tempDir}
-find ${tempDir} -name "*BaseMapView.java" -exec rm {} \;
 find ${tempDir} -name "*JNI.java" -exec rm {} \;
-find ${tempDir} -name "*RedrawRequestListener.java" -exec rm {} \;
-find ${tempDir} -name "*ConfigChooser.java" -exec rm {} \;
-find ${tempDir} -name "*AndroidUtils.java" -exec rm {} \;
-find ${tempDir} -name "*LicenseType.java" -exec rm {} \;
 find ${tempDir} -name "*.java" > ${tempDir}/files
 
 # Execute JavaDoc
 rm -rf ${javadocDir}
 mkdir -p ${javadocDir}
-${javadocExec} -hdf project.name "CARTO Mobile SDK" -doclet com.google.doclava.Doclava -docletpath ${cmdDir}/javadoc/doclava-1.0.6.jar -public -classpath "${ANDROID_HOME}/platforms/android-9/android.jar" -source 1.6 -d "${javadocDir}" "@${tempDir}/files"
+${javadocExec} -public -doctitle "CARTO Mobile SDK" -classpath "${ANDROID_HOME}/platforms/android-21/android.jar" -d "${javadocDir}" -sourcepath "@${tempDir}/files"
 
 # Create .jar
 cd ${javadocDir}

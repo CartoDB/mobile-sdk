@@ -33,14 +33,14 @@ namespace carto {
         void onSurfaceDestroyed();
     
     protected:
+        void drawBackground(const ViewState& viewState);
+        void drawSky(const ViewState& viewState);
+        void drawContour(const ViewState& viewState);
+
         static void BuildPlanarSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& focusPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale);
         static void BuildSphereSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale, int tesselate);
         static void BuildSphereContour(std::vector<cglib::vec3<float> >& coords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, float coordScale, int tesselate);
         static void BuildSphereSurface(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV);
-
-        void drawBackground(const ViewState& viewState);
-        void drawSky(const ViewState& viewState);
-        void drawContour(const ViewState& viewState);
 
         enum { SPHERE_TESSELATION_LEVELS_U = 128, SPHERE_TESSELATION_LEVELS_V = 64, SKY_TESSELATION_LEVELS = 128, CONTOUR_TESSELATION_LEVELS = 128 };
     

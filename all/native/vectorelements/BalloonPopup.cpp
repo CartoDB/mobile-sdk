@@ -165,7 +165,7 @@ namespace carto {
         _balloonPopupEventListener.set(eventListener);
     }
         
-    bool BalloonPopup::processClick(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos) {
+    bool BalloonPopup::processClick(const ClickInfo& clickInfo, const MapPos& clickPos, const ScreenPos& elementClickPos) {
         DirectorPtr<BalloonPopupEventListener> eventListener = _balloonPopupEventListener;
 
         if (eventListener) {
@@ -184,8 +184,8 @@ namespace carto {
                 auto it2 = buttonRects.find(button);
                 if (it2 != buttonRects.end()) {
                     if (it2->second.contains(elementClickPos)) {
-                        auto clickInfo = std::make_shared<BalloonPopupButtonClickInfo>(clickType, button, std::static_pointer_cast<BalloonPopup>(shared_from_this()));
-                        if (eventListener->onButtonClicked(clickInfo)) {
+                        auto balloonPopupButtonClickInfo = std::make_shared<BalloonPopupButtonClickInfo>(clickInfo, button, std::static_pointer_cast<BalloonPopup>(shared_from_this()));
+                        if (eventListener->onButtonClicked(balloonPopupButtonClickInfo)) {
                             return true;
                         }
                     }

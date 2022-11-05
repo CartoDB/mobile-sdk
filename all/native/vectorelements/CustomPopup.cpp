@@ -40,8 +40,8 @@ namespace carto {
         return _popupHandler.get();
     }
     
-    bool CustomPopup::processClick(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos) {
-        auto popupClickInfo = std::make_shared<PopupClickInfo>(clickType, clickPos, elementClickPos, std::static_pointer_cast<Popup>(shared_from_this()));
+    bool CustomPopup::processClick(const ClickInfo& clickInfo, const MapPos& clickPos, const ScreenPos& elementClickPos) {
+        auto popupClickInfo = std::make_shared<PopupClickInfo>(clickInfo, clickPos, elementClickPos, std::static_pointer_cast<Popup>(shared_from_this()));
         return _popupHandler->onPopupClicked(popupClickInfo);
     }
 

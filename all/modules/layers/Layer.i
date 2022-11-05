@@ -5,7 +5,8 @@
 
 %module Layer
 
-!proxy_imports(carto::Layer, core.MapRange, core.ScreenPos, core.Variant, core.StringVariantMap, graphics.ViewState, renderers.components.CullState, ui.ClickType)
+!proxy_imports(carto::Layer, core.MapRange, core.ScreenPos, core.Variant, core.StringVariantMap, graphics.ViewState, renderers.components.CullState, ui.ClickInfo)
+!java_imports(carto::Layer, com.carto.ui.ClickType)
 
 %{
 #include "layers/Layer.h"
@@ -20,7 +21,7 @@
 %import "core/Variant.i"
 %import "graphics/ViewState.i"
 %import "renderers/components/CullState.i"
-%import "ui/ClickType.i"
+%import "ui/ClickInfo.i"
 
 !polymorphic_shared_ptr(carto::Layer, layers.Layer)
 !value_type(std::vector<std::shared_ptr<carto::Layer> >, layers.LayerVector)

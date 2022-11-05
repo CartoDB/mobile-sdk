@@ -46,7 +46,7 @@ namespace carto {
         public:
             explicit PackageManagerListener(PackageManagerRoutingService& service);
                 
-            virtual void onPackagesChanged();
+            virtual void onPackagesChanged(PackageChangeType changeType);
             virtual void onStylesChanged();
                 
         private:

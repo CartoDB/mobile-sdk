@@ -58,19 +58,16 @@ namespace carto {
     }
     
     void TileLayer::setPreloading(bool preloading) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _preloading = preloading;
-        }
-        refresh();
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _preloading = preloading;
     }
     
     bool TileLayer::isSynchronizedRefresh() const {
-        return _synchronizedRefresh;
+        return _synchronizedRefresh.load();
     }
     
     void TileLayer::setSynchronizedRefresh(bool synchronizedRefresh) {
-        _synchronizedRefresh = synchronizedRefresh;
+        _synchronizedRefresh.store(synchronizedRefresh);
     }
     
     TileSubstitutionPolicy::TileSubstitutionPolicy TileLayer::getTileSubstitutionPolicy() const {
@@ -161,7 +158,7 @@ namespace carto {
     }
     
     bool TileLayer::isUpdateInProgress() const {
-        return !_fetchingTiles.getTasks().empty();
+        return !_fetchingTileTasks.getAll().empty();
     }
     
     TileLayer::DataSourceListener::DataSourceListener(const std::shared_ptr<TileLayer>& layer) :
@@ -171,7 +168,7 @@ namespace carto {
         
     void TileLayer::DataSourceListener::onTilesChanged(bool removeTiles) {
         if (std::shared_ptr<TileLayer> layer = _layer.lock()) {
-            layer->tilesChanged(removeTiles);
+            layer->updateTiles(removeTiles);
         } else {
             Log::Error("TileLayer::DataSourceListener: Lost connection to layer");
         }
@@ -179,26 +176,27 @@ namespace carto {
         
     TileLayer::TileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         Layer(),
-        _synchronizedRefresh(false),
-        _calculatingTiles(false),
-        _refreshedTiles(false),
         _dataSource(dataSource),
         _dataSourceListener(),
+        _tileRenderer(std::make_shared<TileRenderer>()),
+        _fetchingTileTasks(),
+        _calculatingTiles(false),
+        _refreshedTiles(false),
         _utfGridDataSource(),
         _tileLoadListener(),
         _utfGridEventListener(),
-        _fetchingTiles(),
+        _synchronizedRefresh(false),
         _frameNr(0),
-        _lastFrameNr(-1),
+        _lastFrameNr(0),
         _preloading(false),
         _substitutionPolicy(TileSubstitutionPolicy::TILE_SUBSTITUTION_POLICY_ALL),
         _zoomLevelBias(0.0f),
         _maxOverzoomLevel(MAX_PARENT_SEARCH_DEPTH),
         _maxUnderzoomLevel(MAX_CHILD_SEARCH_DEPTH),
-        _tileRenderer(std::make_shared<TileRenderer>()),
         _visibleTiles(),
         _preloadingTiles(),
         _utfGridTiles(),
+        _tileCullState(),
         _glResourceManager(),
         _projectionSurface()
     {
@@ -251,54 +249,128 @@ namespace carto {
 
         // Remove UTF grid tiles that are missing from the cache
         for (auto it = _utfGridTiles.begin(); it != _utfGridTiles.end(); ) {
-            if (!tileExists(it->first, false) && !tileExists(it->first, true)) {
+            long long tileId = getTileId(it->first);
+            if (!tileExists(tileId, false) && !tileExists(tileId, true)) {
                 it = _utfGridTiles.erase(it);
             } else {
                 it++;
             }
         }
     
-        // Cancel old tasks
-        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
-            task->cancel();
-        }
-        
         // Check if layer should be drawn
         if (!isVisible() || !getVisibleZoomRange().inRange(cullState->getViewState().getZoom()) || getOpacity() <= 0) {
             _calculatingTiles = false;
 
-            refreshDrawData(cullState);
+            refreshDrawData(cullState, true);
             return;
         }
-        
-        if (!_lastCullState || _frameNr != _lastFrameNr || cullState->getViewState().getModelviewProjectionMat() != _lastCullState->getViewState().getModelviewProjectionMat()) {
+
+        // Check if tiles need to be recalculated
+        bool recalculateTiles = (!_tileCullState || _frameNr != _lastFrameNr || cullState->getViewState().getModelviewProjectionMat() != _tileCullState->getViewState().getModelviewProjectionMat());
+        if (recalculateTiles) {
             // If the view has changed calculate new visible tiles, otherwise use the old ones
             calculateVisibleTiles(cullState);
+
+            _tileCullState = cullState;
         }
     
-        // Find replacements for visible tiles
-        findTiles(_visibleTiles, false);
-    
+        // Find replacements for visible tiles, create fetch list
+        std::vector<FetchTileInfo> fetchTileList;
+        buildFetchTiles(_visibleTiles, false, fetchTileList);
         if (_preloading) {
-            // Find replacements for preloading tiles
-            findTiles(_preloadingTiles, true);
-            
-            // Pre-fetch up to 2 levels of parent tiles
-            std::vector<MapTile> allTiles = _visibleTiles;
-            allTiles.insert(allTiles.end(), _preloadingTiles.begin(), _preloadingTiles.end());
-            for (const MapTile& visTile : allTiles) {
-                if (visTile.getZoom() > 0) {
-                    int tileMask = (1 << visTile.getZoom()) - 1;
-                    MapTile tile(visTile.getX() & tileMask, visTile.getY() & tileMask, visTile.getZoom(), visTile.getFrameNr());
-                    fetchTile(tile.getParent(), true, false);
+            buildFetchTiles(_preloadingTiles, true, fetchTileList);
+        }
+
+        // If there are multiple missing visible tiles with shared parent, then fetch the parent tile to provide quick rendering
+        std::unordered_map<MapTile, int> childTileCountMap;
+        for (const FetchTileInfo& fetchTile : fetchTileList) {
+            if (!fetchTile.preloading && fetchTile.tile.getZoom() > 0) {
+                childTileCountMap[fetchTile.tile.getParent()]++;
+            }
+        }
+        for (std::pair<MapTile, int> childTileCount : childTileCountMap) {
+            if (childTileCount.second > 1) {
+                long long tileId = getTileId(childTileCount.first);
+                if (!prefetchTile(tileId, false)) {
+                    fetchTileList.push_back({ childTileCount.first, false, PARENT_PRIORITY_OFFSET });
                 }
             }
         }
+
+        // Sort the fetch tile list.
+        // The sorting order is based on priority delta, preloading flag and finally on whether the tile has parents in the fetch list.
+        std::stable_sort(fetchTileList.begin(), fetchTileList.end(), [&childTileCountMap](const FetchTileInfo& fetchTile1, const FetchTileInfo& fetchTile2) {
+            if (fetchTile1.priorityDelta != fetchTile2.priorityDelta) {
+                return fetchTile1.priorityDelta > fetchTile2.priorityDelta;
+            }
+            if (fetchTile1.preloading != fetchTile2.preloading) {
+                return fetchTile1.preloading < fetchTile2.preloading;
+            }
+            return (childTileCountMap[fetchTile1.tile.getParent()] > 1) < (childTileCountMap[fetchTile2.tile.getParent()] > 1);
+        });
+
+        // Fetch the tiles
+        std::unordered_set<long long> fetchedTiles;
+        for (const FetchTileInfo& fetchTileInfo : fetchTileList) {
+            long long tileId = getTileId(fetchTileInfo.tile);
+            if (fetchedTiles.find(tileId) != fetchedTiles.end()) {
+                continue;
+            }
+            fetchedTiles.insert(tileId);
+
+            // If there is an existing task for this tile, keep it. Otherwise fetch it.
+            bool found = false;
+            for (std::shared_ptr<FetchTaskBase> task : _fetchingTileTasks.get(tileId)) {
+                if (!task->isCanceled()) {
+                    if (task->isPreloadingTile() == fetchTileInfo.preloading) {
+                        found = true;
+                        break;
+                    }
+                    task->cancel();
+                }
+            }
+            if (!found) {
+                fetchTile(getTileId(fetchTileInfo.tile), fetchTileInfo.tile, fetchTileInfo.preloading, fetchTileInfo.priorityDelta);
+            }
+        }
+
+        // Cancel old tasks
+        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
+            if (fetchedTiles.find(task->getTileId()) == fetchedTiles.end()) {
+                task->cancel();
+            }
+        }
     
+        // Done. Refresh.
         _calculatingTiles = false;
         _refreshedTiles = true;
         
-        refreshDrawData(cullState);
+        refreshDrawData(cullState, recalculateTiles);
+    }
+
+    void TileLayer::updateTiles(bool removeTiles) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+            // Reset cullstate. This will force recalculation of visible tiles, which is important if data extent has changed.
+            _tileCullState.reset();
+
+            // Invalidate current tasks
+            for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTileTasks.getAll()) {
+                task->invalidate();
+                task->cancel();
+            }
+
+            // Flush caches
+            if (removeTiles) {
+                clearTiles(false);
+                clearTiles(true);
+            } else {
+                invalidateTiles(false);
+                clearTiles(true);
+            }
+        }
+        refresh();
     }
 
     void TileLayer::updateTileLoadListener() {
@@ -310,12 +382,12 @@ namespace carto {
             bool refreshedTiles = std::atomic_exchange(&_refreshedTiles, false);
     
             // Check if visible tiles have finished loading, notify listener
-            if (refreshedTiles && _fetchingTiles.getVisibleCount() == 0) {
+            if (refreshedTiles && _fetchingTileTasks.getVisibleCount() == 0) {
                 tileLoadListener->onVisibleTilesLoaded();
             }
     
             // Check if preloading tiles have finished loading, notify listener
-            if (isPreloading() && refreshedTiles && _fetchingTiles.getPreloadingCount() == 0) {
+            if (isPreloading() && refreshedTiles && _fetchingTileTasks.getPreloadingCount() == 0) {
                 tileLoadListener->onPreloadingTilesLoaded();
             }
         }
@@ -345,18 +417,19 @@ namespace carto {
         // Try to get the tile from cache
         std::shared_ptr<UTFGridTile> utfGridTile;
         int utfGridTileZoom = -1;
-        for (MapTile flippedMapTile = calculateMapTile(mapPos, utfGridDataSource->getMaxZoom()).getFlipped(); true; flippedMapTile = flippedMapTile.getParent()) {
-            if (std::abs(flippedMapTile.getZoom() - zoom) < std::abs(utfGridTileZoom - zoom)) {
-                if (tileExists(flippedMapTile, false) || tileExists(flippedMapTile, true)) {
+        for (MapTile flippedTile = calculateMapTile(mapPos, utfGridDataSource->getMaxZoom()).getFlipped(); true; flippedTile = flippedTile.getParent()) {
+            if (std::abs(flippedTile.getZoom() - zoom) < std::abs(utfGridTileZoom - zoom)) {
+                long long flippedTileId = getTileId(flippedTile);
+                if (tileExists(flippedTileId, false) || tileExists(flippedTileId, true)) {
                     std::lock_guard<std::recursive_mutex> lock(_mutex);
-                    auto it = _utfGridTiles.find(flippedMapTile);
+                    auto it = _utfGridTiles.find(flippedTile);
                     if (it != _utfGridTiles.end()) {
                         utfGridTile = it->second;
-                        utfGridTileZoom = flippedMapTile.getZoom();
+                        utfGridTileZoom = flippedTile.getZoom();
                     }
                 }
             }
-            if (flippedMapTile.getZoom() == 0) {
+            if (flippedTile.getZoom() == 0) {
                 break;
             }
         }
@@ -382,7 +455,7 @@ namespace carto {
         }
     }
 
-    bool TileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+    bool TileLayer::processClick(const ClickInfo& clickInfo, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
         if (!projectionSurface) {
             return false;
@@ -393,12 +466,12 @@ namespace carto {
         if (utfGridEventListener) {
             if (auto elementInfo = intersectedElement.getElement<Variant>()) {
                 MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
-                auto clickInfo = std::make_shared<UTFGridClickInfo>(clickType, hitPos, *elementInfo, intersectedElement.getLayer());
-                return utfGridEventListener->onUTFGridClicked(clickInfo);
+                auto utfClickInfo = std::make_shared<UTFGridClickInfo>(clickInfo, hitPos, *elementInfo, intersectedElement.getLayer());
+                return utfGridEventListener->onUTFGridClicked(utfClickInfo);
             }
         }
 
-        return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
+        return clickInfo.getClickType() == ClickType::CLICK_TYPE_SINGLE || clickInfo.getClickType() == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
     }
 
     void TileLayer::calculateVisibleTiles(const std::shared_ptr<CullState>& cullState) {
@@ -481,14 +554,14 @@ namespace carto {
         taggedTiles.reserve(tiles.size());
         for (const MapTile& mapTile : tiles) {
             int parentSubstLevel = 0;
-            MapTile parentTile = mapTile.getParent();
-            if (tileExists(parentTile, preloadingTiles) || tileExists(parentTile, !preloadingTiles)) {
+            long long parentTileId = getTileId(mapTile.getParent());
+            if (tileExists(parentTileId, preloadingTiles) || tileExists(parentTileId, !preloadingTiles)) {
                 parentSubstLevel = 1;
             }
             int childSubstLevel = 0;
             for (int n = 0; n < 4; n++) {
-                MapTile subTile = mapTile.getChild(n);
-                if (tileExists(subTile, preloadingTiles) || tileExists(subTile, !preloadingTiles)) {
+                long long subTileId = getTileId(mapTile.getChild(n));
+                if (tileExists(subTileId, preloadingTiles) || tileExists(subTileId, !preloadingTiles)) {
                     childSubstLevel = 1;
                     break;
                 }
@@ -511,18 +584,19 @@ namespace carto {
         });
     }
     
-    void TileLayer::findTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles) {
+    void TileLayer::buildFetchTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles, std::vector<FetchTileInfo>& fetchTileList) {
         for (const MapTile& visTile : visTiles) {
             int tileMask = (1 << visTile.getZoom()) - 1;
             MapTile tile(visTile.getX() & tileMask, visTile.getY() & tileMask, visTile.getZoom(), visTile.getFrameNr());
+            long long tileId = getTileId(tile);
 
             // Check caches
-            if (tileExists(tile, preloadingTiles) || tileExists(tile, !preloadingTiles)) {
+            if (tileExists(tileId, preloadingTiles) || tileExists(tileId, !preloadingTiles)) {
                 calculateDrawData(visTile, tile, preloadingTiles);
 
                 // Re-fetch invalid tile
-                if (!tileValid(tile, preloadingTiles) && !tileValid(tile, !preloadingTiles)) {
-                    fetchTile(tile, preloadingTiles, true);
+                if (!tileValid(tileId, preloadingTiles) && !tileValid(tileId, !preloadingTiles)) {
+                    fetchTileList.push_back({ tile, preloadingTiles, (preloadingTiles ? PRELOADING_PRIORITY_OFFSET : 0) });
                 }
                 continue;
             }
@@ -546,7 +620,8 @@ namespace carto {
             for (bool preloadingCache : preloadingCaches) {
                 // Check for a tile with the last frame nr
                 MapTile prevFrameTile(tile.getX(), tile.getY(), tile.getZoom(), _lastFrameNr);
-                bool foundSubstitute = tileExists(prevFrameTile, preloadingCache);
+                long prevFrameTileId = getTileId(prevFrameTile);
+                bool foundSubstitute = tileExists(prevFrameTileId, preloadingCache);
 
                 if (foundSubstitute) {
                     calculateDrawData(visTile, prevFrameTile, preloadingTiles);
@@ -565,8 +640,10 @@ namespace carto {
                 }
             }
     
-            // Finally fetch the tile from source
-            fetchTile(tile, preloadingTiles, false);
+            // Prefetch, add the tile to the fetch list
+            if (!prefetchTile(tileId, preloadingTiles)) {
+                fetchTileList.push_back({ tile, preloadingTiles, (preloadingTiles ? PRELOADING_PRIORITY_OFFSET : 0) });
+            }
         }
     }
     
@@ -576,9 +653,10 @@ namespace carto {
         }
 
         MapTile parentTile = tile.getParent();
+        long long parentTileId = getTileId(parentTile);
         
         // Check the cache
-        if (tileExists(parentTile, preloadingCache)) {
+        if (tileExists(parentTileId, preloadingCache)) {
             calculateDrawData(visTile, parentTile, preloadingTile);
             return true;
         }
@@ -595,7 +673,8 @@ namespace carto {
         int childTileCount = 0;
         for (int n = 0; n < 4; n++) {
             MapTile subTile = tile.getChild(n);
-            if (tileExists(subTile, preloadingCache)) {
+            long long subTileId = getTileId(subTile);
+            if (tileExists(subTileId, preloadingCache)) {
                 calculateDrawData(visTile, subTile, preloadingTile);
                 childTileCount++;
             } else {
@@ -629,11 +708,12 @@ namespace carto {
         _tileRenderer->setTileTransformer(tileTransformer);
     }
 
-    TileLayer::FetchTaskBase::FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile) :
+    TileLayer::FetchTaskBase::FetchTaskBase(const std::shared_ptr<TileLayer>& layer, long long tileId, const MapTile& tile, bool preloadingTile) :
         _layer(layer),
+        _tileId(tileId),
         _tile(tile),
-        _dataSourceTiles(),
         _preloadingTile(preloadingTile),
+        _dataSourceTiles(),
         _started(false),
         _invalidated(false)
     {
@@ -648,46 +728,63 @@ namespace carto {
             dataSourceTile = dataSourceTile.getParent();
         }
     }
+
+    long long TileLayer::FetchTaskBase::getTileId() const {
+        return _tileId;
+    }
     
-    bool TileLayer::FetchTaskBase::isPreloading() const {
+    MapTile TileLayer::FetchTaskBase::getMapTile() const {
+        return _tile;
+    }
+    
+    bool TileLayer::FetchTaskBase::isPreloadingTile() const {
         return _preloadingTile;
     }
     
     bool TileLayer::FetchTaskBase::isInvalidated() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _invalidated;
+        return _invalidated.load();
     }
 
     void TileLayer::FetchTaskBase::invalidate() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _invalidated = true;
+        _invalidated.store(true);
     }
         
     void TileLayer::FetchTaskBase::cancel() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        if (!_started) {
-            _canceled = true;
-                
-            if (std::shared_ptr<TileLayer> layer = _layer.lock()) {
-                layer->_fetchingTiles.remove(_tile.getTileId());
+        std::shared_ptr<TileLayer> layer = _layer.lock();
+        if (!layer) {
+            Log::Info("TileLayer::FetchTaskBase: Lost connection to layer");
+            return;
+        }
+
+        bool cancel = false;
+        {
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            if (!_started) {
+                cancel = true;
             }
+            CancelableTask::cancel();
+        }
+
+        if (cancel) {
+            layer->_fetchingTileTasks.remove(_tileId, std::static_pointer_cast<FetchTaskBase>(shared_from_this()));
         }
     }
-        
+
     void TileLayer::FetchTaskBase::run() {
         std::shared_ptr<TileLayer> layer = _layer.lock();
         if (!layer) {
+            Log::Info("TileLayer::FetchTaskBase: Lost connection to layer");
             return;
         }
             
         {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_canceled) {
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            if (isCanceled()) {
                 return;
             }
             _started = true;
         }
-        
+
         bool refresh = false;
         try {
             refresh = loadTile(layer) && !_preloadingTile;
@@ -699,7 +796,7 @@ namespace carto {
             Log::Errorf("TileLayer::FetchTaskBase: Exception while loading tile: %s", ex.what());
         }
     
-        layer->_fetchingTiles.remove(_tile.getTileId());
+        layer->_fetchingTileTasks.remove(_tileId, std::static_pointer_cast<FetchTaskBase>(shared_from_this()));
 
         if (refresh) {
             if (auto mapRenderer = layer->getMapRenderer()) {
@@ -735,6 +832,9 @@ namespace carto {
             if (tileData->isReplaceWithParent()) {
                 continue;
             }
+            if (!tileData->getData()) {
+                break;
+            }
 
             std::shared_ptr<UTFGridTile> utfTile = UTFGridTile::DecodeUTFTile(tileData->getData());
             if (utfTile) {
@@ -754,6 +854,8 @@ namespace carto {
     const int TileLayer::MAX_PARENT_SEARCH_DEPTH = 6;
     const int TileLayer::MAX_CHILD_SEARCH_DEPTH = 3;
 
+    const int TileLayer::PARENT_PRIORITY_OFFSET = 1;
+    const int TileLayer::PRELOADING_PRIORITY_OFFSET = -2;
     const double TileLayer::PRELOADING_TILE_SCALE = 1.5;
     const float TileLayer::SUBDIVISION_THRESHOLD = Const::WORLD_SIZE;
     
