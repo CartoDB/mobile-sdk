@@ -63,7 +63,7 @@
             _swapChainPanelSize = new Windows.Foundation.Size(_swapChainPanel.RenderSize.Width, _swapChainPanel.RenderSize.Height);
 
             Windows.Graphics.Display.DisplayInformation dispInfo = Windows.Graphics.Display.DisplayInformation.GetForCurrentView();
-            _resolutionScale = (float) dispInfo.RawPixelsPerViewPixel;
+            _resolutionScale = 1.0f; // NOTE: can not use dispInfo.RawPixelsPerViewPixel, seems to be applied at lower level
             _baseMapView.GetOptions().DPI = (float) dispInfo.RawDpiX;
 
             _baseMapView.SetRedrawRequestListener(new MapViewRedrawRequestListener(this));
