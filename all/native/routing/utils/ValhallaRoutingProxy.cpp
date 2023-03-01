@@ -349,18 +349,21 @@ namespace carto {
             locations.emplace_back(location);
         }
 
-        picojson::value customParams = request->getCustomParameters().toPicoJSON();
 
         picojson::object json;
-        if (customParams.is<picojson::object>()) {
-            json = customParams.get<picojson::object>();
-        }
         json["shape"] = picojson::value(locations);
         json["shape_match"] = picojson::value("map_snap");
         json["costing"] = picojson::value(profile);
         json["units"] = picojson::value("kilometers");
         if (request->getAccuracy() > 0) {
             json["gps_accuracy"] = picojson::value(request->getAccuracy());
+        }
+        picojson::value customParams = request->getCustomParameters().toPicoJSON();
+        if (customParams.is<picojson::object>()) {
+            const picojson::object& customParamsObj = customParams.get<picojson::value::object>();
+            for (auto it = customParamsObj.begin(); it != customParamsObj.end(); it++) {
+                    json[it->first] = it->second;
+            }
         }
         return picojson::value(json).serialize();
     }
