@@ -455,8 +455,17 @@ namespace carto {
 
         RoutingResultBuilder resultBuilder(proj);
         try {
+            std::size_t shapeIndex= 0;
             for (const picojson::value& legInfo : result.get("trip").get("legs").get<picojson::array>()) {
                 std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(legInfo.get("shape").get<std::string>());
+
+                std::vector<MapPos> points;
+                points.reserve(shape.size());
+                for (std::size_t i = 0; i < shape.size(); i++) {
+                    const valhalla::midgard::PointLL& point = shape.at(i);
+                    points.push_back(proj->fromLatLong(point.second, point.first));
+                }
+                resultBuilder.addPoints(points);
 
                 const picojson::array& maneuvers = legInfo.get("maneuvers").get<picojson::array>();
                 for (std::size_t i = 0; i < maneuvers.size(); i++) {
@@ -464,13 +473,6 @@ namespace carto {
 
                     std::size_t maneuverIndex0 = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>());
                     std::size_t maneuverIndex1 = static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>());
-                    std::vector<MapPos> points;
-                    points.reserve(maneuverIndex1 >= maneuverIndex0 ? maneuverIndex1 - maneuverIndex0 + 1 : 0);
-                    for (std::size_t j = maneuverIndex0; j <= maneuverIndex1; j++) {
-                        const valhalla::midgard::PointLL& point = shape.at(j);
-                        points.push_back(proj->fromLatLong(point.second, point.first));
-                    }
-                    int pointIndex = resultBuilder.addPoints(points);
 
                     RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
                     TranslateManeuverType(static_cast<int>(maneuver.get("type").get<std::int64_t>()), action);
@@ -489,12 +491,16 @@ namespace carto {
                     double time = maneuver.get("time").get<double>();
                     double distance = maneuver.get("length").get<double>() * 1000.0;
 
+                    std::size_t shapeBeginIndex = maneuver.get("begin_shape_index").get<std::int64_t>();
+                    int pointIndex = shapeIndex + shapeBeginIndex;
+
                     RoutingInstructionBuilder& instrBuilder = resultBuilder.addInstruction(action, pointIndex);
                     instrBuilder.setStreetName(streetName);
                     instrBuilder.setTime(time);
                     instrBuilder.setDistance(distance);
                     instrBuilder.setInstruction(instruction);
                 }
+                shapeIndex += maneuvers[maneuvers.size()-1].get("begin_shape_index").get<std::int64_t>();
             }
         }
         catch (const std::exception& ex) {
