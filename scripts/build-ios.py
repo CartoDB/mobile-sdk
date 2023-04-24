@@ -8,6 +8,7 @@ import string
 from build.sdk_build_utils import *
 
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64', 'arm64-simulator', 'x86_64-maccatalyst', 'arm64-maccatalyst']
+SDK_VERSION = "4.4.2"
 
 def getFinalBuildDir(target, arch=None):
   return getBuildDir(('%s_metal' % target) if args.metalangle else target, arch)
